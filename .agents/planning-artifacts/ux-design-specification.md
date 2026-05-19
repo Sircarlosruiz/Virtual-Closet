@@ -409,6 +409,42 @@ Base unit: **8px** (Tailwind estándar)
 Grid de prendas en dashboard: **2 columnas mobile / 3 columnas desktop**
 Grid de modelos IA: **2 columnas siempre** (imagen suficientemente grande para evaluar)
 
+---
+
+## Design Direction Decision
+
+### Design Directions Explored
+
+Se generaron 3 direcciones visuales en [ux-design-directions.html](./ux-design-directions.html):
+
+| Dirección | Concepto | Fortaleza |
+| --- | --- | --- |
+| **1 — Card Flow** | Bottom nav + cards con imagen dominante | Familiar, visualmente limpio |
+| **2 — Editorial Grid** | Full-bleed grid + selector de modelo en filas | Máximo protagonismo de imagen |
+| **3 — Action-First** | Wizard paso a paso + CTAs enormes | Estado de proceso muy visible |
+
+### Chosen Direction
+
+Dirección 1 (Card Flow) como base, con elementos clave de Dirección 2 y Dirección 3:
+
+- Layout general y bottom nav de Dirección 1
+- Wizard de selección de modelo de Dirección 2 (filas descriptivas, no grid compacto)
+- Pantalla de compartir celebratoria de Dirección 3
+- Pipeline de progreso visible de Dirección 3
+
+### Design Rationale
+
+- Card Flow es el más familiar para el ICP (similar a Instagram/WhatsApp que ya usan)
+- El selector en filas da más información del modelo sin requerir hover (crítico en mobile)
+- La pantalla de compartir celebratoria refuerza la emoción de orgullo post-publicación
+- El pipeline de progreso visible elimina la ansiedad durante la generación IA
+
+### Design Implementation Order
+
+Componentes a implementar en este orden: `GarmentCard` → `ModelSelector` (filas) → `ProgressPipeline` → `CatalogShareSheet`
+
+---
+
 ### Accessibility Considerations
 
 - Todos los textos sobre fondo blanco cumplen WCAG AA (ratio mínimo 4.5:1)
