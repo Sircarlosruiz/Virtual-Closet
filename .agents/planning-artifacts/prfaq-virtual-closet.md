@@ -1,4 +1,4 @@
-# PR/FAQ — NicaCommerce Virtual Closet
+# PR/FAQ — NikaCommerce Virtual Closet
 
 **Versión:** 1.0  
 **Fecha:** 2026-05-18  
@@ -13,20 +13,20 @@ Managua, Nicaragua — [Fecha de lanzamiento]
 
 ---
 
-### NicaCommerce lanza Virtual Closet: la IA que convierte el catálogo de fotos planas de un mayorista en un showroom digital interactivo en menos de 5 minutos
+### NikaCommerce lanza Virtual Closet: la IA que convierte el catálogo de fotos planas de un mayorista en un showroom digital interactivo en menos de 5 minutos
 
 *Por primera vez, un revendedor puede ver cómo queda exactamente una blusa sobre un modelo real antes de hacer su pedido — sin que el mayorista haya contratado una sola sesión de fotografía*
 
 ---
 
-**NicaCommerce** anunció hoy el lanzamiento de **Virtual Closet**, una plataforma web B2B que permite a los mayoristas de ropa transformar automáticamente las fotos de sus prendas en catálogos visuales profesionales usando Inteligencia Artificial, y compartirlos con su red de revendedores a través de un simple link.
+**NikaCommerce** anunció hoy el lanzamiento de **Virtual Closet**, una plataforma web B2B que permite a los mayoristas de ropa transformar automáticamente las fotos de sus prendas en catálogos visuales profesionales usando Inteligencia Artificial, y compartirlos con su red de revendedores a través de un simple link.
 
 El problema que resuelve Virtual Closet es conocido por cualquier mayorista de ropa en la región: publicar una nueva colección significa contratar modelos, fotógrafos y producción de estudio, un proceso que puede costar entre $800 y $3,000 USD por colección y tomar de dos a cuatro semanas. Muchos mayoristas lo evitan y terminan compartiendo fotos sobre maniquíes de plástico o en percha por WhatsApp — imágenes que no inspiran confianza y que llevan a sus revendedores a pedir pocas piezas por temor a no poder venderlas.
 
 Virtual Closet elimina ese cuello de botella. El mayorista sube las fotos de sus prendas desde cualquier dispositivo, selecciona entre un catálogo de modelos de IA que representan la diversidad del mercado centroamericano, y en menos de 5 minutos obtiene imágenes fotorrealistas de cada prenda vestida sobre un modelo real. El resultado se publica automáticamente en un catálogo digital con link único que puede compartir directamente por WhatsApp, Instagram o email — sin instalaciones, sin conocimientos técnicos.
 
 *"Nuestros clientes no necesitan saber nada de IA. Solo necesitan subir sus prendas como siempre lo han hecho y recibir en minutos el catálogo que antes les costaba semanas y miles de dólares."*  
-— **[Nombre del CEO]**, fundador de NicaCommerce
+— **[Nombre del CEO]**, fundador de NikaCommerce
 
 El impacto para el revendedor es igual de directo. En lugar de imaginar cómo quedaría una blusa en sus propias clientas basándose en una foto de maniquí, ahora puede ver el producto puesto en un modelo, con caída de tela, textura y color reales. Esa confianza visual se traduce en pedidos más grandes y más frecuentes.
 
@@ -73,16 +73,24 @@ No. El catálogo es un link web que se abre en cualquier navegador de teléfono 
 
 **P3: ¿Cuánto me cuesta y cuándo recupero la inversión?**
 
-El precio se basa en el número de revendedores activos que acceden a tu catálogo cada mes. Ejemplo de cálculo básico de ROI:
+El precio se basa en el número de revendedores activos que acceden a tu catálogo cada mes:
 
-| Concepto | Valor estimado |
-|---|---|
+| Plan | Precio | Revendedores incluidos | Prendas/mes |
+| --- | --- | --- | --- |
+| **Base** | **$39/mes** | Hasta 50 | 40 prendas |
+| **Pro** | **$79/mes** | Hasta 150 | 100 prendas |
+
+Ejemplo de cálculo de ROI con el Plan Base:
+
+| Concepto | Valor |
+| --- | --- |
 | Costo de una sesión fotográfica tradicional (20 prendas) | $800 – $1,500 USD |
 | Tiempo para publicar la colección | 2–4 semanas |
-| Costo de Virtual Closet (plan base) | $[X]/mes |
-| Punto de equilibrio (colecciones/año) | 1–2 colecciones |
+| Costo de Virtual Closet (Plan Base) | $39/mes — $468/año |
+| Punto de equilibrio vs. una sesión fotográfica | **Menos de 1 colección** |
+| ROI si pedidos crecen 20% en el primer mes | **Positivo desde el día 1** |
 
-Adicionalmente, si el tamaño promedio de pedido de tus revendedores aumenta un 20% — resultado observado en usuarios beta — el retorno sobre la inversión ocurre en el primer pedido de la primera colección.
+Con el Plan Base a $39/mes, el ahorro frente a una sola sesión fotográfica tradicional cubre más de 20 meses de suscripción. Si el tamaño promedio de pedido de tus revendedores aumenta un 20% — resultado observado en usuarios beta — el retorno sobre la inversión ocurre en el primer pedido de la primera colección.
 
 ---
 
@@ -152,7 +160,7 @@ Las fotos personales del usuario final (función premium futura) no se almacenan
 ## Próximos pasos recomendados
 
 - [ ] Reemplazar métricas estimadas de ROI (P3) con datos reales de usuarios beta
-- [ ] Definir nombre final del producto (considerar alternativas a "Virtual Closet")
-- [ ] Establecer precio concreto del plan base por asiento para completar FAQ P3
+- [x] Definir nombre final del producto → **Virtual Closet** (confirmado)
+- [x] Establecer precio concreto del plan base → **$39/mes** (Base) / **$79/mes** (Pro)
 - [ ] Definir fecha de lanzamiento para anclar la nota de prensa
 - [ ] Validar con 3-5 mayoristas reales el headline de confianza/pedidos
