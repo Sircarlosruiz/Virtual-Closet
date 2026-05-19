@@ -1,8 +1,9 @@
 ---
 project: Virtual Closet
 version: 1.0
-stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8, 9]
-lastStep: 9
+stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+lastStep: 14
+status: complete
 inputDocuments:
   - .agents/planning-artifacts/prfaq-virtual-closet.md
   - .agents/planning-artifacts/arquitectura-tecnica.md
@@ -453,3 +454,294 @@ Componentes a implementar en este orden: `GarmentCard` → `ModelSelector` (fila
 - Alt text obligatorio en todas las imágenes de prendas y modelos IA
 - Barra de progreso de generación IA con `aria-valuenow` dinámico
 - Catálogo público funciona sin JavaScript (SSR) para dispositivos lentos
+
+---
+
+## User Journey Flows
+
+### Journey 1 — Mayorista: Primera generación de imagen IA
+
+El flujo central del producto. Desde subir una foto hasta ver la prenda sobre un modelo.
+
+```mermaid
+flowchart TD
+    A([Mayorista abre dashboard]) --> B[Ve botón Agregar prenda]
+    B --> C{¿Cómo sube la foto?}
+    C -->|Cámara| D[Toma foto en vivo]
+    C -->|Galería| E[Selecciona foto existente]
+    D --> F[Preview de la foto]
+    E --> F
+    F --> G{¿Foto aceptable?}
+    G -->|No| C
+    G -->|Sí| H[Nombre de prenda — opcional]
+    H --> I[Pantalla selección de modelo]
+    I --> J[Filas de 6 modelos IA con descripción]
+    J --> K[Tap en modelo — highlight]
+    K --> L[Botón Generar aparece]
+    L --> M[Job publicado en RabbitMQ]
+    M --> N[Pantalla de progreso]
+    N --> N1[Extrayendo prenda... 0-15s]
+    N1 --> N2[Aplicando al modelo... 15-60s]
+    N2 --> N3[Finalizando... 60-90s]
+    N3 --> O{¿Generación exitosa?}
+    O -->|Error| P[Mensaje de error + Reintentar]
+    P --> M
+    O -->|Éxito| Q[WebSocket notifica al frontend]
+    Q --> R[Imagen generada a pantalla completa]
+    R --> S[Toggle Ver original disponible]
+    S --> T{¿Conforme?}
+    T -->|No| U[Tap Regenerar con otro modelo]
+    U --> I
+    T -->|Sí| V[Tap Agregar al catálogo]
+    V --> W([Prenda lista en el catálogo])
+```
+
+### Journey 2 — Mayorista: Publicar y compartir catálogo
+
+El momento de máximo valor. Desde las prendas listas hasta el link en WhatsApp.
+
+```mermaid
+flowchart TD
+    A([Mayorista tiene prendas listas]) --> B[Tab Catálogos]
+    B --> C{¿Catálogo existente?}
+    C -->|No| D[Tap Nuevo catálogo]
+    D --> E[Nombre del catálogo]
+    E --> F[Selecciona prendas a incluir]
+    C -->|Sí| F
+    F --> G[Vista previa del catálogo]
+    G --> H{¿Listo para publicar?}
+    H -->|No| I[Agrega más prendas]
+    I --> G
+    H -->|Sí| J[Tap Publicar]
+    J --> K[Slug único generado]
+    K --> L[QR generado automáticamente]
+    L --> M[Pantalla celebratoria]
+    M --> N{¿Cómo compartir?}
+    N -->|WhatsApp| O[WhatsApp con texto pre-escrito + link]
+    N -->|Copiar link| P[Link copiado al portapapeles]
+    N -->|QR| Q[QR a pantalla completa]
+    O --> R([Revendedor recibe el link])
+    P --> R
+    Q --> R
+```
+
+### Journey 3 — Revendedor: Ver catálogo y contactar
+
+Sin login. Desde el link de WhatsApp hasta el pedido.
+
+```mermaid
+flowchart TD
+    A([Revendedor recibe link en WhatsApp]) --> B[Tap en el link]
+    B --> C[Browser — página pública SSR]
+    C --> D{¿Carga < 3s?}
+    D -->|Sí| E[Header del catálogo visible]
+    D -->|No| F[Skeleton loading visible]
+    F --> E
+    E --> G[Scroll por prendas — imagen full ancho]
+    G --> H{¿Prenda de interés?}
+    H -->|No| G
+    H -->|Sí| I[Tap en prenda — imagen expandida]
+    I --> J[Ve tallas y descripción]
+    J --> K{¿Quiere pedir?}
+    K -->|Más info| L[Ver otras variantes]
+    L --> I
+    K -->|Pedir| M[Tap en botón sticky WhatsApp]
+    M --> N[WhatsApp con mensaje pre-formateado]
+    N --> O([Mayorista recibe el pedido])
+```
+
+### Journey Patterns
+
+- Botón de acción principal siempre fijo en el bottom — nunca requiere scroll
+- Cada pantalla presenta una sola decisión — sin opciones paralelas en MVP
+- Toda operación asíncrona tiene 3 estados: iniciando → procesando → completado/error
+- Los errores siempre incluyen acción de recuperación — nunca mensaje solo
+
+### Flow Optimization Principles
+
+1. Upload → Modelo → Generar son 3 taps. Nada entre ellos es obligatorio.
+2. La generación IA sobrevive si el mayorista sale de la pantalla.
+3. Cada journey del mayorista termina con un tap a WhatsApp.
+4. El revendedor nunca necesita cuenta — cero fricción en Journey 3.
+
+---
+
+## Component Strategy
+
+### Design System Components
+
+Componentes de shadcn/ui usados directamente:
+
+| Componente | Uso |
+| --- | --- |
+| `Button` | Todos los CTAs — Generar, Publicar, Compartir |
+| `Card` | Contenedor base de `GarmentCard` |
+| `Dialog` | Confirmaciones, vista expandida de prenda |
+| `Progress` | Base del `ProgressPipeline` |
+| `Sheet` | Panel de compartir en mobile |
+| `Toast` | Notificación WebSocket "Tu prenda está lista" |
+| `Skeleton` | Loading states del catálogo público |
+| `Badge` | Estados: Lista / Procesando / Error |
+| `Tabs` | Dashboard: Prendas / Catálogos |
+
+### Custom Components
+
+**`GarmentCard`** — Tarjeta de prenda con estado de procesamiento
+
+- Variantes: `pending` `processing` `ready` `error`
+- Anatomía: imagen + badge de estado + nombre + barra de progreso (solo en processing) + acción contextual
+- `aria-label="Prenda {nombre}, estado {estado}"` + alt en imagen
+
+**`ModelSelector`** — Selector de modelo IA en filas
+
+- Anatomía por fila: thumbnail 56px + nombre + descripción (tez, cabello) + lock si Plan Pro + checkmark si seleccionado
+- `role="radiogroup"` en contenedor, `role="radio"` + `aria-checked` por fila
+- Navegable con arrow keys
+
+**`ProgressPipeline`** — Barra de progreso multi-estado
+
+- 3 segmentos: Extrayendo (scissors) → Aplicando (sparkles animado) → Finalizando (check)
+- Si supera 90s: "Tomando más tiempo de lo usual, casi listo..."
+- `role="progressbar"` + `aria-valuenow` dinámico
+
+**`CatalogShareSheet`** — Panel de compartir catálogo
+
+- Header celebratorio + preview card + link copiable + botón WhatsApp (full width) + QR expandible
+- `role="dialog"` + focus trap + cierre con Escape
+
+### Component Implementation Roadmap
+
+| Sprint | Componentes |
+| --- | --- |
+| Sprint 1 | `Button`, `Card`, `Dialog`, `Toast` de shadcn — tema base |
+| Sprint 2 | `GarmentCard`, `ModelSelector`, `ProgressPipeline` |
+| Sprint 3 | `CatalogShareSheet`, `Skeleton`, `Badge` |
+
+---
+
+## UX Consistency Patterns
+
+### Button Hierarchy
+
+| Nivel | Estilo Tailwind | Uso | Regla |
+| --- | --- | --- | --- |
+| **Primary** | `bg-indigo-600 text-white rounded-2xl py-4` | Acción principal de la pantalla | Máximo 1 por pantalla |
+| **Accent** | `bg-pink-500 text-white rounded-2xl py-4` | Compartir por WhatsApp | Siempre en bottom bar |
+| **Secondary** | `border border-gray-200 bg-white rounded-2xl` | Alternativas al primary | 1-2 por pantalla |
+| **Ghost** | `text-indigo-600` sin fondo | Acciones terciarias en contexto | Sin límite |
+| **Destructivo** | `text-red-500 border-red-200` | Acciones irreversibles | Nunca como primary |
+
+Regla global: máximo 1 Primary + 1 Accent por pantalla. Nunca dos botones Primary juntos.
+
+### Feedback Patterns
+
+- **Éxito menor:** `Toast` verde, auto-cierra 4s, texto en pasado ("Prenda agregada al catálogo")
+- **Éxito mayor:** Pantalla celebratoria completa (publicar catálogo) — no solo toast
+- **Error:** `Toast` rojo persistente + acción "Reintentar" incluida en el toast
+- **Error de generación IA:** Reemplaza la pantalla de progreso — no toast, pantalla completa con botón
+- **Procesamiento < 1s:** Spinner inline junto al botón
+- **Procesamiento 1–90s:** `ProgressPipeline` o `Skeleton` según contexto
+- **Información:** `Badge` inline — nunca modal de información
+
+### Form Patterns
+
+- Campos obligatorios: solo los estrictamente necesarios — nombre de prenda y catálogo son opcionales con sugerencia auto-generada
+- Validación: inline al perder foco (blur) — nunca al submit
+- Labels: siempre visibles encima del campo — nunca solo placeholder
+- `type="email"` para email, `type="tel"` para teléfono — activa teclado correcto en mobile
+- Submit: único botón Primary full width en mobile
+
+### Navigation Patterns
+
+**Dashboard (mayorista):** Bottom bar 3 tabs (Inicio / Catálogos / Config) + botón "+" central siempre visible
+**Flujos multi-paso:** Header con `←` + "Paso N de 3" — sin bottom nav durante el flujo
+**Catálogo público (revendedor):** Sin navegación — solo scroll vertical + botón WhatsApp sticky en bottom
+
+### Modal y Overlay Patterns
+
+- Modales solo para confirmaciones destructivas — máximo 2 opciones: Confirmar (rojo) + Cancelar
+- Sheets para acciones secundarias: compartir, filtrar, opciones
+- Overlay de imagen a pantalla completa: tap fuera o × para cerrar
+- Nunca modales para mostrar información — usar pantalla completa o inline
+
+### Empty States y Loading States
+
+- **Dashboard vacío:** Ilustración + "Agregá tu primera prenda" + botón Primary — reemplaza completamente el grid
+- **Catálogo cargando:** 2-3 `Skeleton` en forma de tarjeta — nunca spinner de página completa
+- **Error de red en catálogo público:** Mensaje + botón "Intentar de nuevo" — sin pantalla de error genérica
+
+---
+
+## Responsive Design & Accessibility
+
+### Responsive Strategy
+
+Dos contextos de uso con estrategias distintas:
+
+- **Catálogo público (revendedor):** `max-w-[480px] mx-auto` — formato mobile siempre, no escala en desktop. El revendedor abre desde WhatsApp en su teléfono.
+- **Dashboard (mayorista):** Mobile-first funcional, enriquecido en desktop. El mayorista sube prendas desde el teléfono pero gestiona colecciones grandes desde la PC.
+
+### Breakpoint Strategy
+
+| Breakpoint | Ancho | Comportamiento |
+| --- | --- | --- |
+| base (mobile) | 0–639px | 1 columna, bottom nav, touch targets 44px |
+| sm | 640px+ | Dashboard: grid 2-3 col. Catálogo: sigue a 480px centrado |
+| md | 768px+ | Dashboard: sidebar opcional. Selector de modelo: 3 col |
+| lg | 1024px+ | Dashboard: max-w-[1280px] centrado. Panel de gestión completo |
+
+Regla: escribir siempre mobile-first. Todo breakpoint es una mejora, no una excepción.
+
+### Responsive Layout por Pantalla
+
+| Pantalla | Mobile | Desktop (lg+) |
+| --- | --- | --- |
+| Dashboard — grid prendas | 2 columnas, cards compactas | 3-4 columnas, cards más grandes |
+| Selector de modelo | Filas full-width | Grid 3 col con thumbnail mayor |
+| Catálogo público | 1 col, imagen full ancho | Max 480px centrado — igual que mobile |
+| Resultado de generación | Imagen full height, acciones en bottom | Imagen izquierda, acciones en panel derecho |
+| Pantalla de compartir | Sheet full width desde abajo | Dialog centrado 480px |
+
+### Accessibility Strategy
+
+Nivel objetivo: **WCAG AA**
+
+| Área | Requerimiento | Relevancia para el ICP |
+| --- | --- | --- |
+| Contraste | Mínimo 4.5:1 en texto normal | Todos los tokens definidos ya cumplen |
+| Touch targets | Mínimo 44×44px | Android básico, pantallas pequeñas, uso con dedos |
+| Tamaño de fuente | Mínimo 16px en body | Mayoristas de edad media-alta |
+| Screen reader | TalkBack (Android) + VoiceOver (iOS) | Chrome Mobile dominante en Centroamérica |
+| Imágenes | `alt` descriptivo en prendas y modelos | Baja visión en el segmento de revendedores |
+| Estados de foco | `ring-indigo-500` visible en todos los elementos | Teclado bluetooth en tablet |
+| Formularios | `<label htmlFor>` explícito en todos los inputs | TalkBack lee el label, no el placeholder |
+
+### Testing Strategy
+
+Dispositivos prioritarios (el ICP real de Centroamérica):
+
+| Dispositivo | Qué testear |
+| --- | --- |
+| Moto G Play (budget Android) | Velocidad de carga, touch targets, scroll |
+| iPhone SE (375px) | Layout, bottom nav, modales |
+| Chrome Desktop 1280px | Grid dashboard, panel de compartir |
+
+Checklist por pantalla antes de cada sprint: touch targets ≥ 44px · texto 16px mínimo · bottom bar no cubre contenido en notch · catálogo SSR sin JS · WebSocket fallback en 3G
+
+### Implementation Guidelines
+
+```text
+Responsive:
+✓  Unidades relativas: rem, %, vw — no px fijos en layouts
+✓  Breakpoints Tailwind: sm: md: lg: — siempre mobile-first
+✓  next/image con sizes por breakpoint
+✓  Catálogo: max-w-[480px] mx-auto — no escala en desktop
+
+Accesibilidad:
+✓  HTML semántico: <main> <nav> <section> — no solo <div>
+✓  alt="[nombre prenda] sobre modelo [nombre_modelo]" en todas las imágenes
+✓  <label htmlFor> explícito — nunca solo placeholder
+✓  No remover outline — customizar con ring-indigo-500
+✓  Botones con solo ícono: aria-label obligatorio
+✓  axe-core en CI para lint automático de accesibilidad
+```
