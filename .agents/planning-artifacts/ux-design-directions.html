@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Virtual Closet — Design Directions</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { font-family: 'Inter', sans-serif; }
+  .phone-frame {
+    width: 375px; height: 812px;
+    border: 12px solid #1F2937; border-radius: 44px;
+    overflow: hidden; position: relative;
+    box-shadow: 0 24px 48px rgba(0,0,0,0.25);
+    flex-shrink: 0;
+  }
+  .phone-screen { width: 100%; height: 100%; overflow-y: auto; background: #fff; }
+  .phone-screen::-webkit-scrollbar { display: none; }
+  .tab-btn { transition: all 0.2s; }
+  .tab-btn.active { background: #6366F1; color: white; }
+  .tab-btn:not(.active) { background: #F3F4F6; color: #374151; }
+  .dir-section { display: none; }
+  .dir-section.active { display: flex; }
+  .progress-bar { animation: progress 3s ease-in-out infinite; }
+  @keyframes progress { 0% { width: 20%; } 60% { width: 75%; } 100% { width: 20%; } }
+  .pulse { animation: pulse 2s infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+  .bottom-nav { position: absolute; bottom: 0; left: 0; right: 0; }
+  .garment-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
+  .garment-card { transition: all 0.2s; }
+</style>
+</head>
+<body class="bg-gray-100 min-h-screen p-8">
+
+<!-- Header -->
+<div class="max-w-7xl mx-auto mb-8">
+  <h1 class="text-3xl font-bold text-gray-900">Virtual Closet — Design Directions</h1>
+  <p class="text-gray-500 mt-2">Explorá 3 direcciones visuales para las pantallas clave. Todas usan la paleta Clean & Modern (Opción A).</p>
+
+  <!-- Tabs -->
+  <div class="flex gap-3 mt-6">
+    <button onclick="showDir('1')" class="tab-btn active px-5 py-2.5 rounded-full font-medium text-sm" id="tab-1">
+      Dirección 1 — Card Flow
+    </button>
+    <button onclick="showDir('2')" class="tab-btn px-5 py-2.5 rounded-full font-medium text-sm" id="tab-2">
+      Dirección 2 — Editorial Grid
+    </button>
+    <button onclick="showDir('3')" class="tab-btn px-5 py-2.5 rounded-full font-medium text-sm" id="tab-3">
+      Dirección 3 — Action-First
+    </button>
+  </div>
+</div>
+
+<!-- DIRECCIÓN 1: Card Flow -->
+<div id="dir-1" class="dir-section active max-w-7xl mx-auto gap-8 flex-wrap justify-center">
+
+  <div class="text-center mb-2 w-full">
+    <h2 class="text-xl font-semibold text-gray-800">Dirección 1 — Card Flow</h2>
+    <p class="text-gray-500 text-sm mt-1">Bottom nav fija · Cards con imagen dominante · Flujo lineal · Sensación: Canva + Instagram</p>
+  </div>
+
+  <!-- Screen 1: Dashboard -->
+  <div class="flex flex-col items-center gap-3">
+    <p class="text-xs font-medium text-gray-400 uppercase tracking-wide">Pantalla 1 — Dashboard del mayorista</p>
+    <div class="phone-frame">
+      <div class="phone-screen">
+        <!-- Status bar -->
+        <div class="px-6 pt-4 pb-2 flex justify-between text-xs text-gray-500">
+          <span class="font-semibold">9:41</span>
+          <span>●●● WiFi ■</span>
+        </div>
+        <!-- Header -->
+        <div class="px-4 pb-4 flex items-center justify-between">
+          <div>
+            <p class="text-xs text-gray-400">Bienvenida,</p>
+            <h1 class="text-xl font-bold text-gray-900">Mi Colección</h1>
+          </div>
+          <div class="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center">
+            <span class="text-indigo-600 font-bold text-sm">M</span>
+          </div>
+        </div>
+        <!-- Stats strip -->
+        <div class="mx-4 mb-4 bg-indigo-50 rounded-2xl p-3 flex gap-4">
+          <div class="text-center flex-1">
+            <p class="text-2xl font-bold text-indigo-600">12</p>
+            <p class="text-xs text-gray-500">Prendas</p>
+          </div>
+          <div class="w-px bg-indigo-200"></div>
+          <div class="text-center flex-1">
+            <p class="text-2xl font-bold text-indigo-600">3</p>
+            <p class="text-xs text-gray-500">Catálogos</p>
+          </div>
+          <div class="w-px bg-indigo-200"></div>
+          <div class="text-center flex-1">
+            <p class="text-2xl font-bold text-indigo-600">47</p>
+            <p class="text-xs text-gray-500">Vistas</p>
+          </div>
+        </div>
+        <!-- Section title -->
+        <div class="px-4 mb-3 flex items-center justify-between">
+          <h2 class="font-semibold text-gray-900">Prendas recientes</h2>
+          <button class="text-indigo-600 text-sm font-medium">Ver todas</button>
+        </div>
+        <!-- Garment grid -->
+        <div class="px-4 grid grid-cols-2 gap-3 pb-28">
+          <!-- Card 1: Listo -->
+          <div class="garment-card rounded-2xl overflow-hidden shadow-sm border border-gray-100 bg-white cursor-pointer">
+            <div class="h-44 bg-gradient-to-br from-pink-100 to-purple-100 relative flex items-center justify-center">
+              <div class="text-5xl">👚</div>
+              <span class="absolute top-2 right-2 bg-emerald-500 text-white text-xs px-2 py-0.5 rounded-full font-medium">Lista</span>
+            </div>
+            <div class="p-2.5">
+              <p class="font-medium text-gray-900 text-sm truncate">Blusa Floral Rosa</p>
+              <p class="text-xs text-gray-400 mt-0.5">Modelo: Sofia</p>
+            </div>
+          </div>
+          <!-- Card 2: Procesando -->
+          <div class="garment-card rounded-2xl overflow-hidden shadow-sm border border-amber-100 bg-white cursor-pointer">
+            <div class="h-44 bg-gradient-to-br from-amber-50 to-orange-100 relative flex items-center justify-center">
+              <div class="text-5xl pulse">⏳</div>
+              <span class="absolute top-2 right-2 bg-amber-400 text-white text-xs px-2 py-0.5 rounded-full font-medium">Procesando</span>
+            </div>
+            <div class="p-2.5">
+              <p class="font-medium text-gray-900 text-sm truncate">Camisa Blanca</p>
+              <div class="mt-1.5 bg-gray-100 rounded-full h-1.5">
+                <div class="progress-bar bg-amber-400 h-1.5 rounded-full"></div>
+              </div>
+            </div>
+          </div>
+          <!-- Card 3 -->
+          <div class="garment-card rounded-2xl overflow-hidden shadow-sm border border-gray-100 bg-white cursor-pointer">
+            <div class="h-44 bg-gradient-to-br from-blue-100 to-indigo-100 relative flex items-center justify-center">
+              <div class="text-5xl">👗</div>
+              <span class="absolute top-2 right-2 bg-emerald-500 text-white text-xs px-2 py-0.5 rounded-full font-medium">Lista</span>
+            </div>
+            <div class="p-2.5">
+              <p class="font-medium text-gray-900 text-sm truncate">Top Azul Marino</p>
+              <p class="text-xs text-gray-400 mt-0.5">Modelo: Valentina</p>
+            </div>
+          </div>
+          <!-- Card Add -->
+          <div class="rounded-2xl border-2 border-dashed border-indigo-200 flex flex-col items-center justify-center h-44 cursor-pointer hover:bg-indigo-50 transition-colors gap-2">
+            <div class="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center">
+              <span class="text-indigo-600 text-2xl font-light">+</span>
+            </div>
+            <p class="text-indigo-600 text-sm font-medium">Agregar prenda</p>
+          </div>
+        </div>
+        <!-- Bottom nav -->
+        <div class="bottom-nav bg-white border-t border-gray-100 px-2 py-2 flex">
+          <button class="flex-1 flex flex-col items-center gap-1 py-1">
+            <span class="text-xl">🏠</span>
+            <span class="text-xs text-indigo-600 font-medium">Inicio</span>
+          </button>
+          <button class="flex-1 flex flex-col items-center gap-1 py-1">
+            <span class="text-xl">📁</span>
+            <span class="text-xs text-gray-400">Catálogos</span>
+          </button>
+          <button class="flex-1 flex flex-col items-center gap-1 py-1">
+            <div class="w-12 h-12 -mt-5 rounded-full bg-pink-500 flex items-center justify-center shadow-lg">
+              <span class="text-white text-xl">+</span>
+            </div>
+            <span class="text-xs text-gray-400 mt-1">Subir</span>
+          </button>
+          <button class="flex-1 flex flex-col items-center gap-1 py-1">
+            <span class="text-xl">📊</span>
+            <span class="text-xs text-gray-400">Stats</span>
+          </button>
+          <button class="flex-1 flex flex-col items-center gap-1 py-1">
+            <span class="text-xl">⚙️</span>
+            <span class="text-xs text-gray-400">Config</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Screen 2: Momento WOW -->
+  <div class="flex flex-col items-center gap-3">
+    <p class="text-xs font-medium text-gray-400 uppercase tracking-wide">Pantalla 2 — Momento WOW (resultado)</p>
+    <div class="phone-frame">
+      <div class="phone-screen bg-gray-900">
+        <div class="px-6 pt-4 pb-2 flex justify-between text-xs text-white">
+          <span class="font-semibold">9:41</span>
+          <span>●●● WiFi ■</span>
+        </div>
+        <!-- Back + title -->
+        <div class="px-4 pb-4 flex items-center gap-3">
+          <button class="text-white text-xl">←</button>
+          <h1 class="text-white font-semibold">Blusa Floral Rosa</h1>
+        </div>
+        <!-- Result image -->
+        <div class="mx-4 rounded-3xl overflow-hidden bg-gradient-to-b from-pink-200 to-purple-300 h-72 flex items-center justify-center relative">
+          <div class="text-8xl">👚</div>
+          <div class="absolute bottom-3 right-3 bg-white/20 backdrop-blur-sm rounded-full px-3 py-1">
+            <span class="text-white text-xs font-medium">✨ IA generada</span>
+          </div>
+        </div>
+        <!-- Toggle before/after -->
+        <div class="mx-4 mt-4 bg-white/10 rounded-2xl p-1 flex">
+          <button class="flex-1 bg-white text-gray-900 rounded-xl py-2 text-sm font-medium">Resultado IA</button>
+          <button class="flex-1 text-white rounded-xl py-2 text-sm">Ver original</button>
+        </div>
+        <!-- Model info -->
+        <div class="mx-4 mt-4 flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-gradient-to-br from-pink-300 to-purple-300 flex items-center justify-center text-lg">👩</div>
+          <div>
+            <p class="text-white font-medium text-sm">Modelo: Sofia</p>
+            <p class="text-white/60 text-xs">Plan Base · 5 modelos disponibles</p>
+          </div>
+          <button class="ml-auto text-indigo-300 text-sm font-medium">Cambiar</button>
+        </div>
+        <!-- Actions -->
+        <div class="mx-4 mt-6 flex gap-3">
+          <button class="flex-1 border border-white/20 text-white rounded-2xl py-3 text-sm font-medium">
+            🔄 Regenerar
+          </button>
+          <button class="flex-1 bg-indigo-500 text-white rounded-2xl py-3 text-sm font-medium">
+            ✓ Al catálogo
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Screen 3: Catálogo público -->
+  <div class="flex flex-col items-center gap-3">
+    <p class="text-xs font-medium text-gray-400 uppercase tracking-wide">Pantalla 3 — Catálogo público (revendedor)</p>
+    <div class="phone-frame">
+      <div class="phone-screen">
+        <!-- Minimal header -->
+        <div class="px-4 pt-6 pb-4 text-center border-b border-gray-100">
+          <p class="text-xs text-gray-400 uppercase tracking-widest mb-1">Colección</p>
+          <h1 class="text-2xl font-bold text-gray-900">Verano 2026</h1>
+          <p class="text-sm text-gray-500 mt-1">por Modas Lucía · 12 prendas</p>
+        </div>
+        <!-- Items -->
+        <div class="pb-6">
+          <!-- Item 1 -->
+          <div class="border-b border-gray-50">
+            <div class="h-72 bg-gradient-to-br from-pink-100 to-purple-100 flex items-center justify-center">
+              <div class="text-8xl">👚</div>
+            </div>
+            <div class="px-4 py-4">
+              <h2 class="text-lg font-semibold text-gray-900">Blusa Floral Rosa</h2>
+              <p class="text-gray-500 text-sm mt-1">Tallas S, M, L, XL · Colores: Rosa, Blanco</p>
+              <div class="mt-3 flex gap-2">
+                <span class="bg-emerald-50 text-emerald-700 text-xs px-3 py-1 rounded-full font-medium">Disponible</span>
+                <span class="bg-gray-100 text-gray-600 text-xs px-3 py-1 rounded-full">Prendas superiores</span>
+              </div>
+            </div>
+          </div>
+          <!-- Item 2 -->
+          <div class="border-b border-gray-50">
+            <div class="h-72 bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center">
+              <div class="text-8xl">👗</div>
+            </div>
+            <div class="px-4 py-4">
+              <h2 class="text-lg font-semibold text-gray-900">Top Azul Marino</h2>
+              <p class="text-gray-500 text-sm mt-1">Tallas S, M, L · Un color disponible</p>
+              <div class="mt-3 flex gap-2">
+                <span class="bg-emerald-50 text-emerald-700 text-xs px-3 py-1 rounded-full font-medium">Disponible</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Sticky contact footer -->
+        <div class="sticky bottom-0 bg-white border-t border-gray-100 px-4 py-3">
+          <button class="w-full bg-green-500 text-white rounded-2xl py-3.5 font-semibold flex items-center justify-center gap-2">
+            <span>💬</span> Hacer pedido por WhatsApp
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- DIRECCIÓN 2: Editorial Grid -->
+<div id="dir-2" class="dir-section max-w-7xl mx-auto gap-8 flex-wrap justify-center">
+
+  <div class="text-center mb-2 w-full">
+    <h2 class="text-xl font-semibold text-gray-800">Dirección 2 — Editorial Grid</h2>
+    <p class="text-gray-500 text-sm mt-1">Grid full-bleed · Sin chrome · Imágenes al 100% · Sensación: SHEIN + Pinterest</p>
+  </div>
+
+  <!-- Screen 1: Dashboard grid -->
+  <div class="flex flex-col items-center gap-3">
+    <p class="text-xs font-medium text-gray-400 uppercase tracking-wide">Pantalla 1 — Dashboard grid editorial</p>
+    <div class="phone-frame">
+      <div class="phone-screen">
+        <div class="px-4 pt-6 pb-3 flex items-end justify-between">
+          <h1 class="text-2xl font-bold text-gray-900">Prendas</h1>
+          <button class="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center shadow-md">
+            <span class="text-white text-xl font-light">+</span>
+          </button>
+        </div>
+        <!-- Filter chips -->
+        <div class="px-4 mb-3 flex gap-2 overflow-x-auto pb-1">
+          <span class="bg-indigo-600 text-white text-xs px-3 py-1.5 rounded-full whitespace-nowrap font-medium">Todas</span>
+          <span class="bg-gray-100 text-gray-600 text-xs px-3 py-1.5 rounded-full whitespace-nowrap">Listas ✓</span>
+          <span class="bg-gray-100 text-gray-600 text-xs px-3 py-1.5 rounded-full whitespace-nowrap">Procesando</span>
+          <span class="bg-gray-100 text-gray-600 text-xs px-3 py-1.5 rounded-full whitespace-nowrap">Sin modelo</span>
+        </div>
+        <!-- Full-bleed grid -->
+        <div class="grid grid-cols-2 gap-0.5 pb-24">
+          <div class="h-56 bg-gradient-to-br from-pink-200 to-rose-300 flex items-center justify-center relative">
+            <span class="text-6xl">👚</span>
+            <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3">
+              <p class="text-white text-xs font-medium">Blusa Floral</p>
+              <div class="flex items-center gap-1 mt-0.5">
+                <div class="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
+                <span class="text-white/80 text-xs">Lista</span>
+              </div>
+            </div>
+          </div>
+          <div class="h-56 bg-gradient-to-br from-amber-100 to-orange-200 flex items-center justify-center relative">
+            <span class="text-6xl pulse">⏳</span>
+            <div class="absolute inset-0 bg-black/20 flex items-center justify-center">
+              <div class="bg-white/90 rounded-xl px-3 py-2 text-center">
+                <div class="text-xs text-gray-500 mb-1">Generando...</div>
+                <div class="w-20 h-1 bg-gray-200 rounded-full">
+                  <div class="progress-bar h-1 bg-amber-400 rounded-full"></div>
+                </div>
+              </div>
+            </div>
+            <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3">
+              <p class="text-white text-xs font-medium">Camisa Blanca</p>
+            </div>
+          </div>
+          <div class="h-56 bg-gradient-to-br from-blue-200 to-indigo-300 flex items-center justify-center relative">
+            <span class="text-6xl">👗</span>
+            <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3">
+              <p class="text-white text-xs font-medium">Top Azul</p>
+              <div class="flex items-center gap-1 mt-0.5">
+                <div class="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
+                <span class="text-white/80 text-xs">Lista</span>
+              </div>
+            </div>
+          </div>
+          <div class="h-56 bg-gray-50 border-2 border-dashed border-gray-200 flex flex-col items-center justify-center gap-2 cursor-pointer">
+            <div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center">
+              <span class="text-indigo-600 text-xl">+</span>
+            </div>
+            <p class="text-xs text-gray-400 font-medium">Nueva prenda</p>
+          </div>
+        </div>
+        <!-- Bottom bar -->
+        <div class="bottom-nav bg-white/95 backdrop-blur border-t border-gray-100 px-6 py-3 flex justify-around">
+          <button class="flex flex-col items-center gap-1">
+            <span class="text-xl">🏠</span>
+            <span class="text-xs text-indigo-600 font-semibold">Inicio</span>
+          </button>
+          <button class="flex flex-col items-center gap-1">
+            <span class="text-xl">📚</span>
+            <span class="text-xs text-gray-400">Catálogos</span>
+          </button>
+          <button class="flex flex-col items-center gap-1">
+            <span class="text-xl">⚙️</span>
+            <span class="text-xs text-gray-400">Config</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Screen 2: Selector de modelo -->
+  <div class="flex flex-col items-center gap-3">
+    <p class="text-xs font-medium text-gray-400 uppercase tracking-wide">Pantalla 2 — Selector de modelo IA</p>
+    <div class="phone-frame">
+      <div class="phone-screen">
+        <div class="px-4 pt-6 pb-2 flex items-center gap-3">
+          <button class="text-gray-600 text-xl">←</button>
+          <div>
+            <p class="text-xs text-gray-400">Paso 2 de 3</p>
+            <h1 class="font-bold text-gray-900">Elegí un modelo</h1>
+          </div>
+        </div>
+        <!-- Prenda preview -->
+        <div class="mx-4 my-3 rounded-2xl bg-gradient-to-br from-pink-100 to-purple-100 h-36 flex items-center justify-center">
+          <span class="text-6xl">👚</span>
+          <p class="absolute text-xs text-gray-500">Tu prenda</p>
+        </div>
+        <!-- Model grid -->
+        <p class="px-4 text-xs text-gray-500 mb-2 font-medium">MODELOS DISPONIBLES · PLAN BASE</p>
+        <div class="px-4 grid grid-cols-3 gap-2 pb-24">
+          <!-- Selected -->
+          <div class="relative cursor-pointer">
+            <div class="rounded-2xl overflow-hidden ring-4 ring-indigo-500 ring-offset-2">
+              <div class="h-28 bg-gradient-to-b from-amber-200 to-amber-300 flex items-end justify-center pb-2">
+                <span class="text-4xl">👩</span>
+              </div>
+            </div>
+            <p class="text-xs font-semibold text-center mt-1.5 text-gray-900">Sofia</p>
+            <div class="absolute -top-1 -right-1 w-5 h-5 bg-indigo-500 rounded-full flex items-center justify-center">
+              <span class="text-white text-xs">✓</span>
+            </div>
+          </div>
+          <!-- Others -->
+          <div class="cursor-pointer">
+            <div class="rounded-2xl overflow-hidden">
+              <div class="h-28 bg-gradient-to-b from-brown-200 to-amber-400 flex items-end justify-center pb-2">
+                <span class="text-4xl">👩🏽</span>
+              </div>
+            </div>
+            <p class="text-xs text-center mt-1.5 text-gray-600">Valentina</p>
+          </div>
+          <div class="cursor-pointer">
+            <div class="rounded-2xl overflow-hidden">
+              <div class="h-28 bg-gradient-to-b from-gray-100 to-gray-200 flex items-end justify-center pb-2">
+                <span class="text-4xl">👩🏻</span>
+              </div>
+            </div>
+            <p class="text-xs text-center mt-1.5 text-gray-600">Isabella</p>
+          </div>
+          <div class="cursor-pointer">
+            <div class="rounded-2xl overflow-hidden">
+              <div class="h-28 bg-gradient-to-b from-slate-300 to-slate-400 flex items-end justify-center pb-2">
+                <span class="text-4xl">👩🏿</span>
+              </div>
+            </div>
+            <p class="text-xs text-center mt-1.5 text-gray-600">Camila</p>
+          </div>
+          <div class="cursor-pointer">
+            <div class="rounded-2xl overflow-hidden">
+              <div class="h-28 bg-gradient-to-b from-rose-200 to-rose-300 flex items-end justify-center pb-2">
+                <span class="text-4xl">👩🏻‍🦱</span>
+              </div>
+            </div>
+            <p class="text-xs text-center mt-1.5 text-gray-600">Gabriela</p>
+          </div>
+          <div class="cursor-pointer opacity-40">
+            <div class="rounded-2xl overflow-hidden border-2 border-dashed border-gray-200 h-28 flex items-center justify-center">
+              <span class="text-2xl">🔒</span>
+            </div>
+            <p class="text-xs text-center mt-1.5 text-gray-400">Plan Pro</p>
+          </div>
+        </div>
+        <!-- Generate CTA -->
+        <div class="bottom-nav bg-white border-t border-gray-100 px-4 py-3">
+          <button class="w-full bg-indigo-600 text-white rounded-2xl py-4 font-semibold text-base shadow-lg shadow-indigo-200">
+            ✨ Generar imagen
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Screen 3: Catálogo editorial -->
+  <div class="flex flex-col items-center gap-3">
+    <p class="text-xs font-medium text-gray-400 uppercase tracking-wide">Pantalla 3 — Catálogo editorial (revendedor)</p>
+    <div class="phone-frame">
+      <div class="phone-screen bg-gray-50">
+        <!-- Minimal header -->
+        <div class="bg-white px-4 pt-8 pb-5 text-center shadow-sm">
+          <p class="text-xs font-bold tracking-[0.2em] text-gray-400 uppercase">Modas Lucía</p>
+          <h1 class="text-3xl font-bold text-gray-900 mt-1">Verano 2026</h1>
+          <p class="text-sm text-gray-400 mt-1">12 prendas disponibles</p>
+        </div>
+        <!-- Full bleed items -->
+        <div class="pb-20">
+          <div class="bg-gradient-to-br from-pink-200 to-purple-200 h-80 flex items-center justify-center">
+            <span class="text-9xl">👚</span>
+          </div>
+          <div class="bg-white px-4 py-4 border-b border-gray-100">
+            <h2 class="text-xl font-bold text-gray-900">Blusa Floral Rosa</h2>
+            <p class="text-gray-500 text-sm mt-1">Tallas S, M, L, XL</p>
+            <div class="flex gap-2 mt-3">
+              <span class="bg-pink-50 text-pink-700 text-xs px-3 py-1 rounded-full font-medium border border-pink-200">Rosa</span>
+              <span class="bg-gray-50 text-gray-600 text-xs px-3 py-1 rounded-full border border-gray-200">Blanco</span>
+            </div>
+          </div>
+          <div class="bg-gradient-to-br from-blue-200 to-indigo-200 h-80 flex items-center justify-center mt-2">
+            <span class="text-9xl">👗</span>
+          </div>
+          <div class="bg-white px-4 py-4">
+            <h2 class="text-xl font-bold text-gray-900">Top Azul Marino</h2>
+            <p class="text-gray-500 text-sm mt-1">Tallas S, M, L</p>
+          </div>
+        </div>
+        <!-- Footer CTA -->
+        <div class="bottom-nav bg-white border-t border-gray-100 px-4 py-3">
+          <button class="w-full bg-green-500 text-white rounded-2xl py-4 font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-green-200">
+            <span>💬</span> Hacer pedido por WhatsApp
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DIRECCIÓN 3: Action-First -->
+<div id="dir-3" class="dir-section max-w-7xl mx-auto gap-8 flex-wrap justify-center">
+
+  <div class="text-center mb-2 w-full">
+    <h2 class="text-xl font-semibold text-gray-800">Dirección 3 — Action-First</h2>
+    <p class="text-gray-500 text-sm mt-1">CTAs enormes · Wizard paso a paso · Progreso visible · Sensación: Notion + Linear</p>
+  </div>
+
+  <!-- Screen 1: Home con CTA central -->
+  <div class="flex flex-col items-center gap-3">
+    <p class="text-xs font-medium text-gray-400 uppercase tracking-wide">Pantalla 1 — Dashboard orientado a acción</p>
+    <div class="phone-frame">
+      <div class="phone-screen">
+        <div class="px-4 pt-6 pb-4">
+          <p class="text-sm text-gray-400">Hola, Lucía 👋</p>
+          <h1 class="text-2xl font-bold text-gray-900 mt-1">¿Qué hacemos hoy?</h1>
+        </div>
+        <!-- Main CTA card -->
+        <div class="mx-4 bg-indigo-600 rounded-3xl p-5 text-white">
+          <p class="text-indigo-200 text-xs font-medium uppercase tracking-wide mb-2">Acción principal</p>
+          <h2 class="text-xl font-bold mb-1">Agregar prenda nueva</h2>
+          <p class="text-indigo-200 text-sm mb-4">Genera una imagen profesional en menos de 60 segundos</p>
+          <button class="w-full bg-white text-indigo-700 rounded-2xl py-3 font-bold text-sm">
+            📷 Subir foto ahora
+          </button>
+        </div>
+        <!-- Secondary action -->
+        <div class="mx-4 mt-3 border border-pink-200 bg-pink-50 rounded-3xl p-4 flex items-center gap-4">
+          <div class="w-12 h-12 bg-pink-500 rounded-2xl flex items-center justify-center">
+            <span class="text-white text-xl">📤</span>
+          </div>
+          <div class="flex-1">
+            <p class="font-semibold text-gray-900 text-sm">Compartir catálogo</p>
+            <p class="text-gray-500 text-xs mt-0.5">Colección Verano 2026 · 12 prendas</p>
+          </div>
+          <button class="bg-pink-500 text-white text-xs px-3 py-2 rounded-xl font-semibold">
+            Enviar
+          </button>
+        </div>
+        <!-- Status list -->
+        <div class="mx-4 mt-4">
+          <p class="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">En proceso</p>
+          <div class="space-y-3">
+            <div class="flex items-center gap-3 bg-white rounded-2xl p-3 shadow-sm border border-gray-100">
+              <div class="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
+                <span class="text-amber-600">⏳</span>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-gray-900 truncate">Camisa Blanca</p>
+                <div class="flex items-center gap-2 mt-1">
+                  <div class="flex-1 bg-gray-100 rounded-full h-1.5">
+                    <div class="progress-bar bg-amber-400 h-1.5 rounded-full"></div>
+                  </div>
+                  <span class="text-xs text-amber-500 whitespace-nowrap">45s</span>
+                </div>
+              </div>
+            </div>
+            <div class="flex items-center gap-3 bg-white rounded-2xl p-3 shadow-sm border border-gray-100">
+              <div class="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center">
+                <span class="text-emerald-600">✓</span>
+              </div>
+              <div class="flex-1">
+                <p class="text-sm font-medium text-gray-900">Blusa Floral Rosa</p>
+                <p class="text-xs text-emerald-500 mt-0.5">Lista para revisar →</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Screen 2: Wizard de generación -->
+  <div class="flex flex-col items-center gap-3">
+    <p class="text-xs font-medium text-gray-400 uppercase tracking-wide">Pantalla 2 — Wizard paso a paso</p>
+    <div class="phone-frame">
+      <div class="phone-screen">
+        <!-- Progress steps -->
+        <div class="px-4 pt-6 pb-4">
+          <div class="flex items-center gap-2 mb-4">
+            <button class="text-gray-400 text-lg">←</button>
+            <div class="flex-1 flex items-center gap-1">
+              <div class="h-2 flex-1 rounded-full bg-indigo-600"></div>
+              <div class="h-2 flex-1 rounded-full bg-indigo-600"></div>
+              <div class="h-2 flex-1 rounded-full bg-gray-200"></div>
+            </div>
+          </div>
+          <p class="text-xs text-gray-400 font-medium">PASO 2 DE 3</p>
+          <h1 class="text-xl font-bold text-gray-900 mt-1">Elegí el modelo</h1>
+          <p class="text-gray-500 text-sm mt-1">Tu prenda aparecerá sobre el modelo elegido</p>
+        </div>
+        <!-- Preview strip -->
+        <div class="flex gap-3 px-4 mb-4 items-center">
+          <div class="w-14 h-16 rounded-xl bg-gradient-to-br from-pink-100 to-purple-100 flex items-center justify-center">
+            <span class="text-2xl">👚</span>
+          </div>
+          <div class="text-2xl text-gray-300">→</div>
+          <div class="w-14 h-16 rounded-xl bg-indigo-100 ring-2 ring-indigo-500 flex items-center justify-center">
+            <span class="text-2xl">👩</span>
+          </div>
+          <div class="text-2xl text-gray-300">→</div>
+          <div class="flex-1 h-16 rounded-xl bg-gray-50 border-2 border-dashed border-gray-200 flex items-center justify-center">
+            <span class="text-xs text-gray-400">Resultado</span>
+          </div>
+        </div>
+        <!-- Models list (different layout: horizontal cards) -->
+        <div class="px-4 space-y-2 pb-28">
+          <div class="flex items-center gap-3 bg-indigo-50 border-2 border-indigo-500 rounded-2xl p-3 cursor-pointer">
+            <div class="w-14 h-14 rounded-xl bg-gradient-to-b from-amber-200 to-amber-300 flex items-end justify-center pb-1">
+              <span class="text-3xl">👩</span>
+            </div>
+            <div class="flex-1">
+              <p class="font-semibold text-gray-900">Sofia</p>
+              <p class="text-xs text-gray-500 mt-0.5">Tez clara · Cabello castaño</p>
+            </div>
+            <div class="w-5 h-5 rounded-full bg-indigo-500 flex items-center justify-center">
+              <span class="text-white text-xs">✓</span>
+            </div>
+          </div>
+          <div class="flex items-center gap-3 bg-white border border-gray-200 rounded-2xl p-3 cursor-pointer">
+            <div class="w-14 h-14 rounded-xl bg-gradient-to-b from-amber-300 to-amber-500 flex items-end justify-center pb-1">
+              <span class="text-3xl">👩🏽</span>
+            </div>
+            <div class="flex-1">
+              <p class="font-semibold text-gray-900">Valentina</p>
+              <p class="text-xs text-gray-500 mt-0.5">Tez morena · Cabello negro</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-3 bg-white border border-gray-200 rounded-2xl p-3 cursor-pointer">
+            <div class="w-14 h-14 rounded-xl bg-gradient-to-b from-slate-300 to-slate-500 flex items-end justify-center pb-1">
+              <span class="text-3xl">👩🏿</span>
+            </div>
+            <div class="flex-1">
+              <p class="font-semibold text-gray-900">Camila</p>
+              <p class="text-xs text-gray-500 mt-0.5">Tez oscura · Cabello rizado</p>
+            </div>
+          </div>
+        </div>
+        <div class="bottom-nav bg-white border-t border-gray-100 px-4 py-3">
+          <button class="w-full bg-indigo-600 text-white rounded-2xl py-4 font-bold shadow-lg shadow-indigo-200">
+            ✨ Generar con Sofia →
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Screen 3: Share sheet -->
+  <div class="flex flex-col items-center gap-3">
+    <p class="text-xs font-medium text-gray-400 uppercase tracking-wide">Pantalla 3 — Compartir catálogo</p>
+    <div class="phone-frame">
+      <div class="phone-screen bg-gray-50">
+        <div class="px-4 pt-6 pb-4">
+          <h1 class="text-2xl font-bold text-gray-900">Tu catálogo está listo 🎉</h1>
+          <p class="text-gray-500 text-sm mt-2">Compartí con tus revendedores y empezá a recibir pedidos</p>
+        </div>
+        <!-- Catalog preview card -->
+        <div class="mx-4 bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+          <div class="h-32 bg-gradient-to-br from-pink-100 via-purple-100 to-blue-100 flex items-center justify-center gap-4">
+            <span class="text-4xl">👚</span>
+            <span class="text-4xl">👗</span>
+            <span class="text-4xl">👕</span>
+          </div>
+          <div class="p-4">
+            <h2 class="font-bold text-gray-900">Colección Verano 2026</h2>
+            <p class="text-gray-500 text-sm mt-1">12 prendas · Modas Lucía</p>
+            <div class="mt-3 flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2">
+              <span class="text-gray-400 text-xs flex-1 truncate">virtualcloset.app/c/verano26</span>
+              <button class="text-indigo-600 text-xs font-semibold">Copiar</button>
+            </div>
+          </div>
+        </div>
+        <!-- Share options -->
+        <div class="mx-4 mt-4 space-y-3">
+          <button class="w-full bg-green-500 text-white rounded-2xl py-4 font-bold text-base flex items-center justify-center gap-3 shadow-lg shadow-green-200">
+            <span class="text-2xl">💬</span>
+            <span>Compartir por WhatsApp</span>
+          </button>
+          <div class="flex gap-3">
+            <button class="flex-1 bg-white border border-gray-200 text-gray-700 rounded-2xl py-3 font-medium text-sm flex items-center justify-center gap-2">
+              <span>📋</span> Copiar link
+            </button>
+            <button class="flex-1 bg-white border border-gray-200 text-gray-700 rounded-2xl py-3 font-medium text-sm flex items-center justify-center gap-2">
+              <span>📊</span> Ver QR
+            </button>
+          </div>
+        </div>
+        <!-- Stats -->
+        <div class="mx-4 mt-4 bg-white rounded-2xl border border-gray-100 p-4">
+          <p class="text-xs font-medium text-gray-400 uppercase mb-3">Actividad del catálogo</p>
+          <div class="flex gap-4">
+            <div>
+              <p class="text-2xl font-bold text-gray-900">0</p>
+              <p class="text-xs text-gray-400">Vistas hoy</p>
+            </div>
+            <div>
+              <p class="text-2xl font-bold text-gray-900">12</p>
+              <p class="text-xs text-gray-400">Prendas</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Comparison notes -->
+<div class="max-w-7xl mx-auto mt-12 bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
+  <h2 class="text-xl font-bold text-gray-900 mb-6">Guía de evaluación — ¿qué mirar en cada dirección?</h2>
+  <div class="grid grid-cols-3 gap-6">
+    <div>
+      <h3 class="font-semibold text-indigo-700 mb-3">Dirección 1 — Card Flow</h3>
+      <ul class="space-y-2 text-sm text-gray-600">
+        <li>✅ Familiar para usuarios de Instagram/WhatsApp</li>
+        <li>✅ Las cards con imagen dominan visualmente</li>
+        <li>✅ Bottom nav clara y accesible</li>
+        <li>✅ El catálogo público es limpio y directo</li>
+        <li>⚠️ Grid de 2 columnas puede sentirse pequeño para ver detalles de prenda</li>
+      </ul>
+    </div>
+    <div>
+      <h3 class="font-semibold text-pink-700 mb-3">Dirección 2 — Editorial Grid</h3>
+      <ul class="space-y-2 text-sm text-gray-600">
+        <li>✅ Las imágenes tienen máximo protagonismo</li>
+        <li>✅ Selector de modelo con filas es más descriptivo</li>
+        <li>✅ Catálogo tipo revista — muy aspiracional</li>
+        <li>⚠️ Menos información de estado visible al primer vistazo</li>
+        <li>⚠️ Más scroll necesario en el dashboard</li>
+      </ul>
+    </div>
+    <div>
+      <h3 class="font-semibold text-emerald-700 mb-3">Dirección 3 — Action-First</h3>
+      <ul class="space-y-2 text-sm text-gray-600">
+        <li>✅ El estado de procesamiento es muy visible</li>
+        <li>✅ El wizard 3 pasos es imposible de confundir</li>
+        <li>✅ La pantalla de compartir es celebratoria y clara</li>
+        <li>⚠️ Menos imagen, más texto — puede sentirse menos "moda"</li>
+        <li>⚠️ Home con CTAs puede abrumar en la primera visita</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<script>
+function showDir(num) {
+  document.querySelectorAll('.dir-section').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('dir-' + num).classList.add('active');
+  document.getElementById('tab-' + num).classList.add('active');
+}
+</script>
+</body>
+</html>

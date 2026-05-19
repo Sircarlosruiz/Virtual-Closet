@@ -1,8 +1,8 @@
 ---
 project: Virtual Closet
 version: 1.0
-stepsCompleted: [1, 2, 3]
-lastStep: 3
+stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+lastStep: 9
 inputDocuments:
   - .agents/planning-artifacts/prfaq-virtual-closet.md
   - .agents/planning-artifacts/arquitectura-tecnica.md
@@ -116,6 +116,114 @@ Los primeros 3 segundos del catálogo determinan si el revendedor se queda o cie
 **Momento crítico de fallo — Espera de procesamiento IA**
 Si el mayorista sube una prenda y no recibe feedback durante 90 segundos, asume que algo falló. La UX debe mostrar progreso real y continuo desde el momento de upload.
 
+---
+
+## Desired Emotional Response
+
+### Primary Emotional Goals
+
+| Usuario | Emoción primaria | Emoción secundaria | Emoción a evitar |
+| --- | --- | --- | --- |
+| **Mayorista** | **Orgullo** — "mi catálogo se ve igual que el de una marca grande" | Alivio — "ya no necesito gastar $800 en fotos" | Ansiedad durante la espera, frustración por errores |
+| **Revendedor** | **Confianza** — "puedo ver cómo se ve la prenda de verdad" | Deseo — "quiero pedir esta" | Desconfianza — "esto parece photoshop" |
+
+### Emotional Journey Mapping
+
+| Momento | Mayorista | Revendedor |
+| --- | --- | --- |
+| Primer contacto con el producto | Escepticismo → curiosidad | — |
+| Sube la primera prenda | Incertidumbre ("¿se verá bien?") | — |
+| Ve la imagen generada por primera vez | **Sorpresa → orgullo** | — |
+| Comparte el catálogo | Alivio + anticipación | — |
+| Abre el link del catálogo | — | Curiosidad |
+| Ve la prenda sobre el modelo | — | **Confianza → deseo de comprar** |
+| Error o fallo técnico | Frustración | — |
+| Regresa a usar el producto | Hábito + confianza | — |
+
+### Micro-Emotions
+
+- **Escepticismo del mayorista** → barrera de entrada principal. El free trial de 5 prendas existe para romper esto antes de pedir tarjeta.
+- **Desconfianza del revendedor** → el catálogo debe evitar cualquier señal visual que parezca edición exagerada. Luz natural, textura visible, caída de tela realista.
+- **Ansiedad en la espera** → 30–90s sin feedback convierte la incertidumbre en frustración. Requiere feedback visual activo y continuo.
+
+### Design Implications
+
+| Emoción objetivo | Decisión de UX |
+| --- | --- |
+| Orgullo del mayorista | Comparación lado a lado: foto original vs. imagen IA al revelar el resultado |
+| Confianza del revendedor | Imágenes grandes, sin filtros exagerados, luz y textura natural visibles |
+| Alivio post-compartir | Pantalla de confirmación celebratoria + botón directo a WhatsApp |
+| Eliminar ansiedad en espera | Barra de progreso con estados: "Extrayendo prenda… Aplicando modelo… Finalizando…" |
+| Romper escepticismo inicial | Onboarding con 5 prendas gratis: el WOW ocurre antes de pedir tarjeta |
+
+### Emotional Design Principles
+
+1. **El contraste hace el trabajo** — Mostrar siempre foto original junto al resultado IA. El mayorista no necesita que le expliquen la mejora; la ve.
+2. **La espera tiene nombre** — Cada segundo de procesamiento IA tiene un estado visible y legible. Nunca un spinner genérico.
+3. **El catálogo no pide permiso** — El revendedor no debe enfrentar logins, popups ni interrupciones. La confianza se construye en los primeros 3 segundos de carga.
+4. **Celebrar el logro, no el producto** — La pantalla post-publicación celebra al mayorista ("Tu colección está lista"), no a la tecnología ("IA procesó tus imágenes").
+
+---
+
+---
+
+## UX Pattern Analysis & Inspiración
+
+### Inspiring Products Analysis
+
+| Producto | Por qué es referente | Qué tomamos |
+| --- | --- | --- |
+| **Canva** | Onboarding sin fricción para usuarios no técnicos. Primer resultado en 2 minutos. Botón "Compartir" siempre visible. | Modelo de onboarding guiado, selector visual de templates → selector de modelos IA |
+| **WhatsApp** | Canal principal del mayorista. Compartir contenido es un tap. El receptor no instala nada. | Patrón de compartir con texto pre-escrito, UX familiar para el usuario |
+| **Linktree / Stan.store** | Páginas públicas compartibles sin login, carga rápida en mobile, cero distracciones. | Diseño del catálogo público: URL corta, sin navegación, solo contenido |
+| **SHEIN (catálogo mobile)** | Presenta prendas sobre modelos para generar deseo de compra. Imágenes grandes, scroll fluido, texto mínimo. | Layout del catálogo del revendedor: imagen ocupa el 80% de pantalla |
+
+### Transferable UX Patterns
+
+**Navegación:**
+
+- Canva → barra inferior fija en mobile con las 3 acciones principales (subir prenda, ver catálogo, compartir)
+- Linktree → página pública sin header de navegación — solo imágenes de prendas
+
+**Interacción:**
+
+- WhatsApp → compartir con mensaje pre-escrito incluido ("Te comparto mi catálogo de la nueva colección: [link]")
+- Canva → selector de modelos IA como grid visual con preview — un tap selecciona y dispara la generación
+
+**Visual:**
+
+- SHEIN → prenda sobre modelo ocupa el 80% de la tarjeta en el catálogo del revendedor
+- Linktree → fondo neutro claro, tipografía mínima, las imágenes son el único protagonista
+
+### Anti-Patterns to Avoid
+
+| Anti-patrón | Por qué dañaría Virtual Closet |
+| --- | --- |
+| Wizard de 6 pasos para crear el catálogo | El mayorista abandona antes del paso 3 — no es usuario de software |
+| Modal de "completa tu perfil" antes del primer uso | Friction antes del WOW — el usuario no sabe todavía si vale la pena |
+| Catálogo con header de navegación y menús | El revendedor se pierde; quiere ver prendas, no explorar una app |
+| Spinner genérico durante generación IA | Ansiedad — no sabe si algo está pasando o se rompió |
+| CTAs de venta o precios dentro del catálogo público | El revendedor cierra — siente que lo están empujando, no informando |
+
+### Design Inspiration Strategy
+
+**Adoptar directamente:**
+
+- Selector visual tipo-Canva para los modelos IA (grid con preview, un tap genera)
+- Compartir tipo-WhatsApp con texto pre-escrito al copiar el link del catálogo
+- Layout de catálogo público tipo-Linktree: sin header, sin menú, solo contenido
+
+**Adaptar:**
+
+- Imagen tipo-SHEIN → adaptar para mostrar comparación lado a lado (original vs. generada) en el dashboard del mayorista
+- Onboarding tipo-Canva → simplificar aún más: el primer paso es subir una foto, no elegir un template
+
+**Evitar:**
+
+- Cualquier patrón de e-commerce tradicional (carrito, filtros, búsqueda) en el catálogo público — no es una tienda, es un showroom
+
+---
+
 ### Experience Principles
 
 1. **Lo visual primero, lo textual después** — El producto vende imágenes. Cada pantalla debe estar dominada por las fotos de las prendas, no por texto, formularios o navegación.
@@ -127,3 +235,185 @@ Si el mayorista sube una prenda y no recibe feedback durante 90 segundos, asume 
 4. **Compartir es el destino, no una opción** — El botón de compartir por WhatsApp es el elemento más prominente del dashboard. No está en un menú — está siempre visible.
 
 5. **El catálogo se defiende solo** — La página pública del catálogo no tiene navegación, branding ni distracciones. Solo las prendas. El diseño limpio es la confianza.
+
+---
+
+## Design System Foundation
+
+### Design System Choice
+
+**Tailwind CSS + shadcn/ui** — sistema themeable sobre Next.js 14.
+
+### Rationale for Selection
+
+- **Open-source sin licencia** — alineado con el stack definido en la arquitectura técnica
+- **Nativo en Next.js 14** — integración directa con App Router y Server Components
+- **Componentes propios** — shadcn/ui copia los componentes al proyecto; se modifican sin restricciones ni lock-in
+- **Mobile-first por defecto** — Tailwind tiene utilidades de breakpoint diseñadas para mobile-first
+- **Sin identidad visual impuesta** — Virtual Closet tendrá brand propia sin pelear contra Material Design o Ant Design
+- **Velocidad para un solo developer** — comparable a MUI sin el peso del lock-in
+
+### Implementation Approach
+
+Componentes de shadcn/ui a usar directamente:
+
+- `Button`, `Card`, `Dialog`, `Progress`, `Tabs`, `Badge` — UI base
+- `Sheet` — panel lateral en mobile para opciones secundarias
+- `Toast` — notificaciones de job completado vía WebSocket
+- `Skeleton` — loading states mientras carga el catálogo del revendedor
+
+### Customization Strategy
+
+Componentes custom necesarios (no disponibles en shadcn/ui):
+
+---
+
+## Core Interaction Design
+
+### La experiencia definitoria
+
+> **"Subí una foto de tu prenda y en menos de 60 segundos la ves puesta en un modelo real."**
+
+Eso es lo que el mayorista va a describirle a un colega. La UX extiende el flujo que ya conoce:
+
+```text
+Antes:  Foto con teléfono → WhatsApp directo
+Ahora:  Foto con teléfono → Virtual Closet → Foto en modelo → WhatsApp
+```
+
+El único paso nuevo es Virtual Closet en el medio. Tiene que sentirse tan natural como ir de la cámara al WhatsApp.
+
+### User Mental Model
+
+El mayorista llega con analogías de apps conocidas:
+
+- Subir foto = como subir a Instagram (tap, galería, listo)
+- Seleccionar modelo = como elegir un filtro en Snapchat (visual, inmediato)
+- Esperar resultado = como enviar un mensaje de voz pesado (sé que está procesando)
+- Compartir = como compartir un link de YouTube (un tap, texto incluido)
+
+### Success Criteria
+
+| Criterio | Medible cuando... |
+| --- | --- |
+| Cero fricción en upload | El mayorista sube su primera prenda en < 30s sin instrucciones |
+| Selección de modelo obvia | El mayorista elige modelo sin leer ningún texto — solo con el visual |
+| Espera sin ansiedad | Ningún usuario presiona "atrás" o recarga durante la generación |
+| WOW medible | El mayorista hace toggle entre imagen original y generada al ver el resultado |
+| Compartir en un tap | El link llega al WhatsApp del revendedor en < 10s desde que presiona "Compartir" |
+
+### Novel UX Patterns
+
+Ninguna interacción requiere educación del usuario. Todo usa patrones que el mayorista ya conoce:
+
+| Interacción | Patrón | Referente |
+| --- | --- | --- |
+| Upload de foto | Establecido | Instagram, Google Photos |
+| Selector de modelo como grid visual | Establecido (adaptado) | Filtros de Snapchat/Instagram |
+| Barra de progreso multi-estado | Establecido | Descarga de apps en App Store |
+| Comparación antes/después con toggle | Establecido | Apps de retoque fotográfico |
+| Compartir por WhatsApp con link pre-generado | Establecido | Cualquier app con "Share via WhatsApp" |
+
+### Experience Mechanics
+
+```text
+1. INICIO
+   Dashboard → botón "Agregar prenda" (grande, prominente)
+   Tap → selector: [Cámara] o [Galería]
+
+2. UPLOAD
+   Foto seleccionada → preview inmediato
+   Nombre de prenda (opcional, con sugerencia auto-generada)
+   Avanza a selección de modelo
+
+3. SELECCIÓN DE MODELO
+   Grid 2×3 de modelos IA con foto completa
+   Tap → highlight + checkmark → botón "Generar" aparece
+
+4. GENERACIÓN (asíncrono)
+   ● "Extrayendo tu prenda..."  (0–15s)
+   ● "Aplicando al modelo..."   (15–60s)
+   ● "Finalizando imagen..."    (60–90s)
+   El mayorista puede salir — la generación continúa en background
+
+5. RESULTADO (momento WOW)
+   Notificación: "¡Tu prenda está lista!"
+   Imagen generada a pantalla completa
+   Toggle "Ver original" — fade suave para comparar
+   Acciones: [Regenerar] [Agregar al catálogo ✓]
+
+6. PUBLICACIÓN Y COMPARTIR
+   Bottom bar fija: "Compartir catálogo por WhatsApp"
+   Tap → WhatsApp con texto pre-escrito + link del catálogo
+```
+
+Componentes custom necesarios (no disponibles en shadcn/ui):
+
+| Componente | Propósito |
+| --- | --- |
+| `GarmentCard` | Tarjeta de prenda con imagen original + generada + estado de procesamiento |
+| `ModelSelector` | Grid de modelos IA con preview en hover/tap — un tap dispara la generación |
+| `ProgressPipeline` | Barra de progreso multi-estado para generación IA ("Extrayendo… Aplicando… Finalizando…") |
+| `CatalogShareSheet` | Panel de compartir con botón WhatsApp directo y código QR descargable |
+
+---
+
+## Visual Design Foundation
+
+### Color System
+
+Dirección elegida: **A — Clean & Modern**
+
+| Token | Valor | Tailwind class | Uso |
+| --- | --- | --- | --- |
+| `color-bg` | `#FFFFFF` | `bg-white` | Fondo principal |
+| `color-bg-subtle` | `#F9FAFB` | `bg-gray-50` | Fondo de secciones secundarias |
+| `color-primary` | `#6366F1` | `bg-indigo-500` | Acción principal, links, estados activos |
+| `color-primary-dark` | `#4F46E5` | `bg-indigo-600` | Hover de primary |
+| `color-accent` | `#EC4899` | `bg-pink-500` | CTA de compartir WhatsApp (máxima jerarquía) |
+| `color-text` | `#111827` | `text-gray-900` | Texto principal |
+| `color-text-muted` | `#6B7280` | `text-gray-500` | Texto secundario, placeholders |
+| `color-border` | `#E5E7EB` | `border-gray-200` | Bordes de cards y separadores |
+| `color-success` | `#10B981` | `text-emerald-500` | Estado "imagen lista", confirmaciones |
+| `color-warning` | `#F59E0B` | `text-amber-500` | Estado "procesando" |
+| `color-error` | `#EF4444` | `text-red-500` | Errores de generación |
+
+### Typography System
+
+Fuente única: **Inter** (Google Fonts, open-source, carga < 50KB)
+
+| Nivel | Tamaño | Peso | Line height | Uso |
+| --- | --- | --- | --- | --- |
+| Display | 36px | 700 | 1.1 | Título del catálogo público |
+| H1 | 30px | 700 | 1.2 | Títulos de sección en dashboard |
+| H2 | 24px | 600 | 1.3 | Nombre de colección / prenda |
+| H3 | 20px | 600 | 1.4 | Subtítulos de card |
+| Body | 16px | 400 | 1.6 | Texto de descripción (mínimo absoluto en mobile) |
+| Small | 14px | 400 | 1.5 | Metadatos, fechas, estados |
+| Caption | 12px | 500 | 1.4 | Labels de badges y chips |
+
+### Spacing & Layout Foundation
+
+Base unit: **8px** (Tailwind estándar)
+
+| Concepto | Mobile | Desktop |
+| --- | --- | --- |
+| Padding de pantalla | 16px | 32px |
+| Gap entre cards | 12px | 16px |
+| Padding interno de card | 16px | 24px |
+| Espaciado entre secciones | 32px | 64px |
+| Touch target mínimo | 44px | 36px |
+| Max-width dashboard | 100% | 1280px |
+| Max-width catálogo público | 480px | 480px (centrado) |
+
+Grid de prendas en dashboard: **2 columnas mobile / 3 columnas desktop**
+Grid de modelos IA: **2 columnas siempre** (imagen suficientemente grande para evaluar)
+
+### Accessibility Considerations
+
+- Todos los textos sobre fondo blanco cumplen WCAG AA (ratio mínimo 4.5:1)
+- Touch targets mínimo 44×44px en mobile
+- Estados de foco visibles en todos los elementos interactivos (outline indigo)
+- Alt text obligatorio en todas las imágenes de prendas y modelos IA
+- Barra de progreso de generación IA con `aria-valuenow` dinámico
+- Catálogo público funciona sin JavaScript (SSR) para dispositivos lentos
