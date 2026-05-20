@@ -4,6 +4,7 @@ from slowapi.errors import RateLimitExceeded
 from starlette.responses import JSONResponse
 
 from api.routers.auth import router as auth_router
+from api.routers.prendas import router as prendas_router
 from core.config import settings
 from core.limiter import limiter
 from core.middleware import TokenRefreshMiddleware
@@ -22,6 +23,7 @@ app.add_middleware(
 app.add_middleware(TokenRefreshMiddleware)
 
 app.include_router(auth_router)
+app.include_router(prendas_router)
 
 
 @app.exception_handler(RateLimitExceeded)

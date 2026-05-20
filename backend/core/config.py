@@ -26,5 +26,11 @@ class Settings(BaseSettings):
     # Cookie security (False for local HTTP dev, True for production)
     COOKIE_SECURE: bool = False
 
+    # MinIO
+    MINIO_ENDPOINT: str = "http://minio:9000"
+    MINIO_ACCESS_KEY: str = "minioadmin"
+    MINIO_SECRET_KEY: str = "minioadmin"
+    MINIO_BUCKET_ORIGINALS: str = "originals"
+
 
 settings = Settings()

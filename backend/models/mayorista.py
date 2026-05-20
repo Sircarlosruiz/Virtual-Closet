@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 
 from sqlalchemy import Boolean, Column, DateTime, Index, String, Text
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy.sql import func
 
 Base = declarative_base()
@@ -31,3 +31,5 @@ class Mayorista(Base):
     __table_args__ = (
         Index("idx_mayorista_email", "email"),
     )
+
+    prendas = relationship("Prenda", back_populates="mayorista", lazy="dynamic")

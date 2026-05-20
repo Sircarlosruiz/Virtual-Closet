@@ -15,6 +15,7 @@ from core.limiter import limiter
 from core.security import create_access_token
 from models.mayorista import Mayorista
 from repositories.mayorista_repo import MayoristaRepository
+from repositories.prenda_repo import PrendaRepository
 from services.auth_service import AuthService, EmailAlreadyExistsError, InvalidCredentialsError
 from services.email_service import send_welcome_email
 
@@ -128,7 +129,12 @@ async def logout(response: Response):
 
 
 @router.get("/me", response_model=MeResponse)
-async def me(mayorista: Mayorista = Depends(get_current_mayorista)):
+async def me(
+    mayorista: Mayorista = Depends(get_current_mayorista),
+    db: AsyncSession = Depends(get_db),
+):
+    repo = PrendaRepository(db)
+    count = await repo.count_by_mayorista(mayorista.id)
     return MeResponse(
         id=mayorista.id,
         email=mayorista.email,
@@ -136,5 +142,5 @@ async def me(mayorista: Mayorista = Depends(get_current_mayorista)):
         plan=mayorista.plan,
         trial_activo=mayorista.trial_activo,
         trial_expira_en=mayorista.trial_expira_en,
-        prendas_count=0,  # Hardcoded until Épica 2
+        prendas_count=count,
     )
