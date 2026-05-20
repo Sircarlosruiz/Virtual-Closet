@@ -6,6 +6,8 @@ from starlette.responses import JSONResponse
 from api.routers.auth import router as auth_router
 from api.routers.prendas import router as prendas_router
 from api.routers.ws import router as ws_router
+from api.routers.modelos_ia import router as modelos_ia_router
+from api.routers.generaciones import router as generaciones_router
 from core.config import settings
 from core.limiter import limiter
 from core.middleware import TokenRefreshMiddleware
@@ -26,6 +28,8 @@ app.add_middleware(TokenRefreshMiddleware)
 app.include_router(auth_router)
 app.include_router(prendas_router)
 app.include_router(ws_router)
+app.include_router(modelos_ia_router)
+app.include_router(generaciones_router)
 
 
 @app.exception_handler(RateLimitExceeded)
@@ -54,7 +58,13 @@ async def startup_event():
         ) as client:
             buckets = await client.list_buckets()
             bucket_names = [b["Name"] for b in buckets.get("Buckets", [])]
-            if settings.MINIO_BUCKET_ORIGINALS not in bucket_names:
-                await client.create_bucket(Bucket=settings.MINIO_BUCKET_ORIGINALS)
+            for bucket in [
+                settings.MINIO_BUCKET_ORIGINALS,
+                settings.MINIO_BUCKET_GENERATED,
+                settings.MINIO_BUCKET_THUMBNAILS,
+                settings.MINIO_BUCKET_MODEL_THUMBNAILS,
+            ]:
+                if bucket not in bucket_names:
+                    await client.create_bucket(Bucket=bucket)
     except Exception:
         pass

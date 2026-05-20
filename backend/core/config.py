@@ -32,6 +32,16 @@ class Settings(BaseSettings):
     MINIO_ACCESS_KEY: str = "minioadmin"
     MINIO_SECRET_KEY: str = "minioadmin"
     MINIO_BUCKET_ORIGINALS: str = "originals"
+    MINIO_BUCKET_GENERATED: str = "generated"
+    MINIO_BUCKET_THUMBNAILS: str = "thumbnails"
+    MINIO_BUCKET_MODEL_THUMBNAILS: str = "model-thumbnails"
+
+    # VTON / IA
+    VTON_PROVIDER: str = "replicate"
+    REPLICATE_API_KEY: str = ""
+
+    # RabbitMQ / Celery
+    RABBITMQ_URL: str = "amqp://guest:guest@rabbitmq:5672/"
 
 
 settings = Settings()

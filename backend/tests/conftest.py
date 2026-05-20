@@ -1,17 +1,22 @@
 import pytest
+import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy import NullPool
+from sqlalchemy import NullPool, text
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
+from unittest.mock import AsyncMock, patch
 
 from core.config import settings
 from core.database import get_db
 from core.limiter import limiter
 from main import app
-from models import Base
+from models.mayorista import Base
 
 TEST_DATABASE_URL = "postgresql+asyncpg://postgres:postgres@localhost:5432/virtual_closet_test"
 
 settings.COOKIE_SECURE = False
+
+_test_engine = None
+_test_async_session = None
 
 
 @pytest.fixture(autouse=True)
@@ -20,23 +25,33 @@ def reset_rate_limiter():
     yield
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
+def mock_celery():
+    """Mock Celery send_task to avoid RabbitMQ connection in tests."""
+    with patch("api.routers.generaciones.celery_app.send_task") as mock_send:
+        mock_send.return_value = None
+        yield mock_send
+
+
+@pytest_asyncio.fixture
 async def client():
-    engine = create_async_engine(
+    global _test_engine, _test_async_session
+
+    _test_engine = create_async_engine(
         TEST_DATABASE_URL,
         echo=False,
         poolclass=NullPool,
     )
 
-    async with engine.begin() as conn:
+    async with _test_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
-    async_session = async_sessionmaker(
-        engine, class_=AsyncSession, expire_on_commit=False, autocommit=False, autoflush=False
+    _test_async_session = async_sessionmaker(
+        _test_engine, class_=AsyncSession, expire_on_commit=False, autocommit=False, autoflush=False
     )
 
     async def _get_db():
-        async with async_session() as session:
+        async with _test_async_session() as session:
             yield session
 
     app.dependency_overrides[get_db] = _get_db
@@ -47,9 +62,36 @@ async def client():
 
     app.dependency_overrides.clear()
 
-    async with engine.begin() as conn:
+    async with _test_engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
-    await engine.dispose()
+    await _test_engine.dispose()
+    _test_engine = None
+    _test_async_session = None
+
+
+@pytest_asyncio.fixture
+async def client_with_seeds(client):
+    """Client with 6 modelos IA seeded in the test database."""
+    from models.modelo_ia import ModeloIA
+
+    async with _test_async_session() as session:
+        for i, (nombre, desc, plan) in enumerate([
+            ("María", "Mujer latina, 25-30 años", "base"),
+            ("Carlos", "Hombre latino, 30-35 años", "base"),
+            ("Sofía", "Mujer latina, 20-25 años", "base"),
+            ("Diego", "Hombre latino, 25-30 años, barba", "base"),
+            ("Valentina Pro", "Mujer latina, premium", "pro"),
+            ("Alejandro Pro", "Hombre latino, premium", "pro"),
+        ], start=1):
+            session.add(ModeloIA(
+                nombre=nombre,
+                descripcion=desc,
+                thumbnail_key=f"{i:04d}.jpg",
+                plan_minimo=plan,
+            ))
+        await session.commit()
+
+    yield client
 
 
 async def register_user(client, email="test@mayorista.com", password="password123", nombre_negocio="Test Business"):

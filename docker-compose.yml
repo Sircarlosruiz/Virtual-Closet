@@ -68,6 +68,52 @@ services:
       timeout: 5s
       retries: 5
 
+  rabbitmq:
+    image: rabbitmq:3.12-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  celery_worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: uv run celery -A core.celery_app worker --loglevel=info -Q vton.generation.normal,vton.generation.priority
+    volumes:
+      - ./backend:/app
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/virtual_closet_dev
+      JWT_SECRET_KEY: dev-secret-key-change-in-production
+      JWT_ALGORITHM: HS256
+      JWT_EXPIRE_DAYS: "7"
+      FRONTEND_URL: http://localhost:3000
+      BACKEND_URL: http://localhost:8000
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_PUBLIC_ENDPOINT: http://localhost:9000
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+      MINIO_BUCKET_ORIGINALS: originals
+      MINIO_BUCKET_GENERATED: generated
+      MINIO_BUCKET_THUMBNAILS: thumbnails
+      MINIO_BUCKET_MODEL_THUMBNAILS: model-thumbnails
+      VTON_PROVIDER: replicate
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+
 volumes:
   postgres_data:
   minio_data:
