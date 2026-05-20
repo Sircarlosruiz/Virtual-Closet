@@ -23,11 +23,11 @@ export default function OnboardingPage() {
             Transforma fotos planas de tus prendas en catálogos profesionales con IA.
             Comienza ahora subiendo tu primera prenda.
           </p>
-          <Button asChild size="lg" className="w-full">
-            <Link href="/dashboard/nueva-prenda">
+          <Link href="/dashboard/nueva-prenda" className="block">
+            <Button size="lg" className="w-full">
               Subir tu primera prenda
-            </Link>
-          </Button>
+            </Button>
+          </Link>
           <p className="text-xs text-zinc-500 dark:text-zinc-500">
             Próximamente: Épica 2 - Gestión de prendas
           </p>
