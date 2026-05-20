@@ -1,0 +1,34 @@
+# BMM Framework Configuration — Virtual Closet
+# NikaCommerce
+
+project_name: "Virtual Closet"
+user_name: "Carlos"
+project_key: VC
+
+# Language configuration
+communication_language: es
+document_output_language: es
+
+# User skill level: beginner | intermediate | expert
+user_skill_level: expert
+
+# Paths (relative to project root)
+planning_artifacts: ".agents/planning-artifacts"
+implementation_artifacts: ".agents/implementation-artifacts"
+
+# Tech stack reference
+tech_stack:
+  frontend: "Next.js 14 App Router + Tailwind CSS + shadcn/ui"
+  backend: "FastAPI (Python 3.11)"
+  database: "PostgreSQL 16"
+  queue: "RabbitMQ + Celery"
+  storage: "MinIO (S3-compatible)"
+  ai_provider_dev: "LocalGPUProvider (NVIDIA Titan RTX)"
+  ai_provider_prod: "ReplicateProvider (IDM-VTON)"
+  deployment: "Docker Compose (dev) | k3s on Hetzner (prod)"
+  auth: "JWT in HttpOnly cookie"
+  billing: "Stripe Checkout + Customer Portal"
+  accessibility: "WCAG AA"
+
+# Sprint tracking
+sprint_status: ".agents/implementation-artifacts/sprint-status.yaml"
