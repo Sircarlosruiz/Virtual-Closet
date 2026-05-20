@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Response, status
+from fastapi import APIRouter, Depends, Request, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.schemas.auth import (
@@ -8,8 +8,11 @@ from api.schemas.auth import (
     RegisterRequest,
     RegisterResponse,
 )
+from core.config import settings
 from core.database import get_db
 from core.dependencies import get_current_mayorista
+from core.limiter import limiter
+from core.security import create_access_token
 from models.mayorista import Mayorista
 from repositories.mayorista_repo import MayoristaRepository
 from services.auth_service import AuthService, EmailAlreadyExistsError, InvalidCredentialsError
@@ -53,6 +56,16 @@ async def register(
 
     asyncio.create_task(send_welcome_email(mayorista.email, mayorista.nombre_negocio))
 
+    token = create_access_token(str(mayorista.id))
+    response.set_cookie(
+        key="access_token",
+        value=token,
+        httponly=True,
+        samesite="lax",
+        secure=settings.COOKIE_SECURE,
+        max_age=604800,  # 7 days
+    )
+
     return RegisterResponse(
         id=mayorista.id,
         email=mayorista.email,
@@ -65,10 +78,13 @@ async def register(
     response_model=LoginResponse,
     responses={
         401: {"description": "Email o contraseña incorrectos"},
+        429: {"description": "Demasiados intentos"},
     },
 )
+@limiter.limit("10/minute")
 async def login(
-    request: LoginRequest,
+    request: Request,
+    login_data: LoginRequest,
     response: Response,
     db: AsyncSession = Depends(get_db),
 ):
@@ -77,8 +93,8 @@ async def login(
 
     try:
         mayorista, token = await auth_service.login(
-            email=request.email,
-            password=request.password,
+            email=login_data.email,
+            password=login_data.password,
         )
     except InvalidCredentialsError:
         from fastapi import HTTPException
@@ -93,7 +109,7 @@ async def login(
         value=token,
         httponly=True,
         samesite="lax",
-        secure=True,
+        secure=settings.COOKIE_SECURE,
         max_age=604800,  # 7 days
     )
 

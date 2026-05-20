@@ -49,6 +49,7 @@ export default function RegisterPage() {
       });
       toast.success("Cuenta creada exitosamente");
       router.push("/dashboard/onboarding");
+      router.refresh();
     } catch (error) {
       if (error instanceof Error) {
         if (error.message.includes("409")) {

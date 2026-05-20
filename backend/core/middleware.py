@@ -4,6 +4,7 @@ from datetime import datetime, timedelta, timezone
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 
+from core.config import settings
 from core.security import create_access_token, decode_access_token
 
 logger = logging.getLogger(__name__)
@@ -40,7 +41,7 @@ class TokenRefreshMiddleware(BaseHTTPMiddleware):
                     value=new_token,
                     httponly=True,
                     samesite="lax",
-                    secure=True,
+                    secure=settings.COOKIE_SECURE,
                     max_age=604800,
                 )
                 logger.debug("Token refreshed automatically")

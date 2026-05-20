@@ -1,14 +1,6 @@
 import pytest
-from httpx import ASGITransport, AsyncClient
 
-from main import app
-
-
-@pytest.fixture
-async def client():
-    transport = ASGITransport(app=app)
-    async with AsyncClient(transport=transport, base_url="http://test") as c:
-        yield c
+from tests.conftest import register_user
 
 
 @pytest.mark.asyncio
@@ -26,26 +18,13 @@ async def test_register_success(client):
     assert data["email"] == "test@mayorista.com"
     assert data["nombre_negocio"] == "Test Business"
     assert "id" in data
+    assert "access_token" in response.cookies
 
 
 @pytest.mark.asyncio
 async def test_register_duplicate_email(client):
-    await client.post(
-        "/api/auth/register",
-        json={
-            "email": "dup@mayorista.com",
-            "password": "password123",
-            "nombre_negocio": "First Business",
-        },
-    )
-    response = await client.post(
-        "/api/auth/register",
-        json={
-            "email": "dup@mayorista.com",
-            "password": "password456",
-            "nombre_negocio": "Second Business",
-        },
-    )
+    await register_user(client, email="dup@mayorista.com")
+    response = await register_user(client, email="dup@mayorista.com", password="password456", nombre_negocio="Second Business")
     assert response.status_code == 409
     assert "Este email ya está registrado" in response.json()["detail"]
 

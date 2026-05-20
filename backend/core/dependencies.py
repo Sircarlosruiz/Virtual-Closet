@@ -1,4 +1,4 @@
-from fastapi import Cookie, HTTPException, status
+from fastapi import Cookie, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -9,6 +9,7 @@ from models.mayorista import Mayorista
 
 async def get_current_mayorista(
     access_token: str | None = Cookie(None),
+    db: AsyncSession = Depends(get_db),
 ) -> Mayorista:
     if not access_token:
         raise HTTPException(
@@ -30,14 +31,13 @@ async def get_current_mayorista(
             detail="Invalid token payload",
         )
 
-    async for db in get_db():
-        from uuid import UUID
+    from uuid import UUID
 
-        result = await db.execute(select(Mayorista).where(Mayorista.id == UUID(mayorista_id)))
-        mayorista = result.scalar_one_or_none()
-        if not mayorista:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="User not found",
-            )
-        return mayorista
+    result = await db.execute(select(Mayorista).where(Mayorista.id == UUID(mayorista_id)))
+    mayorista = result.scalar_one_or_none()
+    if not mayorista:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found",
+        )
+    return mayorista

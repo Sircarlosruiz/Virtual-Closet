@@ -23,5 +23,8 @@ class Settings(BaseSettings):
     FRONTEND_URL: str = "http://localhost:3000"
     BACKEND_URL: str = "http://localhost:8000"
 
+    # Cookie security (False for local HTTP dev, True for production)
+    COOKIE_SECURE: bool = False
+
 
 settings = Settings()
