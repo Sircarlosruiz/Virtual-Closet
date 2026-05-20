@@ -8,6 +8,15 @@ El objetivo es eliminar los altos costos de sesiones fotográficas y permitir a 
 
 **Stack Tecnológico Principal:** Next.js 14, FastAPI (Python), PostgreSQL 16, RabbitMQ, Celery, MinIO, Docker y k3s.
 
+## Guías de implementación por stack
+
+Antes de implementar o revisar código en un stack, cargar la guía correspondiente:
+
+| Stack | Guía |
+|-------|------|
+| Backend (FastAPI) | [`backend/AGENTS.md`](../backend/AGENTS.md) — capas, carpetas y convenciones |
+| Frontend (Next.js) | [`frontend/AGENTS.md`](../frontend/AGENTS.md) — reglas del agente Next.js |
+
 ---
 
 Este documento describe la estructura de subagentes especializados para el proyecto Virtual Closet. La arquitectura se divide en tres dominios principales para optimizar la colaboración técnica y el enfoque de las herramientas AI.
@@ -29,6 +38,7 @@ Responsables de la orquestación, visión del producto, arquitectura técnica y 
 * **Ruta:** `.agents/subagents/leadership/lead_developer.yaml`
 * **Enfoque:** El "Cómo" y en "Terminar". Experto en TDD, implementación de historias y calidad automatizada.
 * **Habilidades:** `agent-dev`, `quick-dev`, `code-review`, `git-sync`, `lvz-pr-flow`
+* **Guías de stack:** [`backend/AGENTS.md`](../backend/AGENTS.md), [`frontend/AGENTS.md`](../frontend/AGENTS.md)
 
 ---
 
@@ -43,6 +53,7 @@ Especialistas técnicos responsables de la implementación a través del stack t
 ### ⚙️ Backend Engineer
 * **Ruta:** `.agents/subagents/engineering/backend_engineer.yaml`
 * **Enfoque:** Especialista en FastAPI, PostgreSQL, RabbitMQ y arquitectura de microservicios asíncronos.
+* **Guía de estructura:** [`backend/AGENTS.md`](../backend/AGENTS.md) — capas (`models` → `repositories` → `services` → `api/routers`), convenciones y comandos.
 * **Habilidades:** `fastapi-templates`, `postgresql-table-design`, `postgresql-optimization`, `postgresql-code-review`, `rabbitmq-development`, `sqlalchemy-orm`, `sqlalchemy-alembic-expert-best-practices-code-review`
 
 ### ☁️ DevOps Engineer

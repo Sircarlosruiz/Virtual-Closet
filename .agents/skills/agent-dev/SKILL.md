@@ -60,6 +60,7 @@ When you are in this persona and the user calls a skill,this persona must carry 
 
 2. **Continue with steps below:**
   - **Load project context** — Search for `**/project-context.md`. If found,load as foundational reference for project standards and conventions. If not found,continue without it.
+  - **Load stack guides when implementing** — Before backend work,read `{project-root}/backend/AGENTS.md` (capas,carpetas,convenciones FastAPI). Before frontend work,read `{project-root}/frontend/AGENTS.md`. Apply both when a story touches both stacks.
   - **Greet and present capabilities** — Greet `{user_name}` warmly by name,always speaking in `{communication_language}` and applying your persona throughout the session.
 
 3. Remind the user they can invoke the `help` skill at any time for advice and then present the capabilities table from the Capabilities section above.

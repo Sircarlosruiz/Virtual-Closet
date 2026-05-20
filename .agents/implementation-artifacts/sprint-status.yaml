@@ -38,10 +38,10 @@ story_location: ".agents/implementation-artifacts"
 
 development_status:
   # ── Épica 1 — Autenticación y Onboarding ─────────────────────────────
-  epic-1: in-progress
-  1-1-registro-mayorista: review
-  1-2-login-mayorista: review
-  1-3-onboarding-guiado: review
+  epic-1: done
+  1-1-registro-mayorista: done
+  1-2-login-mayorista: done
+  1-3-onboarding-guiado: done
   epic-1-retrospective: optional
 
   # ── Épica 2 — Gestión de Prendas ─────────────────────────────────────

@@ -1,4 +1,26 @@
+import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
+
+const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:8000";
+
+async function getPrendasCount(): Promise<number | null> {
+  try {
+    const { cookies } = await import("next/headers");
+    const cookieStore = await cookies();
+    const token = cookieStore.get("access_token")?.value;
+    if (!token) return null;
+
+    const res = await fetch(`${BACKEND_URL}/api/auth/me`, {
+      headers: { Cookie: `access_token=${token}` },
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.prendas_count ?? 0;
+  } catch {
+    return null;
+  }
+}
 import {
   Card,
   CardContent,
@@ -8,7 +30,12 @@ import {
 } from "@/components/ui/card";
 import Link from "next/link";
 
-export default function OnboardingPage() {
+export default async function OnboardingPage() {
+  const prendasCount = await getPrendasCount();
+  if (prendasCount !== null && prendasCount > 0) {
+    redirect("/dashboard");
+  }
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-50 px-4 dark:bg-zinc-950">
       <Card className="w-full max-w-md text-center">
