@@ -32,12 +32,12 @@ def _get_prenda_service(db: AsyncSession = Depends(get_db)) -> PrendaService:
 
 @router.get("/upload-url", response_model=UploadUrlResponse)
 async def get_upload_url(
-    request: UploadUrlRequest,
+    extension: str = Query(..., pattern="^(jpg|png|heic)$"),
     mayorista: Mayorista = Depends(get_current_mayorista),
     prenda_service: PrendaService = Depends(_get_prenda_service),
 ):
     try:
-        result = await prenda_service.iniciar_subida(mayorista.id, request.extension)
+        result = await prenda_service.iniciar_subida(mayorista.id, extension)
         return result
     except LimiteMensualAlcanzadoError:
         raise HTTPException(

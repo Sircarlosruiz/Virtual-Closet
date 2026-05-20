@@ -26,7 +26,7 @@ class PrendaService:
             raise LimiteMensualAlcanzadoError()
 
         prenda_id = uuid4()
-        object_key = f"originals/{mayorista_id}/{prenda_id}/original.{extension}"
+        object_key = f"{mayorista_id}/{prenda_id}/original.{extension}"
         upload_url = await self.storage_service.generate_upload_url(object_key)
         return {"upload_url": upload_url, "prenda_id": prenda_id, "object_key": object_key}
 
@@ -57,6 +57,7 @@ class PrendaService:
 
         await self.prenda_repo.delete(prenda_id, mayorista_id)
 
-        key = prenda.imagen_original_url.split("originals/")[-1] if "originals/" in prenda.imagen_original_url else None
-        if key:
-            await self.storage_service.delete_object(f"originals/{key}")
+        url = prenda.imagen_original_url
+        if "/originals/" in url:
+            key = url.split("/originals/")[-1].split("?")[0]
+            await self.storage_service.delete_object(key)
