@@ -8,9 +8,10 @@ import { Button } from "@/components/ui/button";
 interface PrendaGridProps {
   prendas: PrendaResponse[];
   isLoading: boolean;
+  onDelete?: (id: string) => void;
 }
 
-export function PrendaGrid({ prendas, isLoading }: PrendaGridProps) {
+export function PrendaGrid({ prendas, isLoading, onDelete }: PrendaGridProps) {
   if (isLoading) {
     return (
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -44,7 +45,7 @@ export function PrendaGrid({ prendas, isLoading }: PrendaGridProps) {
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
       {prendas.map((prenda) => (
-        <PrendaCard key={prenda.id} prenda={prenda} />
+        <PrendaCard key={prenda.id} prenda={prenda} onDelete={onDelete} />
       ))}
     </div>
   );

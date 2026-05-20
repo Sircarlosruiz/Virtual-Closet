@@ -45,11 +45,11 @@ development_status:
   epic-1-retrospective: optional
 
   # ── Épica 2 — Gestión de Prendas ─────────────────────────────────────
-  epic-2: in-progress
+  epic-2: done
   2-1-subir-prenda: done
   2-2-nombrar-prenda: done
   2-3-ver-listado-prendas: done
-  2-4-eliminar-prenda: backlog
+  2-4-eliminar-prenda: done
   epic-2-retrospective: optional
 
   # ── Épica 3 — Pipeline de Generación IA ──────────────────────────────

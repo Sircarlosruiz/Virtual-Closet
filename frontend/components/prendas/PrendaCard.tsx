@@ -1,11 +1,32 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
+import { MoreHorizontal } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { PrendaResponse } from "@/lib/api/prendas";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { PrendaResponse, deletePrenda } from "@/lib/api/prendas";
+import { toast } from "sonner";
 
 interface PrendaCardProps {
   prenda: PrendaResponse;
+  onDelete?: (id: string) => void;
 }
 
 const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
@@ -15,13 +36,29 @@ const statusConfig: Record<string, { label: string; variant: "default" | "second
   error: { label: "Error", variant: "destructive" },
 };
 
-export function PrendaCard({ prenda }: PrendaCardProps) {
+export function PrendaCard({ prenda, onDelete }: PrendaCardProps) {
   const config = statusConfig[prenda.estado] || statusConfig.pendiente;
   const isClickable = prenda.estado === "lista";
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    try {
+      await deletePrenda(prenda.id);
+      onDelete?.(prenda.id);
+      toast.success("Prenda eliminada");
+    } catch {
+      toast.error("Error al eliminar la prenda");
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteDialog(false);
+    }
+  };
 
   const cardContent = (
     <>
-      <div className="relative aspect-square bg-zinc-100 dark:bg-zinc-800 rounded-lg overflow-hidden">
+      <div className="relative aspect-square bg-zinc-100 dark:bg-zinc-800 rounded-lg overflow-hidden group">
         <img
           src={prenda.imagen_original_url}
           alt={prenda.nombre}
@@ -41,6 +78,24 @@ export function PrendaCard({ prenda }: PrendaCardProps) {
         >
           {config.label}
         </Badge>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              className="absolute top-2 left-2 p-1 rounded-full bg-black/40 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/60"
+              aria-label="Opciones"
+            >
+              <MoreHorizontal className="w-4 h-4" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            <DropdownMenuItem
+              className="text-red-600 focus:text-red-600"
+              onSelect={() => setShowDeleteDialog(true)}
+            >
+              Eliminar
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
       <p className="mt-2 text-sm font-medium text-zinc-900 dark:text-zinc-50 truncate">
         {prenda.nombre}
@@ -48,16 +103,36 @@ export function PrendaCard({ prenda }: PrendaCardProps) {
     </>
   );
 
-  if (isClickable) {
-    return (
-      <Link
-        href={`/dashboard/prendas/${prenda.id}`}
-        className="group block"
-      >
-        {cardContent}
-      </Link>
-    );
-  }
+  return (
+    <>
+      {isClickable ? (
+        <Link href={`/dashboard/prendas/${prenda.id}`} className="group block">
+          {cardContent}
+        </Link>
+      ) : (
+        <div className="block">{cardContent}</div>
+      )}
 
-  return <div className="block">{cardContent}</div>;
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar esta prenda?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isDeleting ? "Eliminando..." : "Eliminar"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
 }
