@@ -9,3 +9,5 @@ instructions: |
 skills:
   - docker-expert
   - minio
+  - multi-stage-dockerfile
+  - kubernetes-specialist

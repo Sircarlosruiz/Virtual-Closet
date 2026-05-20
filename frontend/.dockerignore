@@ -1,0 +1,11 @@
+node_modules
+.next
+.git
+.gitignore
+*.md
+e2e
+playwright-report
+test-results
+eslint.config.mjs
+playwright.config.ts
+.pnpm-store

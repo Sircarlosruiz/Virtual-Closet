@@ -79,13 +79,12 @@ export function PrendaCard({ prenda, onDelete }: PrendaCardProps) {
           {config.label}
         </Badge>
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button
-              className="absolute top-2 left-2 p-1 rounded-full bg-black/40 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/60"
-              aria-label="Opciones"
-            >
-              <MoreHorizontal className="w-4 h-4" />
-            </button>
+          <DropdownMenuTrigger
+            className="absolute top-2 left-2 p-1 rounded-full bg-black/40 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/60"
+            aria-label="Opciones"
+            onClick={(e) => e.preventDefault()}
+          >
+            <MoreHorizontal className="w-4 h-4" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
             <DropdownMenuItem
