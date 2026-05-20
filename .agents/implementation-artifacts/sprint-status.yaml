@@ -45,9 +45,9 @@ development_status:
   epic-1-retrospective: optional
 
   # ── Épica 2 — Gestión de Prendas ─────────────────────────────────────
-  epic-2: backlog
-  2-1-subir-prenda: backlog
-  2-2-nombrar-prenda: backlog
+  epic-2: in-progress
+  2-1-subir-prenda: done
+  2-2-nombrar-prenda: done
   2-3-ver-listado-prendas: backlog
   2-4-eliminar-prenda: backlog
   epic-2-retrospective: optional

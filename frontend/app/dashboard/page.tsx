@@ -1,4 +1,6 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:8000";
 
@@ -28,15 +30,18 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div className="flex flex-1 items-center justify-center">
-      <div className="text-center">
+    <div className="flex flex-1 flex-col p-6">
+      <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
-          Dashboard
+          Mis prendas
         </h1>
-        <p className="mt-2 text-zinc-600 dark:text-zinc-400">
-          Bienvenido a tu panel de Virtual Closet
-        </p>
+        <Link href="/dashboard/prendas/nueva">
+          <Button>Nueva prenda</Button>
+        </Link>
       </div>
+      <p className="text-zinc-600 dark:text-zinc-400">
+        Tienes {prendasCount} prenda{prendasCount !== 1 ? "s" : ""} en tu closet
+      </p>
     </div>
   );
 }
