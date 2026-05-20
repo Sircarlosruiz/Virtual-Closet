@@ -297,11 +297,13 @@ Then la prenda se elimina también de ese catálogo
 **Contexto técnico:**
 - RabbitMQ exchange: `vton.direct`
 - Queues: `vton.generation.normal` (plan Base), `vton.generation.priority` (plan Pro), `vton.generation.dead`
-- Tabla: `generacion` (id, prenda_id, modelo_ia_id, estado, imagen_generada_url, costo_inferencia_usd, created_at)
-- Tabla: `modelo_ia` (id, nombre, descripcion, thumbnail_url, plan_minimo)
+- Tabla: `generacion` (id, mayorista_id, prenda_id, modelo_ia_id, estado, imagen_generada_key, thumbnail_key, costo_inferencia_usd, error_message, created_at, updated_at)
+- Tabla: `modelo_ia` (id, nombre, descripcion, thumbnail_key, plan_minimo, created_at)
 - Worker: Celery + FastAPI, clase `VTONProvider` abstrae LocalGPU (dev) y Replicate (prod)
-- WebSocket: notificación al completar job
-- Env var: `VTON_PROVIDER=local|replicate`
+- WebSocket: notificación al completar job via `ConnectionManager` de Epic 2
+- Env var: `VTON_PROVIDER=local|replicate`, `REPLICATE_API_KEY`, `RABBITMQ_URL`
+- MinIO buckets: `generated/`, `thumbnails/`, `model-thumbnails/`
+- **Implementado:** Sprint 2 (2026-05-20) — backend completo + frontend completo + tests
 - Source: `arquitectura-tecnica.md` § VTONProvider + RabbitMQ
 
 ---
@@ -334,8 +336,10 @@ Then el último modelo usado aparece pre-seleccionado
 
 **Notas técnicas:**
 - Ruta: `GET /api/modelos-ia` filtrando por plan del mayorista
-- Modelos almacenados en tabla `modelo_ia`, thumbnails en MinIO
-- Persistir `ultimo_modelo_id` en la sesión del mayorista
+- Modelos almacenados en tabla `modelo_ia`, thumbnails en MinIO bucket `model-thumbnails/`
+- Persistir `ultimo_modelo_id` en localStorage del frontend
+- **Implementado:** Model, Repo, Service, Schema, Router + `ModelSelectorScreen` frontend
+- Seed script: `backend/scripts/seed_modelos_ia.py` (6 modelos, 4 base + 2 pro)
 - Source: `arquitectura-tecnica.md` § Schema + `ux-design-specification.md` § Component Strategy
 
 ---
@@ -377,11 +381,13 @@ And la prenda cambia a estado=error
 ```
 
 **Notas técnicas:**
-- Ruta: `POST /api/generaciones` → publica en RabbitMQ y devuelve `generacion_id`
+- Ruta: `POST /api/generaciones` → publica en RabbitMQ via Celery `send_task` y devuelve `generacion_id`
 - Mensajes RabbitMQ: `durable=True` para sobrevivir restarts
-- WebSocket: endpoint `wss://api/ws/{mayorista_id}` para notificaciones
+- WebSocket: endpoint `wss://api/ws/{mayorista_id}` para notificaciones via `ConnectionManager`
 - VTONProvider.generate(garment_img, model_img) → bytes de imagen generada
 - La imagen generada se sube a MinIO: `generated/{mayorista_id}/{generacion_id}.jpg`
+- Thumbnail 400px: `thumbnails/{mayorista_id}/{generacion_id}.jpg`
+- **Implementado:** VTONProvider (base + replicate + local), Celery task `generate_vton`, Model, Repo, Service, Schema, Router + `ProgressScreen` frontend
 - Source: `arquitectura-tecnica.md` § RabbitMQ + VTONProvider
 
 ---
@@ -419,10 +425,11 @@ Then veo pantalla de error con descripción + botón "Reintentar"
 ```
 
 **Notas técnicas:**
-- La imagen generada tiene URL presignada MinIO (24h TTL)
+- La imagen generada tiene URL presignada MinIO (24h TTL) via bucket `generated/`
 - También se genera thumbnail 400px: `thumbnails/{mayorista_id}/{generacion_id}.jpg`
-- Componente: `GenerationResultScreen` con toggle de comparación
+- Componente: `GenerationResultScreen` con toggle de comparación original/generado
 - Guardar `costo_inferencia_usd` del job en la tabla `generacion`
+- **Implementado:** `GET /api/generaciones/{id}` con presigned URLs + `GenerationResultScreen` frontend
 - Source: `ux-design-specification.md` § Design Direction (Direction 1: Card Flow — WOW result screen)
 
 ---
@@ -455,6 +462,7 @@ Then veo todas las generaciones ordenadas por fecha, con el modelo usado
 **Notas técnicas:**
 - Una prenda puede tener N generaciones en tabla `generacion`
 - Al mostrar la prenda en el catálogo se usa la generación más reciente (o la que el mayorista elija)
+- **Implementado:** `GET /api/prendas/{id}/generaciones` + carrusel horizontal en `ResultScreen` + navegación con `prendaId` query params
 - Source: PRD § US-304
 
 ---

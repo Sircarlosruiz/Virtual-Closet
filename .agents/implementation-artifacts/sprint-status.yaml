@@ -30,7 +30,7 @@
 # - Sprint 4: Billing + Launch (US-601..US-602, US-504)
 
 generated: 2026-05-19
-last_updated: 2026-05-20
+last_updated: 2026-05-20T12:00:00Z
 project: Virtual Closet
 project_key: VC
 tracking_system: file-system
@@ -53,12 +53,22 @@ development_status:
   epic-2-retrospective: optional
 
   # ── Épica 3 — Pipeline de Generación IA ──────────────────────────────
-  epic-3: backlog
-  3-1-seleccionar-modelo: backlog
-  3-2-iniciar-generacion: backlog
-  3-3-ver-resultado: backlog
-  3-4-regenerar-modelo: backlog
+  epic-3: done
+  3-1-seleccionar-modelo: done
+  3-2-iniciar-generacion: done
+  3-3-ver-resultado: done
+  3-4-regenerar-modelo: done
   epic-3-retrospective: optional
+
+  # ── Épica 3 Implementation Notes ─────────────────────────────────────
+  # Completed: 2026-05-20
+  # Backend: models (modelo_ia, generacion), repos, services, schemas, routers
+  # Infra: docker-compose (rabbitmq, celery_worker), celery_app.py, alembic migrations
+  # VTON: VTONProvider ABC + ReplicateProvider + LocalProvider
+  # Tasks: generate_vton (Celery) with retry + dead letter queue
+  # Frontend: model-selector, progress, result screens
+  # Tests: 8 tests in test_epic3_generacion.py (all passing)
+  # Dependencies: celery, replicate, pillow added to pyproject.toml
 
   # ── Épica 4 — Gestión de Catálogos ───────────────────────────────────
   epic-4: backlog
