@@ -2,9 +2,9 @@
 # Makefile for development, testing, and deployment
 
 .PHONY: help dev dev-backend dev-frontend test test-backend test-frontend \
-        db-up db-down db-migrate db-reset lint lint-backend lint-frontend \
+        db-up db-down db-migrate db-seed db-reset lint lint-backend lint-frontend \
         build build-frontend build-backend install install-backend install-frontend \
-        docker-up docker-down docker-build clean
+        fix-backend-venv docker-up docker-down docker-build clean
 
 # Variables
 BACKEND_DIR := backend
@@ -41,6 +41,16 @@ db-down: ## Stop PostgreSQL
 
 db-migrate: ## Run Alembic migrations
 	cd $(BACKEND_DIR) && uv run alembic upgrade head
+
+db-seed: ## Seed ejemplo desde docs/imgs (usage: make db-seed EMAIL=tu@email.com)
+	@test -n "$(EMAIL)" || (echo "Uso: make db-seed EMAIL=tu@email.com (mayorista ya registrado en la app)" && exit 1)
+	@test -f docs/imgs/modelo.jpeg || (echo "Falta docs/imgs/modelo.jpeg" && exit 1)
+	@test -f docs/imgs/producto_1.jpeg || (echo "Falta docs/imgs/producto_1.jpeg" && exit 1)
+	$(DOCKER_COMPOSE) up -d postgres minio fastapi
+	@echo "Seed modelos IA (docs/imgs/modelo.jpeg)..."
+	$(DOCKER_COMPOSE) exec -T fastapi uv run python scripts/seed_modelos_ia.py
+	@echo "Seed prenda de ejemplo (docs/imgs/producto_1.jpeg)..."
+	$(DOCKER_COMPOSE) exec -T fastapi uv run python scripts/seed_prenda_ejemplo.py "$(EMAIL)"
 
 db-reset: ## Drop and recreate all tables (WARNING: loses data)
 	cd $(BACKEND_DIR) && uv run alembic downgrade base
@@ -94,6 +104,10 @@ install: install-backend install-frontend ## Install all dependencies
 install-backend: ## Install backend Python dependencies
 	cd $(BACKEND_DIR) && uv sync
 
+fix-backend-venv: ## Remove Docker-corrupted .venv and recreate (no sudo)
+	docker run --rm -v $$(pwd)/$(BACKEND_DIR):/app alpine sh -c 'rm -rf /app/.venv'
+	cd $(BACKEND_DIR) && uv sync
+
 install-frontend: ## Install frontend npm dependencies
 	cd $(FRONTEND_DIR) && pnpm install
 
@@ -112,6 +126,9 @@ docker-build: ## Build all docker compose images
 
 docker-logs: ## Show docker compose logs
 	$(DOCKER_COMPOSE) logs -f
+
+docker-infra: ## Start all infrastructure services except frontend and backend (postgres, minio, rabbitmq, celery_worker)
+	$(DOCKER_COMPOSE) up -d postgres minio rabbitmq celery_worker
 
 # ========================
 # Cleanup

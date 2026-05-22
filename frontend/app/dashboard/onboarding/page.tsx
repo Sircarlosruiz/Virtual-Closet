@@ -50,7 +50,7 @@ export default async function OnboardingPage() {
             Transforma fotos planas de tus prendas en catálogos profesionales con IA.
             Comienza ahora subiendo tu primera prenda.
           </p>
-          <Link href="/dashboard/nueva-prenda" className="block">
+          <Link href="/dashboard/prendas/nueva" className="block">
             <Button size="lg" className="w-full">
               Subir tu primera prenda
             </Button>

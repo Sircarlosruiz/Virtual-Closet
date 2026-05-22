@@ -17,6 +17,12 @@ Antes de implementar o revisar código en un stack, cargar la guía correspondie
 | Backend (FastAPI) | [`backend/AGENTS.md`](../backend/AGENTS.md) — capas, carpetas y convenciones |
 | Frontend (Next.js) | [`frontend/AGENTS.md`](../frontend/AGENTS.md) — reglas del agente Next.js |
 
+## Comandos útiles
+
+| Comando | Descripción |
+|---------|-------------|
+| `make docker-infra` | Levanta todos los servicios Docker excepto frontend y backend (postgres, minio, rabbitmq, celery_worker) |
+
 ---
 
 Este documento describe la estructura de subagentes especializados para el proyecto Virtual Closet. La arquitectura se divide en tres dominios principales para optimizar la colaboración técnica y el enfoque de las herramientas AI.

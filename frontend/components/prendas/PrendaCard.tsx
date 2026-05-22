@@ -105,7 +105,10 @@ export function PrendaCard({ prenda, onDelete }: PrendaCardProps) {
   return (
     <>
       {isClickable ? (
-        <Link href={`/dashboard/prendas/${prenda.id}`} className="group block">
+        <Link
+          href={`/dashboard/generacion/model-selector?prendaId=${prenda.id}`}
+          className="group block"
+        >
           {cardContent}
         </Link>
       ) : (

@@ -1,4 +1,4 @@
-from uuid import UUID
+from uuid import UUID, uuid4
 from datetime import datetime
 
 from sqlalchemy import select, func, text
@@ -12,12 +12,20 @@ class PrendaRepository:
         self.session = session
 
     async def create(
-        self, mayorista_id: UUID, nombre: str, imagen_original_url: str
+        self,
+        mayorista_id: UUID,
+        nombre: str,
+        imagen_original_url: str,
+        *,
+        prenda_id: UUID | None = None,
+        estado: str = "lista",
     ) -> Prenda:
         prenda = Prenda(
+            id=prenda_id or uuid4(),
             mayorista_id=mayorista_id,
             nombre=nombre,
             imagen_original_url=imagen_original_url,
+            estado=estado,
         )
         self.session.add(prenda)
         await self.session.commit()

@@ -62,7 +62,7 @@ export default function HomePage() {
               Iniciar sesión
             </Link>
             <Link
-              href="/register"
+              href="/registro"
               className={cn(buttonVariants({ size: "sm" }))}
             >
               Crear cuenta
@@ -95,7 +95,7 @@ export default function HomePage() {
               </p>
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Link
-                  href="/register"
+                  href="/registro"
                   className={cn(
                     buttonVariants({ size: "lg" }),
                     "bg-indigo-600 text-white hover:bg-indigo-500"
@@ -401,7 +401,7 @@ export default function HomePage() {
           </p>
           <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
             <Link
-              href="/register"
+              href="/registro"
               className={cn(
                 buttonVariants({ size: "lg" }),
                 "bg-indigo-600 text-white hover:bg-indigo-500"

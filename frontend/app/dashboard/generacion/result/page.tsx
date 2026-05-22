@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { fetchGeneracion, fetchGeneracionesByPrenda, type GeneracionResponse } from "@/lib/api/generaciones";
 
-export default function GenerationResultScreen() {
+function GenerationResultScreen() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const generacionId = searchParams.get("id");
@@ -35,7 +35,9 @@ export default function GenerationResultScreen() {
 
   if (loading) return <div className="p-6 text-center">Cargando resultado...</div>;
   if (error) return <div className="p-6 text-center text-red-500">{error}</div>;
-  if (!generacion) return null;
+  if (!generacion) {
+    return <div className="p-6 text-center">Resultado no encontrado</div>;
+  }
 
   if (generacion.estado === "error") {
     return (
@@ -119,5 +121,13 @@ export default function GenerationResultScreen() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function GenerationResultPage() {
+  return (
+    <Suspense fallback={<div className="p-6 text-center">Cargando resultado...</div>}>
+      <GenerationResultScreen />
+    </Suspense>
   );
 }

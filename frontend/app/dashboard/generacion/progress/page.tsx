@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { Suspense, useEffect, useState, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { fetchMe } from "@/lib/api/auth";
 
@@ -10,7 +10,7 @@ const STEPS = [
   { label: "Finalizando...", icon: "🎨" },
 ];
 
-export default function ProgressScreen() {
+function ProgressScreen() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const generacionId = searchParams.get("id");
@@ -110,5 +110,13 @@ export default function ProgressScreen() {
 
       <p className="mt-4 text-xs text-gray-400">{elapsed}s</p>
     </div>
+  );
+}
+
+export default function ProgressPage() {
+  return (
+    <Suspense fallback={<div className="p-6 text-center">Cargando...</div>}>
+      <ProgressScreen />
+    </Suspense>
   );
 }

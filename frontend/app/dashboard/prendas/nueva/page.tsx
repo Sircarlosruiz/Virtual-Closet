@@ -9,6 +9,7 @@ import { UploadProgress } from "@/components/prendas/UploadProgress";
 import {
   getUploadUrl,
   confirmarSubida,
+  normalizeUploadExtension,
 } from "@/lib/api/prendas";
 import { toast } from "sonner";
 
@@ -23,7 +24,9 @@ export default function NuevaPrendaPage() {
     "idle" | "uploading" | "done" | "error"
   >("idle");
 
-  const extension = file?.name.split(".").pop()?.toLowerCase() || "jpg";
+  const extension = normalizeUploadExtension(
+    file?.name.split(".").pop()?.toLowerCase() || "jpg"
+  );
 
   const handleFileSelected = (selectedFile: File) => {
     setFile(selectedFile);
@@ -46,9 +49,7 @@ export default function NuevaPrendaPage() {
       setUploadStatus("uploading");
       setUploadProgress(0);
 
-      const { upload_url, prenda_id, object_key } = await getUploadUrl(
-        extension as "jpg" | "png" | "heic"
-      );
+      const { upload_url, prenda_id, object_key } = await getUploadUrl(extension);
 
       const xhr = new XMLHttpRequest();
       xhr.open("PUT", upload_url, true);
@@ -65,13 +66,19 @@ export default function NuevaPrendaPage() {
           setUploadStatus("done");
 
           try {
-            await confirmarSubida({
+            const prenda = await confirmarSubida({
               prenda_id,
               object_key,
               nombre: nombre || undefined,
             });
             toast.success("Prenda subida correctamente");
-            setTimeout(() => router.push("/dashboard"), 1000);
+            setTimeout(
+              () =>
+                router.push(
+                  `/dashboard/generacion/model-selector?prendaId=${prenda.id}`
+                ),
+              1000
+            );
           } catch (err: any) {
             toast.error(err.message || "Error al registrar la prenda");
             setUploadStatus("error");

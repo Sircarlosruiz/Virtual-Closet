@@ -1,13 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { fetchModelosIA, type ModeloIA } from "@/lib/api/modelos-ia";
+import Link from "next/link";
+import {
+  fetchModelosIA,
+  getModeloUploadUrl,
+  crearModelo,
+  type ModeloIA,
+} from "@/lib/api/modelos-ia";
 import { crearGeneracion } from "@/lib/api/generaciones";
+import { isValidUuid } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 
 const STORAGE_KEY = "ultimo_modelo_id";
 
-export default function ModelSelectorScreen() {
+function ModelSelectorScreen() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const prendaId = searchParams.get("prendaId");
@@ -15,17 +25,31 @@ export default function ModelSelectorScreen() {
   const [modelos, setModelos] = useState<ModeloIA[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [createNombre, setCreateNombre] = useState("");
+  const [createDescripcion, setCreateDescripcion] = useState("");
+  const [createFile, setCreateFile] = useState<File | null>(null);
+  const [createProgress, setCreateProgress] = useState(0);
+  const [createStatus, setCreateStatus] = useState<"idle" | "uploading" | "done" | "error">("idle");
 
   useEffect(() => {
     fetchModelosIA()
-      .then(setModelos)
-      .catch(() => setError("No se pudieron cargar los modelos"))
+      .then((loaded) => {
+        setModelos(loaded);
+        const last = localStorage.getItem(STORAGE_KEY);
+        const restored = loaded.find((m) => m.id === last && m.plan_minimo !== "pro");
+        if (restored) {
+          setSelectedId(restored.id);
+        } else if (last) {
+          localStorage.removeItem(STORAGE_KEY);
+        }
+      })
+      .catch(() => setLoadError("No se pudieron cargar los modelos"))
       .finally(() => setLoading(false));
-
-    const last = localStorage.getItem(STORAGE_KEY);
-    if (last) setSelectedId(last);
   }, []);
 
   const handleSelect = (id: string, planMinimo: string) => {
@@ -34,21 +58,127 @@ export default function ModelSelectorScreen() {
     localStorage.setItem(STORAGE_KEY, id);
   };
 
+  const canGenerate =
+    isValidUuid(prendaId) &&
+    isValidUuid(selectedId) &&
+    modelos.some((m) => m.id === selectedId && m.plan_minimo !== "pro");
+
   const handleGenerate = async () => {
-    if (!selectedId || !prendaId) return;
+    if (!canGenerate) {
+      setSubmitError(
+        !isValidUuid(prendaId)
+          ? "Falta la prenda. Vuelve al catálogo y abre una prenda en estado Lista."
+          : "Selecciona un modelo válido antes de generar."
+      );
+      return;
+    }
     setSubmitting(true);
+    setSubmitError(null);
     try {
-      const generacion = await crearGeneracion(prendaId, selectedId);
+      const generacion = await crearGeneracion(prendaId!, selectedId!);
       router.push(`/dashboard/generacion/progress?id=${generacion.id}`);
-    } catch {
-      setError("Error al iniciar la generación");
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : "Error al iniciar la generación");
     } finally {
       setSubmitting(false);
     }
   };
 
-  if (loading) return <div className="p-6 text-center">Cargando modelos...</div>;
-  if (error) return <div className="p-6 text-center text-red-500">{error}</div>;
+  const handleCreateModelo = async () => {
+    if (!createFile) {
+      toast.error("Selecciona una imagen");
+      return;
+    }
+    if (!createNombre.trim()) {
+      toast.error("Ingresa un nombre para el modelo");
+      return;
+    }
+
+    setCreateStatus("uploading");
+    setCreateProgress(0);
+
+    try {
+      const extension = createFile.name.split(".").pop()?.toLowerCase() || "jpg";
+      const { upload_url, modelo_id, object_key } = await getModeloUploadUrl(extension);
+
+      const xhr = new XMLHttpRequest();
+      xhr.open("PUT", upload_url, true);
+
+      xhr.upload.addEventListener("progress", (e) => {
+        if (e.lengthComputable) {
+          setCreateProgress((e.loaded / e.total) * 100);
+        }
+      });
+
+      xhr.addEventListener("load", async () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          setCreateProgress(100);
+          setCreateStatus("done");
+
+          try {
+            const modelo = await crearModelo({
+              modelo_id,
+              nombre: createNombre.trim(),
+              descripcion: createDescripcion.trim() || undefined,
+              object_key,
+            });
+            toast.success("Modelo creado correctamente");
+            setModelos((prev) => [...prev, modelo]);
+            setSelectedId(modelo.id);
+            setShowCreateForm(false);
+            setCreateFile(null);
+            setCreateNombre("");
+            setCreateDescripcion("");
+            setCreateStatus("idle");
+          } catch (err: any) {
+            toast.error(err.message || "Error al registrar el modelo");
+            setCreateStatus("error");
+          }
+        } else {
+          toast.error("Error al subir la imagen");
+          setCreateStatus("error");
+        }
+      });
+
+      xhr.addEventListener("error", () => {
+        toast.error("Error de red al subir");
+        setCreateStatus("error");
+      });
+
+      xhr.send(createFile);
+    } catch (err: any) {
+      toast.error(err.message || "Error inesperado");
+      setCreateStatus("error");
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen flex-col bg-white">
+        <header className="border-b p-4">
+          <h1 className="text-xl font-semibold">Elige un modelo</h1>
+          <p className="text-sm text-gray-500">Selecciona la persona para la prueba virtual</p>
+        </header>
+        <div className="flex flex-1 items-center justify-center p-6 text-gray-500">
+          Cargando modelos...
+        </div>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="flex min-h-screen flex-col bg-white">
+        <header className="border-b p-4">
+          <h1 className="text-xl font-semibold">Elige un modelo</h1>
+          <p className="text-sm text-gray-500">Selecciona la persona para la prueba virtual</p>
+        </header>
+        <div className="flex flex-1 items-center justify-center p-6 text-center text-red-500">
+          {loadError}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen flex-col bg-white">
@@ -58,53 +188,159 @@ export default function ModelSelectorScreen() {
       </header>
 
       <main className="flex-1 p-4 pb-24">
-        <div className="grid grid-cols-2 gap-3">
-          {modelos.map((m) => {
-            const isPro = m.plan_minimo === "pro";
-            const isSelected = selectedId === m.id;
-            return (
-              <button
-                key={m.id}
-                disabled={isPro}
-                onClick={() => handleSelect(m.id, m.plan_minimo)}
-                className={`relative flex items-center gap-3 rounded-xl border-2 p-3 transition-all ${
-                  isSelected
-                    ? "border-blue-500 bg-blue-50"
-                    : isPro
-                      ? "border-gray-200 bg-gray-50 opacity-60"
-                      : "border-gray-200 bg-white active:scale-95"
-                }`}
-              >
-                <img
-                  src={m.thumbnail_url}
-                  alt={m.nombre}
-                  className="h-14 w-14 rounded-full object-cover"
+        {!isValidUuid(prendaId) && (
+          <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+            <p>
+              No se detectó una prenda válida en la URL. Abre el catálogo y haz clic en una prenda con
+              estado &quot;Lista&quot; (o sube una nueva).
+            </p>
+            <Link
+              href="/dashboard"
+              className="mt-2 inline-block font-medium text-amber-950 underline underline-offset-2"
+            >
+              Ir al catálogo
+            </Link>
+          </div>
+        )}
+        {submitError && (
+          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+            {submitError}
+          </div>
+        )}
+
+        {showCreateForm ? (
+          <div className="max-w-md mx-auto space-y-4 rounded-xl border p-4 bg-gray-50">
+            <h2 className="text-lg font-semibold">Crear modelo personalizado</h2>
+
+            <div>
+              <label className="text-sm font-medium">Imagen del modelo</label>
+              <input
+                type="file"
+                accept="image/jpeg,image/png"
+                onChange={(e) => setCreateFile(e.target.files?.[0] || null)}
+                className="mt-1 block w-full text-sm"
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium">Nombre</label>
+              <Input
+                value={createNombre}
+                onChange={(e) => setCreateNombre(e.target.value.slice(0, 100))}
+                placeholder="Ej: Modelo Ana"
+                maxLength={100}
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium">Descripción (opcional)</label>
+              <Input
+                value={createDescripcion}
+                onChange={(e) => setCreateDescripcion(e.target.value.slice(0, 500))}
+                placeholder="Ej: Mujer, 25 años, talla M"
+                maxLength={500}
+              />
+            </div>
+
+            {createStatus === "uploading" && (
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div
+                  className="bg-blue-600 h-2 rounded-full transition-all"
+                  style={{ width: `${createProgress}%` }}
                 />
-                <div className="flex-1 text-left">
-                  <p className="font-medium text-sm">{m.nombre}</p>
-                  <p className="text-xs text-gray-500 line-clamp-2">{m.descripcion}</p>
-                </div>
-                {isPro && (
-                  <span className="absolute right-2 top-2 text-gray-400">
-                    <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-                    </svg>
-                  </span>
-                )}
-                {isSelected && !isPro && (
-                  <span className="absolute right-2 top-2 text-blue-500">
-                    <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
+              </div>
+            )}
+
+            {createStatus === "error" && (
+              <p className="text-sm text-red-600">Error al crear el modelo. Intenta de nuevo.</p>
+            )}
+
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowCreateForm(false);
+                  setCreateStatus("idle");
+                }}
+                className="flex-1"
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleCreateModelo}
+                disabled={!createFile || !createNombre.trim() || createStatus === "uploading"}
+                className="flex-1"
+              >
+                {createStatus === "uploading" ? "Subiendo..." : "Crear modelo"}
+              </Button>
+            </div>
+          </div>
+        ) : modelos.length === 0 ? (
+          <div className="flex flex-col items-center justify-center gap-4 py-16 text-center">
+            <p className="font-medium text-gray-700">No hay modelos disponibles</p>
+            <p className="text-sm text-gray-500">
+              Crea tu primer modelo personalizado subiendo una foto.
+            </p>
+            <Button onClick={() => setShowCreateForm(true)}>
+              Crear modelo personalizado
+            </Button>
+          </div>
+        ) : (
+          <>
+            <div className="mb-4 flex justify-end">
+              <Button variant="outline" size="sm" onClick={() => setShowCreateForm(true)}>
+                + Nuevo modelo
+              </Button>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {modelos.map((m) => {
+                const isPro = m.plan_minimo === "pro";
+                const isSelected = selectedId === m.id;
+                return (
+                  <button
+                    key={m.id}
+                    disabled={isPro}
+                    onClick={() => handleSelect(m.id, m.plan_minimo)}
+                    className={`relative flex items-center gap-3 rounded-xl border-2 p-3 transition-all ${
+                      isSelected
+                        ? "border-blue-500 bg-blue-50"
+                        : isPro
+                          ? "border-gray-200 bg-gray-50 opacity-60"
+                          : "border-gray-200 bg-white active:scale-95"
+                    }`}
+                  >
+                    <img
+                      src={m.thumbnail_url}
+                      alt={m.nombre}
+                      className="h-14 w-14 rounded-full object-cover"
+                    />
+                    <div className="flex-1 text-left">
+                      <p className="font-medium text-sm">{m.nombre}</p>
+                      <p className="text-xs text-gray-500 line-clamp-2">{m.descripcion}</p>
+                    </div>
+                    {isPro && (
+                      <span className="absolute right-2 top-2 text-gray-400">
+                        <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                        </svg>
+                      </span>
+                    )}
+                    {isSelected && !isPro && (
+                      <span className="absolute right-2 top-2 text-blue-500">
+                        <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </>
+        )}
       </main>
 
-      {selectedId && (
+      {canGenerate && (
         <div className="fixed bottom-0 left-0 right-0 border-t bg-white p-4">
           <button
             onClick={handleGenerate}
@@ -116,5 +352,13 @@ export default function ModelSelectorScreen() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function ModelSelectorPage() {
+  return (
+    <Suspense fallback={<div className="p-6 text-center">Cargando...</div>}>
+      <ModelSelectorScreen />
+    </Suspense>
   );
 }

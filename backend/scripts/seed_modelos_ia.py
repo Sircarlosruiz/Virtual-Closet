@@ -1,23 +1,27 @@
 """Seed script para modelos IA.
 
-Sube 6 imágenes de personas (JPG, fondo neutro) a MinIO e inserta 6 filas en modelo_ia.
-4 modelos con plan_minimo=base, 2 con plan_minimo=pro.
+Sube thumbnails a MinIO (bucket model-thumbnails) e inserta filas en modelo_ia.
+Si existe docs/imgs/modelo.jpeg, se usa para el primer modelo base; el resto usa placeholder.
 
 Uso:
     cd backend
     uv run python scripts/seed_modelos_ia.py
+
+Docker (monta docs/imgs o define SEED_IMGS_DIR):
+    docker compose exec fastapi uv run python scripts/seed_modelos_ia.py
 """
 import asyncio
 import io
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 from aiobotocore.session import get_session
 from sqlalchemy import text
 from core.config import settings
 from core.database import async_session
-
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from scripts.seed_paths import seed_image
 
 MODELOS = [
     {"nombre": "María", "descripcion": "Mujer latina, 25-30 años, pelo oscuro", "plan_minimo": "base"},
@@ -58,18 +62,22 @@ async def seed_modelos_ia():
                 await client.create_bucket(Bucket=bucket)
 
         placeholder = await create_placeholder_image()
+        modelo_ejemplo = seed_image("modelo.jpeg")
 
         for i, modelo in enumerate(MODELOS, start=1):
             model_id = f"{i:04d}"
             key = f"{model_id}.jpg"
+            use_ejemplo = i == 1 and modelo_ejemplo is not None
+            body = modelo_ejemplo.read_bytes() if use_ejemplo else placeholder
+            fuente = "docs/imgs/modelo.jpeg" if use_ejemplo else "placeholder"
             try:
                 await client.put_object(
                     Bucket=settings.MINIO_BUCKET_MODEL_THUMBNAILS,
                     Key=key,
-                    Body=placeholder,
+                    Body=body,
                     ContentType="image/jpeg",
                 )
-                print(f"  Subida imagen: {key}")
+                print(f"  Subida imagen: {key} ({fuente})")
             except Exception as e:
                 print(f"  Error subiendo {key}: {e}")
 

@@ -25,10 +25,19 @@ export type ConfirmarSubidaInput = {
   nombre?: string;
 };
 
+export function normalizeUploadExtension(ext: string): "jpg" | "png" | "heic" {
+  const normalized = ext === "jpeg" ? "jpg" : ext;
+  if (normalized === "jpg" || normalized === "png" || normalized === "heic") {
+    return normalized;
+  }
+  return "jpg";
+}
+
 export async function getUploadUrl(
-  extension: "jpg" | "png" | "heic"
+  extension: "jpg" | "png" | "heic" | "jpeg"
 ): Promise<UploadUrlResponse> {
-  return apiFetch(`/api/prendas/upload-url?extension=${extension}`);
+  const ext = normalizeUploadExtension(extension);
+  return apiFetch(`/api/prendas/upload-url?extension=${ext}`);
 }
 
 export async function confirmarSubida(

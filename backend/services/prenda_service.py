@@ -35,7 +35,13 @@ class PrendaService:
     ) -> Prenda:
         imagen_url = await self.storage_service.generate_download_url(object_key)
         nombre_final = nombre or f"Prenda #{prenda_id.hex[:6]}"
-        return await self.prenda_repo.create(mayorista_id, nombre_final, imagen_url)
+        return await self.prenda_repo.create(
+            mayorista_id,
+            nombre_final,
+            imagen_url,
+            prenda_id=prenda_id,
+            estado="lista",
+        )
 
     async def actualizar_nombre(
         self, prenda_id: UUID, mayorista_id: UUID, nombre: str

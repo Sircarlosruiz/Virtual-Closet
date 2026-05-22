@@ -19,7 +19,8 @@ class StorageService:
             "model-thumbnails": settings.MINIO_BUCKET_MODEL_THUMBNAILS,
         }
 
-    async def generate_upload_url(self, key: str, ttl_seconds: int = 900) -> str:
+    async def generate_upload_url(self, key: str, ttl_seconds: int = 900, bucket_override: str | None = None) -> str:
+        bucket = self._buckets.get(bucket_override, self._bucket) if bucket_override else self._bucket
         async with self._session.create_client(
             "s3",
             endpoint_url=self._public_endpoint,
@@ -29,7 +30,7 @@ class StorageService:
         ) as client:
             url = await client.generate_presigned_url(
                 "put_object",
-                Params={"Bucket": self._bucket, "Key": key},
+                Params={"Bucket": bucket, "Key": key},
                 ExpiresIn=ttl_seconds,
                 HttpMethod="PUT",
             )
