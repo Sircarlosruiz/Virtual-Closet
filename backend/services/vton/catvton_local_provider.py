@@ -19,12 +19,14 @@ class CatVTONLocalProvider(VTONProvider):
     def __init__(self) -> None:
         self._endpoint = settings.CATVTON_LOCAL_URL
 
-    async def generate(self, garment: bytes, model: bytes) -> bytes:
+    async def generate(
+        self, garment: bytes, model: bytes, cloth_type: str = "upper"
+    ) -> bytes:
         files = {
             "garment": ("garment.jpg", io.BytesIO(garment), "image/jpeg"),
             "model": ("model.jpg", io.BytesIO(model), "image/jpeg"),
         }
-        data = {"cloth_type": settings.CATVTON_CLOTH_TYPE}
+        data = {"cloth_type": cloth_type}
         # FLUX inpainting at 1024px takes 60-120 s on an RTX 4090
         async with httpx.AsyncClient(timeout=300.0) as client:
             resp = await client.post(

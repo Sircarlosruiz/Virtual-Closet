@@ -28,7 +28,9 @@ def _sync_send_ws(mayorista_id: UUID, message: dict) -> None:
         pass
 
 
-def _run_vton_provider(garment_bytes: bytes, model_bytes: bytes) -> bytes:
+def _run_vton_provider(
+    garment_bytes: bytes, model_bytes: bytes, cloth_type: str = "upper"
+) -> bytes:
     """Run async VTON provider synchronously."""
     if settings.VTON_PROVIDER == "replicate" and not settings.REPLICATE_API_KEY.strip():
         raise ValueError(
@@ -39,11 +41,14 @@ def _run_vton_provider(garment_bytes: bytes, model_bytes: bytes) -> bytes:
 
     import asyncio
     from services.vton import get_provider
+
     provider = get_provider()
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     try:
-        result = loop.run_until_complete(provider.generate(garment_bytes, model_bytes))
+        result = loop.run_until_complete(
+            provider.generate(garment_bytes, model_bytes, cloth_type)
+        )
         return result
     finally:
         loop.close()
@@ -105,7 +110,11 @@ def generate_vton_task(self, generacion_id: str):
         garment_bytes = storage.get_object_bytes_sync(garment_key, bucket_override="originals")
         model_bytes = storage.get_object_bytes_sync(model_key, bucket_override="model-thumbnails")
 
-        result_bytes = _run_vton_provider(garment_bytes, model_bytes)
+        from services.vton.garment_classifier import detect_cloth_type
+
+        cloth_type = detect_cloth_type(garment_bytes)
+
+        result_bytes = _run_vton_provider(garment_bytes, model_bytes, cloth_type)
 
         generated_key = f"{generacion.mayorista_id}/{generacion.id}.jpg"
         thumbnail_key = f"{generacion.mayorista_id}/{generacion.id}.jpg"

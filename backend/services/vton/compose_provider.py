@@ -5,5 +5,7 @@ from services.vton.garment_compositor import composite_garment_on_model
 class ComposeProvider(VTONProvider):
     """Dev provider: background removal + seamless blending (no LLM)."""
 
-    async def generate(self, garment: bytes, model: bytes) -> bytes:
+    async def generate(
+        self, garment: bytes, model: bytes, cloth_type: str = "upper"
+    ) -> bytes:
         return composite_garment_on_model(garment, model)

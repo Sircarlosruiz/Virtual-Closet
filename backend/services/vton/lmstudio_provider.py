@@ -31,7 +31,9 @@ class LMStudioProvider(VTONProvider):
             settings.LMSTUDIO_SYSTEM_PROMPT.strip() or _PLACEMENT_SYSTEM_PROMPT
         )
 
-    async def generate(self, garment: bytes, model: bytes) -> bytes:
+    async def generate(
+        self, garment: bytes, model: bytes, cloth_type: str = "upper"
+    ) -> bytes:
         from services.vton.garment_compositor import composite_garment_on_model
 
         if settings.LMSTUDIO_USE_PLACEMENT:

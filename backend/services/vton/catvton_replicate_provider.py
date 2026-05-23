@@ -22,7 +22,9 @@ class CatVTONReplicateProvider(VTONProvider):
             )
         self._client = replicate.Client(api_token=settings.REPLICATE_API_KEY)
 
-    async def generate(self, garment: bytes, model: bytes) -> bytes:
+    async def generate(
+        self, garment: bytes, model: bytes, cloth_type: str = "upper"
+    ) -> bytes:
         garment_uri = f"data:image/jpeg;base64,{base64.b64encode(garment).decode()}"
         model_uri = f"data:image/jpeg;base64,{base64.b64encode(model).decode()}"
 
@@ -32,7 +34,7 @@ class CatVTONReplicateProvider(VTONProvider):
                 input={
                     "human_image": model_uri,
                     "cloth_image": garment_uri,
-                    "cloth_type": settings.CATVTON_CLOTH_TYPE,
+                    "cloth_type": cloth_type,
                     "num_inference_steps": 50,
                     "guidance_scale": 30.0,
                 },

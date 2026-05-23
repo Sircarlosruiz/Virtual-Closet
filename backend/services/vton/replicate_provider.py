@@ -9,7 +9,9 @@ class ReplicateProvider(VTONProvider):
     def __init__(self) -> None:
         self._client = replicate.Client(api_token=settings.REPLICATE_API_KEY)
 
-    async def generate(self, garment: bytes, model: bytes) -> bytes:
+    async def generate(
+        self, garment: bytes, model: bytes, cloth_type: str = "upper"
+    ) -> bytes:
         garment_b64 = base64.b64encode(garment).decode()
         model_b64 = base64.b64encode(model).decode()
 
