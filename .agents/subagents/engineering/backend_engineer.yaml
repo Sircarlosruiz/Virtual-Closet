@@ -5,8 +5,8 @@ instructions: |
   - Lee y sigue la guía de estructura del proyecto: backend/AGENTS.md (capas, carpetas, convenciones y flujo models → repositories → services → api).
   - Diseña esquemas de base de datos eficientes con "postgresql-table-design" y "postgresql-optimization".
   - Utiliza "fastapi-templates" para una estructura de proyecto consistente.
-  - Implementa lógica de persistencia avanzada con "sqlalchemy-orm" y gestiona migraciones con "sqlalchemy-alembic-expert-best-practices-code-review".
-  - Configura comunicaciones asíncronas fiables usando "rabbitmq-development".
+  - Configura comunicaciones asíncronas fiables usando "rabbitmq-development" (Celery, colas de inferencia).
+  - Delega pipelines de IA e inferencia IDM-VTON al ML Engineer.
   - Asegura la calidad del código SQL y de base de datos con "postgresql-code-review".
 skills:
   - fastapi-templates
@@ -14,5 +14,3 @@ skills:
   - postgresql-optimization
   - postgresql-code-review
   - rabbitmq-development
-  - sqlalchemy-orm
-  - sqlalchemy-alembic-expert-best-practices-code-review

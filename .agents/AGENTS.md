@@ -2,11 +2,11 @@
 
 ## Descripción del Proyecto
 
-**Virtual Closet (NikaCommerce)** es una plataforma SaaS B2B diseñada para mayoristas de ropa. Permite transformar fotos planas o en maniquí de prendas de vestir en catálogos visuales profesionales generados por Inteligencia Artificial (IDM-VTON) sobre modelos reales en menos de 5 minutos. 
+**Virtual Closet (NikaCommerce)** es una plataforma SaaS B2B diseñada para mayoristas de ropa. Permite transformar fotos planas o en maniquí de prendas de vestir en catálogos visuales profesionales generados por Inteligencia Artificial (IDM-VTON) sobre modelos reales en menos de 5 minutos.
 
 El objetivo es eliminar los altos costos de sesiones fotográficas y permitir a los mayoristas compartir catálogos digitales interactivos con sus revendedores a través de enlaces simples (ej. WhatsApp), aumentando la confianza visual y, consecuentemente, el volumen de pedidos.
 
-**Stack Tecnológico Principal:** Next.js 14, FastAPI (Python), PostgreSQL 16, RabbitMQ, Celery, MinIO, Docker y k3s.
+**Stack tecnológico principal:** Next.js 14, FastAPI (Python), PostgreSQL 16, RabbitMQ, Celery, MinIO, Docker y k3s.
 
 ## Guías de implementación por stack
 
@@ -25,59 +25,132 @@ Antes de implementar o revisar código en un stack, cargar la guía correspondie
 
 ---
 
-Este documento describe la estructura de subagentes especializados para el proyecto Virtual Closet. La arquitectura se divide en tres dominios principales para optimizar la colaboración técnica y el enfoque de las herramientas AI.
+## Catálogo de skills (`.agents/skills/`)
+
+Skills instaladas en el proyecto, agrupadas por dominio. Cada subagente carga solo las skills asignadas en su YAML.
+
+| Dominio | Skills |
+|---------|--------|
+| **Framework / agentes** | `agent-architect`, `agent-dev`, `agent-pm`, `help` |
+| **Producto y planificación** | `product-brief`, `sprint-planning`, `create-story`, `create-architecture`, `create-ux-design`, `dev-story` |
+| **Entrega y Git** | `quick-dev`, `code-review`, `git-sync`, `pr-flow` |
+| **Frontend** | `frontend-design`, `ui-ux-pro-max`, `shadcn`, `tailwind-design-system`, `next-best-practices`, `typescript-advanced-types` |
+| **Backend** | `fastapi-templates`, `postgresql-table-design`, `postgresql-optimization`, `postgresql-code-review`, `rabbitmq-development` |
+| **ML / IA** | `machine-learning-engineer`, `machine-learning`, `transformers-huggingface`, `langchain-fundamentals`, `langchain-architecture`, `langchain-rag` |
+| **DevOps / infra** | `docker-expert`, `multi-stage-dockerfile`, `minio`, `kubernetes-specialist` |
+| **Calidad** | `test-atdd` |
+| **Documentación** | `distillator` |
+
+> **Nota:** `pr-flow` vive en la carpeta `pr-flow/` (el skill interno se identifica como `lvz-pr-flow`). Algunas skills de framework (`create-story`, `dev-story`, etc.) usan `workflow.md` en lugar de `SKILL.md`.
+
+---
+
+## Estructura de subagentes
+
+La arquitectura se divide en **cuatro dominios** para optimizar la colaboración técnica y el enfoque de las herramientas AI.
+
+```
+.agents/subagents/
+├── leadership/
+│   ├── product_lead.yaml
+│   ├── system_architect.yaml
+│   └── lead_developer.yaml
+├── engineering/
+│   ├── frontend_engineer.yaml
+│   ├── backend_engineer.yaml
+│   ├── ml_engineer.yaml
+│   └── devops_engineer.yaml
+└── quality/
+    ├── qa_engineer.yaml
+    └── ux_researcher.yaml
+```
+
+---
 
 ## 1. Dominio de Liderazgo (Leadership)
+
 Responsables de la orquestación, visión del producto, arquitectura técnica y gestión de la entrega.
 
-### 👑 Product Lead (John)
+### Product Lead (John)
+
 * **Ruta:** `.agents/subagents/leadership/product_lead.yaml`
-* **Enfoque:** El "Por qué" y el "Qué". Experto en creación de PRDs, product briefs y refinamiento del backlog basado en valor.
-* **Habilidades:** `product-brief`, `agent-pm`, `help`, `brainstorming`
+* **Enfoque:** El "Por qué" y el "Qué". PRDs, product briefs, backlog y planificación de sprints.
+* **Skills:** `product-brief`, `agent-pm`, `help`, `sprint-planning`, `create-story`
 
-### 🏗️ System Architect (Winston)
+### System Architect (Winston)
+
 * **Ruta:** `.agents/subagents/leadership/system_architect.yaml`
-* **Enfoque:** La "Escala" y la "Consistencia". Experto en decisiones técnicas, diseño de sistemas y viabilidad a largo plazo.
-* **Habilidades:** `agent-architect`, `distillator`, `help`
+* **Enfoque:** Escala, consistencia y decisiones técnicas de largo plazo.
+* **Skills:** `agent-architect`, `distillator`, `help`, `create-architecture`
 
-### 🚀 Lead Developer (Amelia)
+### Lead Developer (Amelia)
+
 * **Ruta:** `.agents/subagents/leadership/lead_developer.yaml`
-* **Enfoque:** El "Cómo" y en "Terminar". Experto en TDD, implementación de historias y calidad automatizada.
-* **Habilidades:** `agent-dev`, `quick-dev`, `code-review`, `git-sync`, `lvz-pr-flow`
+* **Enfoque:** El "Cómo" y terminar. TDD, historias, revisión de código y flujo Git/PR.
+* **Skills:** `agent-dev`, `quick-dev`, `code-review`, `git-sync`, `pr-flow`, `dev-story`, `create-story`
 * **Guías de stack:** [`backend/AGENTS.md`](../backend/AGENTS.md), [`frontend/AGENTS.md`](../frontend/AGENTS.md)
 
 ---
 
 ## 2. Dominio de Ingeniería (Engineering)
-Especialistas técnicos responsables de la implementación a través del stack tecnológico.
 
-### 🎨 Frontend Engineer
+Especialistas técnicos responsables de la implementación a través del stack.
+
+### Frontend Engineer
+
 * **Ruta:** `.agents/subagents/engineering/frontend_engineer.yaml`
-* **Enfoque:** Especialista en el ecosistema de React/Next.js, TypeScript, Tailwind CSS, shadcn/ui y construcción de UI de alto rendimiento.
-* **Habilidades:** `frontend-design`, `ui-ux-pro-max`, `shadcn`, `tailwind-design-system`, `next-best-practices`, `vercel-react-best-practices`, `typescript-advanced-types`
+* **Enfoque:** React/Next.js 14, TypeScript, Tailwind, shadcn/ui y UI de alto rendimiento.
+* **Skills:** `frontend-design`, `ui-ux-pro-max`, `shadcn`, `tailwind-design-system`, `next-best-practices`, `typescript-advanced-types`
 
-### ⚙️ Backend Engineer
+### Backend Engineer
+
 * **Ruta:** `.agents/subagents/engineering/backend_engineer.yaml`
-* **Enfoque:** Especialista en FastAPI, PostgreSQL, RabbitMQ y arquitectura de microservicios asíncronos.
-* **Guía de estructura:** [`backend/AGENTS.md`](../backend/AGENTS.md) — capas (`models` → `repositories` → `services` → `api/routers`), convenciones y comandos.
-* **Habilidades:** `fastapi-templates`, `postgresql-table-design`, `postgresql-optimization`, `postgresql-code-review`, `rabbitmq-development`, `sqlalchemy-orm`, `sqlalchemy-alembic-expert-best-practices-code-review`
+* **Enfoque:** FastAPI, PostgreSQL, RabbitMQ/Celery y APIs asíncronas.
+* **Guía de estructura:** [`backend/AGENTS.md`](../backend/AGENTS.md)
+* **Skills:** `fastapi-templates`, `postgresql-table-design`, `postgresql-optimization`, `postgresql-code-review`, `rabbitmq-development`
 
-### ☁️ DevOps Engineer
+### ML Engineer
+
+* **Ruta:** `.agents/subagents/engineering/ml_engineer.yaml`
+* **Enfoque:** Inferencia IDM-VTON, Hugging Face, despliegue de modelos y orquestación LLM (LangChain).
+* **Skills:** `machine-learning-engineer`, `machine-learning`, `transformers-huggingface`, `langchain-fundamentals`, `langchain-architecture`, `langchain-rag`
+
+### DevOps Engineer
+
 * **Ruta:** `.agents/subagents/engineering/devops_engineer.yaml`
-* **Enfoque:** Especialista en infraestructura, contenedores Docker y almacenamiento de objetos (MinIO).
-* **Habilidades:** `docker-expert`, `minio`
+* **Enfoque:** Docker, MinIO, k3s y pipelines de despliegue.
+* **Skills:** `docker-expert`, `multi-stage-dockerfile`, `minio`, `kubernetes-specialist`
 
 ---
 
 ## 3. Dominio de Calidad (Quality)
-Responsables de asegurar los estándares de código, pruebas y la experiencia de usuario final.
 
-### 🛡️ QA Engineer
+Responsables de estándares de código, pruebas y experiencia de usuario.
+
+### QA Engineer
+
 * **Ruta:** `.agents/subagents/quality/qa_engineer.yaml`
-* **Enfoque:** Especialista en aseguramiento de calidad, pruebas automatizadas y auditoría de código.
-* **Habilidades:** `code-review`
+* **Enfoque:** ATDD, pruebas automatizadas (Playwright) y revisión adversarial de código.
+* **Skills:** `code-review`, `test-atdd`
 
-### 🔍 UX Researcher
+### UX Researcher
+
 * **Ruta:** `.agents/subagents/quality/ux_researcher.yaml`
-* **Enfoque:** Especialista en experiencia de usuario, diseño de interacción y validación de hipótesis de producto.
-* **Habilidades:** `ui-ux-pro-max`, `brainstorming`
+* **Enfoque:** UX, diseño de interacción y validación de hipótesis de producto.
+* **Skills:** `ui-ux-pro-max`, `create-ux-design`
+
+---
+
+## Matriz de delegación rápida
+
+| Tarea | Subagente recomendado |
+|-------|------------------------|
+| PRD, épicas, sprint status | Product Lead |
+| Arquitectura, ADRs, integraciones | System Architect |
+| Implementar historia, PR, dev-story | Lead Developer |
+| UI Next.js, componentes | Frontend Engineer |
+| API FastAPI, DB, colas | Backend Engineer |
+| IDM-VTON, modelos HF, LangChain | ML Engineer |
+| Docker, k3s, MinIO | DevOps Engineer |
+| Tests E2E / ATDD, code review | QA Engineer |
+| Flujos UX, wireframes | UX Researcher |
