@@ -150,12 +150,11 @@ services:
     build:
       context: ./docker/catvton
       dockerfile: Dockerfile
+    # Lee HF_TOKEN, CATVTON_STEPS y CATVTON_GUIDANCE desde backend/.env
+    env_file:
+      - ./backend/.env
     ports:
       - "8001:8000"
-    environment:
-      HF_TOKEN: ${HF_TOKEN:-}
-      CATVTON_STEPS: ${CATVTON_STEPS:-50}
-      CATVTON_GUIDANCE: ${CATVTON_GUIDANCE:-30.0}
     volumes:
       - catvton_cache:/app/model_cache
     deploy:
