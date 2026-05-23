@@ -130,8 +130,10 @@ services:
       MINIO_BUCKET_GENERATED: generated
       MINIO_BUCKET_THUMBNAILS: thumbnails
       MINIO_BUCKET_MODEL_THUMBNAILS: model-thumbnails
-      # VTON_PROVIDER and LMSTUDIO_* come from env_file (backend/.env)
+      # VTON_PROVIDER, CATVTON_*, REPLICATE_API_KEY come from env_file (backend/.env)
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+      # CatVTON-Flux self-hosted: worker needs to reach the inference container by name
+      CATVTON_LOCAL_URL: http://catvton:8000
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -140,6 +142,37 @@ services:
       minio:
         condition: service_healthy
 
+  # CatVTON-Flux inference server — requires an NVIDIA GPU.
+  # Start with: docker compose --profile gpu up catvton
+  # First run downloads ~24 GB of model weights; subsequent starts use the cache volume.
+  catvton:
+    profiles: ["gpu"]
+    build:
+      context: ./docker/catvton
+      dockerfile: Dockerfile
+    ports:
+      - "8001:8000"
+    environment:
+      HF_TOKEN: ${HF_TOKEN:-}
+      CATVTON_STEPS: ${CATVTON_STEPS:-50}
+      CATVTON_GUIDANCE: ${CATVTON_GUIDANCE:-30.0}
+    volumes:
+      - catvton_cache:/app/model_cache
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+
 volumes:
   postgres_data:
   minio_data:
+  catvton_cache:

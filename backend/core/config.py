@@ -46,6 +46,17 @@ class Settings(BaseSettings):
     LMSTUDIO_USE_PLACEMENT: bool = False
     VTON_LOCAL_URL: str = "http://idm-vton-gpu:8000"
 
+    # CatVTON-Flux
+    # Replicate model: find the exact version at https://replicate.com — search "catvton"
+    # Verify input schema (human_image, cloth_image, cloth_type) matches the deployed version.
+    CATVTON_REPLICATE_MODEL: str = "zhengchong/catvton"
+    # Self-hosted inference server (docker compose --profile gpu up catvton)
+    CATVTON_LOCAL_URL: str = "http://catvton:8000"
+    # Type of garment: upper | lower | overall
+    CATVTON_CLOTH_TYPE: str = "upper"
+    # HuggingFace token — required to download gated FLUX.1-Fill-dev weights
+    HF_TOKEN: str = ""
+
     # RabbitMQ / Celery
     RABBITMQ_URL: str = "amqp://guest:guest@rabbitmq:5672/"
 

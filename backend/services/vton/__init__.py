@@ -3,6 +3,8 @@ from services.vton.replicate_provider import ReplicateProvider
 from services.vton.local_provider import LocalProvider
 from services.vton.lmstudio_provider import LMStudioProvider
 from services.vton.compose_provider import ComposeProvider
+from services.vton.catvton_replicate_provider import CatVTONReplicateProvider
+from services.vton.catvton_local_provider import CatVTONLocalProvider
 from core.config import settings
 
 
@@ -14,4 +16,8 @@ def get_provider() -> VTONProvider:
         return ComposeProvider()
     if provider_type == "lmstudio":
         return LMStudioProvider()
+    if provider_type == "catvton_replicate":
+        return CatVTONReplicateProvider()
+    if provider_type == "catvton_local":
+        return CatVTONLocalProvider()
     return ReplicateProvider()
