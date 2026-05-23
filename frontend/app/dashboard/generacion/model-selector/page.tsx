@@ -13,6 +13,7 @@ import { crearGeneracion } from "@/lib/api/generaciones";
 import { isValidUuid } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ImageDropzone } from "@/components/prendas/ImageDropzone";
 import { toast } from "sonner";
 
 const STORAGE_KEY = "ultimo_modelo_id";
@@ -33,8 +34,18 @@ function ModelSelectorScreen() {
   const [createNombre, setCreateNombre] = useState("");
   const [createDescripcion, setCreateDescripcion] = useState("");
   const [createFile, setCreateFile] = useState<File | null>(null);
+  const [createFileError, setCreateFileError] = useState<string>();
+  const [createFormKey, setCreateFormKey] = useState(0);
   const [createProgress, setCreateProgress] = useState(0);
   const [createStatus, setCreateStatus] = useState<"idle" | "uploading" | "done" | "error">("idle");
+
+  const canSubmitCreate =
+    !!createFile && !!createNombre.trim() && createStatus !== "uploading";
+
+  const missingCreateFields = [
+    !createFile && "imagen del modelo",
+    !createNombre.trim() && "nombre",
+  ].filter(Boolean) as string[];
 
   useEffect(() => {
     fetchModelosIA()
@@ -103,6 +114,7 @@ function ModelSelectorScreen() {
 
       const xhr = new XMLHttpRequest();
       xhr.open("PUT", upload_url, true);
+      xhr.setRequestHeader("Content-Type", createFile.type || "image/jpeg");
 
       xhr.upload.addEventListener("progress", (e) => {
         if (e.lengthComputable) {
@@ -127,9 +139,11 @@ function ModelSelectorScreen() {
             setSelectedId(modelo.id);
             setShowCreateForm(false);
             setCreateFile(null);
+            setCreateFileError(undefined);
             setCreateNombre("");
             setCreateDescripcion("");
             setCreateStatus("idle");
+            setCreateFormKey((k) => k + 1);
           } catch (err: any) {
             toast.error(err.message || "Error al registrar el modelo");
             setCreateStatus("error");
@@ -173,8 +187,15 @@ function ModelSelectorScreen() {
           <h1 className="text-xl font-semibold">Elige un modelo</h1>
           <p className="text-sm text-gray-500">Selecciona la persona para la prueba virtual</p>
         </header>
-        <div className="flex flex-1 items-center justify-center p-6 text-center text-red-500">
-          {loadError}
+        <div className="flex flex-1 flex-col items-center justify-center gap-4 p-6">
+          <p className="text-center text-red-500">{loadError}</p>
+          <button
+            type="button"
+            onClick={() => setShowCreateForm(true)}
+            className="rounded-lg bg-blue-600 px-6 py-2.5 font-semibold text-white hover:bg-blue-700"
+          >
+            Crear modelo personalizado
+          </button>
         </div>
       </div>
     );
@@ -183,8 +204,19 @@ function ModelSelectorScreen() {
   return (
     <div className="flex min-h-screen flex-col bg-white">
       <header className="border-b p-4">
-        <h1 className="text-xl font-semibold">Elige un modelo</h1>
-        <p className="text-sm text-gray-500">Selecciona la persona para la prueba virtual</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-semibold">Elige un modelo</h1>
+            <p className="text-sm text-gray-500">Selecciona la persona para la prueba virtual</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowCreateForm(true)}
+            className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          >
+            + Nuevo modelo
+          </button>
+        </div>
       </header>
 
       <main className="flex-1 p-4 pb-24">
@@ -213,13 +245,19 @@ function ModelSelectorScreen() {
             <h2 className="text-lg font-semibold">Crear modelo personalizado</h2>
 
             <div>
-              <label className="text-sm font-medium">Imagen del modelo</label>
-              <input
-                type="file"
-                accept="image/jpeg,image/png"
-                onChange={(e) => setCreateFile(e.target.files?.[0] || null)}
-                className="mt-1 block w-full text-sm"
-              />
+              <label className="text-sm font-medium">
+                Imagen del modelo <span className="text-red-600">*</span>
+              </label>
+              <div className="mt-1">
+                <ImageDropzone
+                  key={createFormKey}
+                  onFileSelected={(file) => {
+                    setCreateFile(file);
+                    setCreateFileError(undefined);
+                  }}
+                  error={createFileError}
+                />
+              </div>
             </div>
 
             <div>
@@ -255,20 +293,41 @@ function ModelSelectorScreen() {
               <p className="text-sm text-red-600">Error al crear el modelo. Intenta de nuevo.</p>
             )}
 
+            {missingCreateFields.length > 0 && createStatus !== "uploading" && (
+              <p className="text-sm text-amber-800">
+                Para continuar, completa: {missingCreateFields.join(" y ")}.
+              </p>
+            )}
+
             <div className="flex gap-3">
               <Button
                 variant="outline"
                 onClick={() => {
                   setShowCreateForm(false);
                   setCreateStatus("idle");
+                  setCreateFile(null);
+                  setCreateFileError(undefined);
+                  setCreateNombre("");
+                  setCreateDescripcion("");
+                  setCreateFormKey((k) => k + 1);
                 }}
                 className="flex-1"
               >
                 Cancelar
               </Button>
               <Button
-                onClick={handleCreateModelo}
-                disabled={!createFile || !createNombre.trim() || createStatus === "uploading"}
+                onClick={() => {
+                  if (!createFile) {
+                    setCreateFileError("Selecciona una imagen del modelo");
+                    return;
+                  }
+                  if (!createNombre.trim()) {
+                    toast.error("Ingresa un nombre para el modelo");
+                    return;
+                  }
+                  handleCreateModelo();
+                }}
+                disabled={!canSubmitCreate}
                 className="flex-1"
               >
                 {createStatus === "uploading" ? "Subiendo..." : "Crear modelo"}
@@ -281,68 +340,67 @@ function ModelSelectorScreen() {
             <p className="text-sm text-gray-500">
               Crea tu primer modelo personalizado subiendo una foto.
             </p>
-            <Button onClick={() => setShowCreateForm(true)}>
+            <button
+              type="button"
+              onClick={() => setShowCreateForm(true)}
+              className="rounded-lg bg-blue-600 px-6 py-2.5 font-semibold text-white hover:bg-blue-700"
+            >
               Crear modelo personalizado
-            </Button>
+            </button>
           </div>
         ) : (
-          <>
-            <div className="mb-4 flex justify-end">
-              <Button variant="outline" size="sm" onClick={() => setShowCreateForm(true)}>
-                + Nuevo modelo
-              </Button>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              {modelos.map((m) => {
-                const isPro = m.plan_minimo === "pro";
-                const isSelected = selectedId === m.id;
-                return (
-                  <button
-                    key={m.id}
-                    disabled={isPro}
-                    onClick={() => handleSelect(m.id, m.plan_minimo)}
-                    className={`relative flex items-center gap-3 rounded-xl border-2 p-3 transition-all ${
-                      isSelected
-                        ? "border-blue-500 bg-blue-50"
-                        : isPro
-                          ? "border-gray-200 bg-gray-50 opacity-60"
-                          : "border-gray-200 bg-white active:scale-95"
-                    }`}
-                  >
-                    <img
-                      src={m.thumbnail_url}
-                      alt={m.nombre}
-                      className="h-14 w-14 rounded-full object-cover"
-                    />
-                    <div className="flex-1 text-left">
-                      <p className="font-medium text-sm">{m.nombre}</p>
-                      <p className="text-xs text-gray-500 line-clamp-2">{m.descripcion}</p>
-                    </div>
-                    {isPro && (
-                      <span className="absolute right-2 top-2 text-gray-400">
-                        <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-                        </svg>
-                      </span>
-                    )}
-                    {isSelected && !isPro && (
-                      <span className="absolute right-2 top-2 text-blue-500">
-                        <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                        </svg>
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </>
+          <div className="grid grid-cols-2 gap-3">
+            {modelos.map((m) => {
+              const isPro = m.plan_minimo === "pro";
+              const isSelected = selectedId === m.id;
+              return (
+                <button
+                  key={m.id}
+                  type="button"
+                  disabled={isPro}
+                  onClick={() => handleSelect(m.id, m.plan_minimo)}
+                  className={`relative flex items-center gap-3 rounded-xl border-2 p-3 transition-all ${
+                    isSelected
+                      ? "border-blue-500 bg-blue-50"
+                      : isPro
+                        ? "border-gray-200 bg-gray-50 opacity-60"
+                        : "border-gray-200 bg-white active:scale-95"
+                  }`}
+                >
+                  <img
+                    src={m.thumbnail_url}
+                    alt={m.nombre}
+                    className="h-14 w-14 rounded-full object-cover"
+                  />
+                  <div className="flex-1 text-left">
+                    <p className="font-medium text-sm">{m.nombre}</p>
+                    <p className="text-xs text-gray-500 line-clamp-2">{m.descripcion}</p>
+                  </div>
+                  {isPro && (
+                    <span className="absolute right-2 top-2 text-gray-400">
+                      <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                      </svg>
+                    </span>
+                  )}
+                  {isSelected && !isPro && (
+                    <span className="absolute right-2 top-2 text-blue-500">
+                      <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
         )}
       </main>
 
       {canGenerate && (
         <div className="fixed bottom-0 left-0 right-0 border-t bg-white p-4">
           <button
+            type="button"
             onClick={handleGenerate}
             disabled={submitting}
             className="w-full rounded-xl bg-blue-600 py-3 font-semibold text-white transition-colors hover:bg-blue-700 disabled:opacity-50"

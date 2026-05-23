@@ -3,12 +3,16 @@
 import { Suspense, useEffect, useState, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { fetchMe } from "@/lib/api/auth";
+import { fetchGeneracion } from "@/lib/api/generaciones";
 
 const STEPS = [
   { label: "Analizando prenda...", icon: "🔍" },
   { label: "Aplicando modelo...", icon: "✨" },
   { label: "Finalizando...", icon: "🎨" },
 ];
+
+const POLL_INTERVAL_MS = 3000;
+const TIMEOUT_MS = 300_000;
 
 function ProgressScreen() {
   const router = useRouter();
@@ -19,6 +23,7 @@ function ProgressScreen() {
   const [elapsed, setElapsed] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
+  const finishedRef = useRef(false);
 
   useEffect(() => {
     if (!generacionId) return;
@@ -31,6 +36,39 @@ function ProgressScreen() {
 
     let ws: WebSocket | null = null;
 
+    const finishWithResult = () => {
+      if (finishedRef.current) return;
+      finishedRef.current = true;
+      router.push(`/dashboard/generacion/result?id=${generacionId}`);
+    };
+
+    const finishWithError = (message: string) => {
+      if (finishedRef.current) return;
+      finishedRef.current = true;
+      setError(message || "Error en la generación");
+    };
+
+    const pollStatus = async () => {
+      if (finishedRef.current) return;
+      try {
+        const generacion = await fetchGeneracion(generacionId);
+        if (generacion.estado === "lista") {
+          finishWithResult();
+        } else if (generacion.estado === "error") {
+          finishWithError(generacion.error_message || "Error en la generación");
+        }
+      } catch {
+        // ignore transient poll errors
+      }
+    };
+
+    const pollInterval = setInterval(pollStatus, POLL_INTERVAL_MS);
+    pollStatus();
+
+    const timeoutId = setTimeout(() => {
+      finishWithError("La generación está tardando demasiado. Por favor, reintenta.");
+    }, TIMEOUT_MS);
+
     fetchMe()
       .then((me) => {
         const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
@@ -42,9 +80,9 @@ function ProgressScreen() {
           try {
             const data = JSON.parse(event.data);
             if (data.type === "generacion_completada" && data.generacion_id === generacionId) {
-              router.push(`/dashboard/generacion/result?id=${generacionId}`);
+              finishWithResult();
             } else if (data.type === "generacion_error" && data.generacion_id === generacionId) {
-              setError(data.error || "Error en la generación");
+              finishWithError(data.error || "Error en la generación");
             }
           } catch {
             // ignore parse errors
@@ -52,12 +90,14 @@ function ProgressScreen() {
         };
       })
       .catch(() => {
-        // WS connection failed, continue polling fallback
+        // WS optional; polling handles progress
       });
 
     return () => {
       clearInterval(timer);
       clearInterval(stepTimer);
+      clearInterval(pollInterval);
+      clearTimeout(timeoutId);
       ws?.close();
     };
   }, [generacionId, router]);

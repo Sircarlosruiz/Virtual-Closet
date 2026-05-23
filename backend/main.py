@@ -48,23 +48,8 @@ async def health():
 @app.on_event("startup")
 async def startup_event():
     try:
-        from aiobotocore.session import get_session
-        session = get_session()
-        async with session.create_client(
-            "s3",
-            endpoint_url=settings.MINIO_ENDPOINT,
-            aws_secret_access_key=settings.MINIO_SECRET_KEY,
-            aws_access_key_id=settings.MINIO_ACCESS_KEY,
-        ) as client:
-            buckets = await client.list_buckets()
-            bucket_names = [b["Name"] for b in buckets.get("Buckets", [])]
-            for bucket in [
-                settings.MINIO_BUCKET_ORIGINALS,
-                settings.MINIO_BUCKET_GENERATED,
-                settings.MINIO_BUCKET_THUMBNAILS,
-                settings.MINIO_BUCKET_MODEL_THUMBNAILS,
-            ]:
-                if bucket not in bucket_names:
-                    await client.create_bucket(Bucket=bucket)
+        from core.minio_buckets import ensure_minio_buckets
+
+        await ensure_minio_buckets()
     except Exception:
         pass

@@ -39,6 +39,12 @@ class Settings(BaseSettings):
     # VTON / IA
     VTON_PROVIDER: str = "replicate"
     REPLICATE_API_KEY: str = ""
+    LMSTUDIO_BASE_URL: str = "http://localhost:1234"
+    LMSTUDIO_MODEL: str = ""
+    LMSTUDIO_API_KEY: str = "lm-studio"
+    LMSTUDIO_SYSTEM_PROMPT: str = ""
+    LMSTUDIO_USE_PLACEMENT: bool = False
+    VTON_LOCAL_URL: str = "http://idm-vton-gpu:8000"
 
     # RabbitMQ / Celery
     RABBITMQ_URL: str = "amqp://guest:guest@rabbitmq:5672/"

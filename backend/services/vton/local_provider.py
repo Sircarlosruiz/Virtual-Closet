@@ -4,8 +4,10 @@ from services.vton.base import VTONProvider
 
 
 class LocalProvider(VTONProvider):
-    def __init__(self, endpoint: str = "http://idm-vton-gpu:8000") -> None:
-        self._endpoint = endpoint
+    def __init__(self, endpoint: str | None = None) -> None:
+        from core.config import settings
+
+        self._endpoint = endpoint or settings.VTON_LOCAL_URL
 
     async def generate(self, garment: bytes, model: bytes) -> bytes:
         files = {

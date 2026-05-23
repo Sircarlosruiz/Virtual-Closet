@@ -3,9 +3,10 @@
 interface UploadProgressProps {
   progress: number;
   status: "idle" | "uploading" | "done" | "error";
+  errorMessage?: string;
 }
 
-export function UploadProgress({ progress, status }: UploadProgressProps) {
+export function UploadProgress({ progress, status, errorMessage }: UploadProgressProps) {
   const statusText = {
     idle: "Preparando...",
     uploading: "Subiendo imagen...",
@@ -36,6 +37,9 @@ export function UploadProgress({ progress, status }: UploadProgressProps) {
           style={{ width: `${progress}%` }}
         />
       </div>
+      {status === "error" && errorMessage && (
+        <p className="text-sm text-red-600">{errorMessage}</p>
+      )}
     </div>
   );
 }

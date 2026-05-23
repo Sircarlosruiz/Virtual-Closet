@@ -1,4 +1,4 @@
-import { apiFetch } from "@/lib/api";
+import { apiFetch, BACKEND_URL } from "@/lib/api";
 
 export type UploadUrlResponse = {
   upload_url: string;
@@ -46,6 +46,60 @@ export async function confirmarSubida(
   return apiFetch("/api/prendas", {
     method: "POST",
     body: JSON.stringify(data),
+  });
+}
+
+export async function subirPrenda(
+  file: File,
+  nombre?: string,
+  onProgress?: (percent: number) => void
+): Promise<PrendaResponse> {
+  const formData = new FormData();
+  formData.append("file", file);
+  if (nombre) {
+    formData.append("nombre", nombre);
+  }
+
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", `${BACKEND_URL}/api/prendas/upload`);
+    xhr.withCredentials = true;
+
+    xhr.upload.addEventListener("progress", (e) => {
+      if (e.lengthComputable && onProgress) {
+        onProgress((e.loaded / e.total) * 100);
+      }
+    });
+
+    xhr.addEventListener("load", () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try {
+          resolve(JSON.parse(xhr.responseText));
+        } catch {
+          reject(new Error("Respuesta inválida del servidor"));
+        }
+        return;
+      }
+      try {
+        const err = JSON.parse(xhr.responseText);
+        const detail = err.detail;
+        const message =
+          typeof detail === "string"
+            ? detail
+            : Array.isArray(detail)
+              ? detail.map((d: { msg?: string }) => d.msg ?? "Dato inválido").join(". ")
+              : `HTTP ${xhr.status}`;
+        reject(new Error(message));
+      } catch {
+        reject(new Error(`HTTP ${xhr.status}`));
+      }
+    });
+
+    xhr.addEventListener("error", () => {
+      reject(new Error("Error de red al subir la prenda"));
+    });
+
+    xhr.send(formData);
   });
 }
 

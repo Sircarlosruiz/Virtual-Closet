@@ -6,11 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ImageDropzone } from "@/components/prendas/ImageDropzone";
 import { UploadProgress } from "@/components/prendas/UploadProgress";
-import {
-  getUploadUrl,
-  confirmarSubida,
-  normalizeUploadExtension,
-} from "@/lib/api/prendas";
+import { subirPrenda } from "@/lib/api/prendas";
 import { toast } from "sonner";
 
 export default function NuevaPrendaPage() {
@@ -23,10 +19,7 @@ export default function NuevaPrendaPage() {
   const [uploadStatus, setUploadStatus] = useState<
     "idle" | "uploading" | "done" | "error"
   >("idle");
-
-  const extension = normalizeUploadExtension(
-    file?.name.split(".").pop()?.toLowerCase() || "jpg"
-  );
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   const handleFileSelected = (selectedFile: File) => {
     setFile(selectedFile);
@@ -48,59 +41,32 @@ export default function NuevaPrendaPage() {
       setStep(3);
       setUploadStatus("uploading");
       setUploadProgress(0);
+      setUploadError(null);
 
-      const { upload_url, prenda_id, object_key } = await getUploadUrl(extension);
+      const prenda = await subirPrenda(
+        file,
+        nombre || undefined,
+        (percent) => setUploadProgress(percent)
+      );
 
-      const xhr = new XMLHttpRequest();
-      xhr.open("PUT", upload_url, true);
-
-      xhr.upload.addEventListener("progress", (e) => {
-        if (e.lengthComputable) {
-          setUploadProgress((e.loaded / e.total) * 100);
-        }
-      });
-
-      xhr.addEventListener("load", async () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          setUploadProgress(100);
-          setUploadStatus("done");
-
-          try {
-            const prenda = await confirmarSubida({
-              prenda_id,
-              object_key,
-              nombre: nombre || undefined,
-            });
-            toast.success("Prenda subida correctamente");
-            setTimeout(
-              () =>
-                router.push(
-                  `/dashboard/generacion/model-selector?prendaId=${prenda.id}`
-                ),
-              1000
-            );
-          } catch (err: any) {
-            toast.error(err.message || "Error al registrar la prenda");
-            setUploadStatus("error");
-          }
-        } else {
-          toast.error("Error al subir la imagen");
-          setUploadStatus("error");
-        }
-      });
-
-      xhr.addEventListener("error", () => {
-        toast.error("Error de red al subir");
-        setUploadStatus("error");
-      });
-
-      xhr.send(file);
-    } catch (err: any) {
-      if (err.message?.includes("Límite mensual")) {
+      setUploadStatus("done");
+      toast.success("Prenda subida correctamente");
+      setTimeout(
+        () =>
+          router.push(
+            `/dashboard/generacion/model-selector?prendaId=${prenda.id}`
+          ),
+        1000
+      );
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : "Error inesperado al subir";
+      if (message.includes("Límite mensual")) {
         toast.error("Límite mensual alcanzado. Considera actualizar tu plan.");
       } else {
-        toast.error(err.message || "Error inesperado");
+        toast.error(message);
       }
+      setUploadError(message);
       setUploadStatus("error");
     }
   };
@@ -152,7 +118,11 @@ export default function NuevaPrendaPage() {
       )}
 
       {step === 3 && (
-        <UploadProgress progress={uploadProgress} status={uploadStatus} />
+        <UploadProgress
+          progress={uploadProgress}
+          status={uploadStatus}
+          errorMessage={uploadError ?? undefined}
+        />
       )}
     </div>
   );

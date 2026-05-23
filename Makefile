@@ -115,8 +115,11 @@ install-frontend: ## Install frontend npm dependencies
 # Docker
 # ========================
 
-docker-up: ## Start all services with docker compose
+docker-up: ## Start infra only (postgres, minio, rabbitmq, celery). Use docker-app for containerized FE/BE
 	$(DOCKER_COMPOSE) up -d
+
+docker-app: ## Start full stack including frontend and fastapi containers
+	$(DOCKER_COMPOSE) --profile app up -d
 
 docker-down: ## Stop all docker compose services
 	$(DOCKER_COMPOSE) down
@@ -127,8 +130,8 @@ docker-build: ## Build all docker compose images
 docker-logs: ## Show docker compose logs
 	$(DOCKER_COMPOSE) logs -f
 
-docker-infra: ## Start all infrastructure services except frontend and backend (postgres, minio, rabbitmq, celery_worker)
-	$(DOCKER_COMPOSE) up -d postgres minio rabbitmq celery_worker
+docker-infra: ## Alias for docker-up (infra only; run make dev for local FE/BE)
+	$(MAKE) docker-up
 
 # ========================
 # Cleanup

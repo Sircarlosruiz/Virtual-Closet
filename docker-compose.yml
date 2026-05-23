@@ -16,6 +16,7 @@ services:
       retries: 5
 
   frontend:
+    profiles: ["app"]
     build:
       context: ./frontend
       dockerfile: Dockerfile
@@ -29,6 +30,7 @@ services:
       - fastapi
 
   fastapi:
+    profiles: ["app"]
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -55,10 +57,13 @@ services:
       MINIO_BUCKET_THUMBNAILS: thumbnails
       MINIO_BUCKET_MODEL_THUMBNAILS: model-thumbnails
       SEED_IMGS_DIR: /app/seed-imgs
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
     depends_on:
       postgres:
         condition: service_healthy
       minio:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
 
   minio:
@@ -67,6 +72,9 @@ services:
     environment:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin
+      MINIO_API_CORS_ALLOW_ORIGIN: "*"
+      MINIO_API_CORS_ALLOW_METHODS: "GET,PUT,POST,DELETE,HEAD,OPTIONS"
+      MINIO_API_CORS_ALLOW_HEADERS: "*"
     ports:
       - "9000:9000"
       - "9001:9001"
@@ -97,6 +105,12 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     command: uv run celery -A core.celery_app worker --loglevel=info -Q vton.generation.normal,vton.generation.priority
+    env_file:
+      - ./backend/.env
+    # Hybrid dev (make dev-backend + docker celery): backend uses localhost:9000 on the host.
+    # On WSL/Docker Desktop that is often NOT the same store as http://minio:9000 inside the network.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - ./backend:/app
       - /app/.venv
@@ -107,7 +121,8 @@ services:
       JWT_EXPIRE_DAYS: "7"
       FRONTEND_URL: http://localhost:3000
       BACKEND_URL: http://localhost:8000
-      MINIO_ENDPOINT: http://minio:9000
+      # Same MinIO as backend/.env MINIO_ENDPOINT=http://localhost:9000 when API runs on the host
+      MINIO_ENDPOINT: http://host.docker.internal:9000
       MINIO_PUBLIC_ENDPOINT: http://localhost:9000
       MINIO_ACCESS_KEY: minioadmin
       MINIO_SECRET_KEY: minioadmin
@@ -115,7 +130,7 @@ services:
       MINIO_BUCKET_GENERATED: generated
       MINIO_BUCKET_THUMBNAILS: thumbnails
       MINIO_BUCKET_MODEL_THUMBNAILS: model-thumbnails
-      VTON_PROVIDER: replicate
+      # VTON_PROVIDER and LMSTUDIO_* come from env_file (backend/.env)
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
     depends_on:
       rabbitmq:

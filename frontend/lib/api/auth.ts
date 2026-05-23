@@ -11,5 +11,5 @@ export interface MayoristaProfile {
 }
 
 export async function fetchMe(): Promise<MayoristaProfile> {
-  return apiFetch("/api/me");
+  return apiFetch("/api/auth/me");
 }

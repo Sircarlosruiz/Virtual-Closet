@@ -1,4 +1,6 @@
 from uuid import UUID
+
+from core.minio_buckets import ensure_minio_buckets
 from services.storage_service import StorageService
 from repositories.modelo_ia_repo import ModeloIARepository
 from models.modelo_ia import ModeloIA
@@ -32,6 +34,8 @@ class ModeloIAService:
 
     async def generate_upload_url(self, extension: str) -> tuple[str, str, str]:
         import uuid
+
+        await ensure_minio_buckets()
         modelo_id = str(uuid.uuid4())
         object_key = f"custom/{modelo_id}/original.{extension}"
         upload_url = await self._storage.generate_upload_url(
@@ -49,6 +53,11 @@ class ModeloIAService:
         descripcion: str | None,
         object_key: str,
     ) -> dict:
+        if not await self._storage.object_exists(object_key, bucket_override="model-thumbnails"):
+            raise ValueError(
+                "La imagen del modelo no está en almacenamiento. "
+                "Vuelve a subirla antes de confirmar."
+            )
         modelo = ModeloIA(
             id=modelo_id,
             mayorista_id=mayorista_id,

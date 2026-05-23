@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import UUID
 
@@ -15,6 +15,7 @@ from core.dependencies import get_current_mayorista
 from models.mayorista import Mayorista
 from repositories.prenda_repo import PrendaRepository
 from services.prenda_service import (
+    FormatoImagenNoSoportadoError,
     LimiteMensualAlcanzadoError,
     PrendaNoEncontradaError,
     PrendaService,
@@ -28,6 +29,44 @@ def _get_prenda_service(db: AsyncSession = Depends(get_db)) -> PrendaService:
     repo = PrendaRepository(db)
     storage = StorageService()
     return PrendaService(repo, storage)
+
+
+@router.post("/upload", response_model=PrendaResponse, status_code=status.HTTP_201_CREATED)
+async def subir_prenda(
+    file: UploadFile = File(...),
+    nombre: str = Form(""),
+    mayorista: Mayorista = Depends(get_current_mayorista),
+    prenda_service: PrendaService = Depends(_get_prenda_service),
+):
+    try:
+        file_bytes = await file.read()
+        if not file_bytes:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="El archivo está vacío",
+            )
+        return await prenda_service.subir_prenda(
+            mayorista.id,
+            file_bytes,
+            file.filename,
+            file.content_type,
+            nombre,
+        )
+    except LimiteMensualAlcanzadoError:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Límite mensual alcanzado",
+        )
+    except FormatoImagenNoSoportadoError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Formato no soportado. Usa JPG, PNG o HEIC.",
+        )
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Error al subir la prenda: {exc}",
+        ) from exc
 
 
 @router.get("/upload-url", response_model=UploadUrlResponse)
@@ -58,11 +97,22 @@ async def confirmar_subida(
             mayorista.id, body.prenda_id, body.nombre or "", body.object_key
         )
         return prenda
-    except Exception:
+    except ValueError as exc:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Error al confirmar la subida",
+            detail=str(exc),
         )
+    except Exception as exc:
+        detail = "Error al confirmar la subida"
+        if "imagen_original_key" in str(exc):
+            detail = (
+                "Falta aplicar migraciones de base de datos. "
+                "Ejecuta: make db-migrate"
+            )
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=detail,
+        ) from exc
 
 
 @router.get("", response_model=PrendasListResponse)

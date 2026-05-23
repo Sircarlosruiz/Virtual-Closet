@@ -13,6 +13,7 @@ class Prenda(Base):
     mayorista_id = Column(UUID(as_uuid=True), ForeignKey("mayorista.id", ondelete="CASCADE"), nullable=False)
     nombre = Column(String(80), nullable=False)
     imagen_original_url = Column(Text, nullable=False)
+    imagen_original_key = Column(Text, nullable=True)
     estado = Column(String(20), nullable=False, default="pendiente")
     created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
     updated_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())

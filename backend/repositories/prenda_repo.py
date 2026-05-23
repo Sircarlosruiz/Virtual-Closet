@@ -17,6 +17,7 @@ class PrendaRepository:
         nombre: str,
         imagen_original_url: str,
         *,
+        imagen_original_key: str | None = None,
         prenda_id: UUID | None = None,
         estado: str = "lista",
     ) -> Prenda:
@@ -25,6 +26,7 @@ class PrendaRepository:
             mayorista_id=mayorista_id,
             nombre=nombre,
             imagen_original_url=imagen_original_url,
+            imagen_original_key=imagen_original_key,
             estado=estado,
         )
         self.session.add(prenda)

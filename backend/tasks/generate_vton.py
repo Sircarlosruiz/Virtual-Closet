@@ -4,6 +4,7 @@ from uuid import UUID
 
 from core.celery_app import app
 from core.config import settings
+from core.minio_buckets import ensure_minio_buckets_sync
 from services.storage_service import StorageService
 from PIL import Image
 
@@ -29,6 +30,13 @@ def _sync_send_ws(mayorista_id: UUID, message: dict) -> None:
 
 def _run_vton_provider(garment_bytes: bytes, model_bytes: bytes) -> bytes:
     """Run async VTON provider synchronously."""
+    if settings.VTON_PROVIDER == "replicate" and not settings.REPLICATE_API_KEY.strip():
+        raise ValueError(
+            "REPLICATE_API_KEY no configurada. Obtén un token en "
+            "https://replicate.com/account/api-tokens y añádelo en backend/.env, "
+            "luego reinicia el worker: docker compose up -d celery_worker"
+        )
+
     import asyncio
     from services.vton import get_provider
     provider = get_provider()
@@ -43,6 +51,7 @@ def _run_vton_provider(garment_bytes: bytes, model_bytes: bytes) -> bytes:
 
 @app.task(
     bind=True,
+    name="tasks.generate_vton",
     max_retries=3,
     acks_late=True,
     queue="vton.generation.normal",
@@ -54,9 +63,12 @@ def generate_vton_task(self, generacion_id: str):
     from models.prenda import Prenda
     from models.modelo_ia import ModeloIA
 
+    ensure_minio_buckets_sync()
     storage = _get_storage()
 
-    sync_url = settings.DATABASE_URL.replace("postgresql+asyncpg://", "postgresql://")
+    sync_url = settings.DATABASE_URL.replace(
+        "postgresql+asyncpg://", "postgresql+psycopg://"
+    )
     engine = create_engine(sync_url)
     Session = sessionmaker(engine)
     session = Session()
@@ -74,10 +86,23 @@ def generate_vton_task(self, generacion_id: str):
         if not modelo:
             raise ValueError(f"ModeloIA {generacion.modelo_ia_id} not found")
 
-        garment_key = f"{generacion.mayorista_id}/{prenda.id}/original.jpg"
+        garment_key = prenda.imagen_original_key or StorageService.key_from_originals_url(
+            prenda.imagen_original_url
+        )
         model_key = modelo.thumbnail_key
 
-        garment_bytes = storage.get_object_bytes_sync(garment_key)
+        if not storage.object_exists_sync(garment_key, bucket_override="originals"):
+            raise ValueError(
+                f"Imagen de prenda no encontrada en MinIO (key={garment_key}). "
+                "Vuelve a subir la prenda."
+            )
+        if not storage.object_exists_sync(model_key, bucket_override="model-thumbnails"):
+            raise ValueError(
+                f"Imagen de modelo no encontrada en MinIO (key={model_key}). "
+                "Vuelve a crear o seleccionar el modelo."
+            )
+
+        garment_bytes = storage.get_object_bytes_sync(garment_key, bucket_override="originals")
         model_bytes = storage.get_object_bytes_sync(model_key, bucket_override="model-thumbnails")
 
         result_bytes = _run_vton_provider(garment_bytes, model_bytes)
@@ -104,10 +129,18 @@ def generate_vton_task(self, generacion_id: str):
         })
 
     except Exception as exc:
+        from replicate.exceptions import ReplicateError
+
+        auth_failure = (
+            isinstance(exc, ReplicateError) and getattr(exc, "status", None) == 401
+        ) or (
+            isinstance(exc, ValueError) and "REPLICATE_API_KEY" in str(exc)
+        )
+        will_retry = self.request.retries < self.max_retries and not auth_failure
         try:
             session.rollback()
             generacion = session.query(Generacion).filter(Generacion.id == UUID(generacion_id)).first()
-            if generacion:
+            if generacion and not will_retry:
                 generacion.estado = "error"
                 generacion.error_message = str(exc)
                 session.commit()
@@ -120,8 +153,9 @@ def generate_vton_task(self, generacion_id: str):
         except Exception:
             pass
 
-        if self.request.retries < self.max_retries:
-            raise self.exc(exc)
+        if will_retry:
+            raise self.retry(exc=exc)
+        raise
 
     finally:
         session.close()

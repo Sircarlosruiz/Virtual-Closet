@@ -40,7 +40,8 @@ async def get_modelo_upload_url(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Formato no soportado. Usa jpg o png.",
         )
-    modelo_id, upload_url, object_key = await service.generate_upload_url(extension)
+    ext = "jpg" if extension == "jpeg" else extension
+    modelo_id, upload_url, object_key = await service.generate_upload_url(ext)
     return {
         "upload_url": upload_url,
         "modelo_id": modelo_id,
@@ -63,6 +64,11 @@ async def crear_modelo(
             object_key=data.object_key,
         )
         return modelo
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc),
+        )
     except Exception:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
