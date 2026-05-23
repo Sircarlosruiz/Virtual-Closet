@@ -11,9 +11,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY requirements.txt .
 # torchvision is not bundled in the runtime image; install CUDA-matched wheels.
+# gfpgan/realesrgan pull opencv-python (needs libGL); keep only headless for cv2.
 RUN pip install --no-cache-dir -r requirements.txt \
     && pip install --no-cache-dir torchvision==0.19.1 \
-        --index-url https://download.pytorch.org/whl/cu121
+        --index-url https://download.pytorch.org/whl/cu121 \
+    && pip uninstall -y opencv-python \
+    && pip install --no-cache-dir --force-reinstall opencv-python-headless
 
 COPY main.py .
 

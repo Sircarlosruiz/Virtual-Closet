@@ -6,7 +6,7 @@ Models used:
 
 Preprocessing steps:
   1. rembg — garment background removal
-  2. DWPose — pose validation (frontal check)
+  2. MediaPipe Pose — pose validation (frontal check)
   3. Image quality validation (resolution + blur)
   4. Garment normalization (768px height, square padding)
 
@@ -34,6 +34,26 @@ import torch
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.responses import Response
 from PIL import Image
+
+# basicsr (used by gfpgan/realesrgan) imports an internal torchvision module
+# removed in torchvision >= 0.15. Register a shim before basicsr is imported.
+try:
+    import torchvision.transforms.functional_tensor  # noqa: F401
+except ModuleNotFoundError:
+    import sys
+    import types
+    from torchvision.transforms.functional import rgb_to_grayscale as _rgb2gray
+    _shim = types.ModuleType("torchvision.transforms.functional_tensor")
+    _shim.rgb_to_grayscale = _rgb2gray
+    sys.modules["torchvision.transforms.functional_tensor"] = _shim
+
+ClothType = Literal["upper", "lower", "overall"]
+
+_CLOTH_CLASSES: dict[str, list[int]] = {
+    "upper": [4, 7],       # upper-clothes, dress
+    "lower": [5, 6],       # skirt, pants
+    "overall": [4, 5, 6, 7],
+}
 
 _models: dict = {}
 
@@ -84,9 +104,13 @@ def _load_pipeline() -> None:
 
 
 def _load_pose_model() -> None:
-    from controlnet_aux import DWposeDetector
+    import mediapipe.solutions.pose as mp_pose
 
-    _models["dwpose"] = DWposeDetector()
+    _models["mp_pose"] = mp_pose.Pose(
+        static_image_mode=True,
+        model_complexity=1,
+        min_detection_confidence=0.5,
+    )
 
 
 def _load_face_restorer() -> None:
@@ -142,17 +166,21 @@ def _normalize_garment(image: Image.Image, target_h: int = 768) -> Image.Image:
 
 
 def _get_pose_keypoints(image: Image.Image) -> dict:
-    detector = _models.get("dwpose")
-    if detector is None:
+    pose = _models.get("mp_pose")
+    if pose is None:
         return {}
-    result = detector(image, include_body=True, include_hand=False, include_face=False)
-    keypoints = result.get("bodies", {}).get("candidate", [])
-    if not keypoints:
+    import mediapipe.solutions.pose as mp_pose
+
+    results = pose.process(np.array(image))
+    if not results.pose_landmarks:
         return {}
+    lm = results.pose_landmarks.landmark
+    PL = mp_pose.PoseLandmark
+    w, h = image.width, image.height
     return {
-        "shoulder_left": keypoints[5] if len(keypoints) > 5 else None,
-        "shoulder_right": keypoints[6] if len(keypoints) > 6 else None,
-        "nose": keypoints[0] if len(keypoints) > 0 else None,
+        "shoulder_left":  (lm[PL.LEFT_SHOULDER].x * w,  lm[PL.LEFT_SHOULDER].y * h),
+        "shoulder_right": (lm[PL.RIGHT_SHOULDER].x * w, lm[PL.RIGHT_SHOULDER].y * h),
+        "nose":           (lm[PL.NOSE].x * w,           lm[PL.NOSE].y * h),
     }
 
 
@@ -335,9 +363,17 @@ async def lifespan(app: FastAPI):
     print("Loading CatVTON-Flux pipeline…")
     _load_pipeline()
     print("Loading pose estimation model…")
-    _load_pose_model()
+    try:
+        _load_pose_model()
+        print("Pose estimation model loaded.")
+    except Exception as exc:
+        print(f"Warning: pose model unavailable ({exc}). Pose validation will be skipped.")
     print("Loading face restoration model…")
-    _load_face_restorer()
+    try:
+        _load_face_restorer()
+        print("Face restoration model loaded.")
+    except Exception as exc:
+        print(f"Warning: face restorer unavailable ({exc}). Face restoration will be skipped.")
     if os.environ.get("ENABLE_UPSCALE", "false").lower() == "true":
         print("Loading upscaler model…")
         _load_upscaler()
@@ -347,14 +383,6 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="CatVTON-Flux inference server", lifespan=lifespan)
-
-ClothType = Literal["upper", "lower", "overall"]
-
-_CLOTH_CLASSES: dict[str, list[int]] = {
-    "upper": [4, 7],
-    "lower": [5, 6],
-    "overall": [4, 5, 6, 7],
-}
 
 
 @app.post("/predict")
@@ -372,10 +400,11 @@ async def predict(
     _validate_image_quality(person_img, "Model image")
     _validate_image_quality(garment_img, "Garment image")
 
-    keypoints = _get_pose_keypoints(person_img)
-    valid, msg = _validate_pose(keypoints)
-    if not valid:
-        raise HTTPException(status_code=422, detail=msg)
+    if "mp_pose" in _models:
+        keypoints = _get_pose_keypoints(person_img)
+        valid, msg = _validate_pose(keypoints)
+        if not valid:
+            raise HTTPException(status_code=422, detail=msg)
 
     garment_img = _remove_garment_background(garment_img)
     garment_img = _normalize_garment(garment_img)
