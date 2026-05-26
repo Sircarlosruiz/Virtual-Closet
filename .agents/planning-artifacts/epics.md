@@ -2,6 +2,7 @@
 ## NikaCommerce · Versión 1.0
 
 **Basado en:** PRD v1.0 · Arquitectura Técnica v1.0 · UX Design Spec v1.0  
+**Esquema de datos:** ver §7 en `arquitectura-tecnica.md` (fuente canónica; este doc referencia tablas por historia).
 **Stack:** Next.js 14 App Router · FastAPI · PostgreSQL 16 · RabbitMQ · MinIO · Tailwind + shadcn/ui  
 **Entornos:** Docker Compose (dev) · k3s/Hetzner (prod)  
 **GPU dev:** NVIDIA Titan RTX (Docker + nvidia runtime) · GPU prod: Replicate API (IDM-VTON)
@@ -135,7 +136,7 @@ Then veo nuevamente el onboarding
 **Objetivo:** El mayorista puede subir, nombrar y ver el estado de sus prendas en el dashboard.
 
 **Contexto técnico:**
-- Tabla: `prenda` (id, mayorista_id, nombre, imagen_original_url, estado, created_at, updated_at)
+- Tabla: `prenda` (id, mayorista_id, nombre, imagen_original_key, imagen_original_url, estado, created_at, updated_at)
 - Estados: `pendiente` → `procesando` → `lista` | `error`
 - MinIO bucket: `originals/{mayorista_id}/{prenda_id}/original.jpg`
 - Upload: presigned URL de MinIO, frontend sube directo (evita pasar por backend)

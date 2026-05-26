@@ -1,0 +1,29 @@
+---
+description: Contexto de agentes Virtual Closet — fuente única en .agents/
+globs: ["**/*"]
+alwaysApply: true
+---
+
+# Agentes Virtual Closet
+
+Antes de implementar o planificar trabajo significativo:
+
+1. Lee `.agents/PROJECT.md` (stack, convenciones, rutas).
+2. Consulta `.agents/AGENTS.md` para elegir subagente o skill según la tarea.
+3. Para backend/frontend, carga `backend/AGENTS.md` o `frontend/AGENTS.md`.
+
+## Pipeline automático (Planner → Executor → Auditor)
+
+Sigue `.agents/workflows/orchestrator.md`. Los reportes viven en `.agents/reports/`.
+
+## Delegación rápida
+
+| Tarea | Recurso |
+|-------|---------|
+| PRD, sprint, historias | `.agents/subagents/leadership/product_lead.yaml` |
+| Arquitectura | `.agents/subagents/leadership/system_architect.yaml` |
+| Implementación / PR | `.agents/subagents/leadership/lead_developer.yaml` |
+| UI Next.js | `.agents/subagents/engineering/frontend_engineer.yaml` |
+| API FastAPI | `.agents/subagents/engineering/backend_engineer.yaml` |
+
+Idioma: **español**.

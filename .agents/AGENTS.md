@@ -25,6 +25,17 @@ Antes de implementar o revisar código en un stack, cargar la guía correspondie
 
 ---
 
+## Contexto y workflows
+
+| Recurso | Ruta |
+|---------|------|
+| Contexto del proyecto (stack, convenciones) | [`.agents/PROJECT.md`](PROJECT.md) |
+| Pipeline automático (Planner → Executor → Auditor) | [`.agents/workflows/`](workflows/) |
+| Reportes de ejecución | `.agents/reports/` |
+| Adaptadores OpenCode | `.opencode/agents/*-agent.md` → symlinks a `workflows/` |
+
+---
+
 ## Catálogo de skills (`.agents/skills/`)
 
 Skills instaladas en el proyecto, agrupadas por dominio. Cada subagente carga solo las skills asignadas en su YAML.

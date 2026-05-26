@@ -182,7 +182,7 @@ Mensaje de job:
 {
   "prenda_id": "uuid",
   "modelo_ia_id": "uuid",
-  "foto_original_key": "originals/...",
+  "imagen_original_key": "{mayorista_id}/{prenda_id}/original.{ext}",
   "mayorista_plan": "base|pro",
   "retry_count": 0,
   "enqueued_at": "ISO8601"
@@ -193,34 +193,51 @@ Mensaje de job:
 
 ## 7. Modelo de datos (MVP)
 
+**Fuente canónica** para implementación. Alineado con `epics.md` y el esquema PostgreSQL en `backend/models/`. Las prendas pertenecen al mayorista (`mayorista_id`); la relación con catálogos es M:N vía `catalogo_prenda` (no `catalogo_id` en `prenda`).
+
 ```sql
 mayorista
   id UUID PK, email, password_hash, nombre_negocio
-  plan ENUM('base','pro'), activo BOOLEAN, created_at
+  plan ENUM('base','pro') DEFAULT 'base'
+  trial_activo BOOLEAN DEFAULT true
+  trial_expira_en TIMESTAMPTZ NOT NULL
+  whatsapp VARCHAR(20) NULL
+  created_at TIMESTAMPTZ
 
-catalogo
+catalogo                          -- épica 4 (pendiente de migración)
   id UUID PK, mayorista_id FK, nombre
-  slug VARCHAR(50) UNIQUE
-  publicado BOOLEAN DEFAULT false, created_at
+  slug VARCHAR(50) UNIQUE (por mayorista)
+  estado ENUM('borrador','publicado') DEFAULT 'borrador'
+  created_at, updated_at
 
-prenda
-  id UUID PK, catalogo_id FK, nombre, descripcion
-  foto_original_key TEXT         -- path en MinIO
-  estado ENUM('pendiente','procesando','listo','error')
+catalogo_prenda                   -- M:N catálogo ↔ prenda
+  catalogo_id FK, prenda_id FK, orden INTEGER
+  PK (catalogo_id, prenda_id)
+
+prenda                            -- implementado
+  id UUID PK, mayorista_id FK, nombre VARCHAR(80)
+  imagen_original_key TEXT        -- clave MinIO: {mayorista_id}/{prenda_id}/original.{ext}
+  imagen_original_url TEXT        -- presigned URL o URL derivada (API/frontend)
+  estado ENUM('pendiente','procesando','lista','error')
+  created_at, updated_at
+
+generacion                        -- implementado
+  id UUID PK, mayorista_id FK, prenda_id FK, modelo_ia_id FK
+  estado ENUM('pendiente','procesando','lista','error')
+  imagen_generada_key TEXT        -- MinIO bucket generated
+  thumbnail_key TEXT              -- MinIO bucket thumbnails
+  costo_inferencia_usd NUMERIC(10,4)
+  error_message TEXT NULL
+  created_at, updated_at
+
+modelo_ia                         -- implementado
+  id UUID PK, mayorista_id FK NULL  -- modelos custom por mayorista (Pro)
+  nombre, descripcion
+  thumbnail_key TEXT
+  plan_minimo ENUM('base','pro')
   created_at
 
-generacion
-  id UUID PK, prenda_id FK, modelo_ia_id FK
-  imagen_generada_key TEXT       -- path en MinIO
-  thumbnail_key TEXT
-  costo_inferencia_usd NUMERIC(6,4)   -- $0 en dev local, real en prod
-  duracion_segundos INTEGER, created_at
-
-modelo_ia
-  id UUID PK, nombre, preview_key TEXT
-  disponible_en ENUM('base','pro')
-
-catalogo_view_event
+catalogo_view_event               -- épica 5 (pendiente de migración)
   id UUID PK, catalogo_id FK
   ip_hash TEXT, user_agent TEXT, created_at
 ```
@@ -230,11 +247,17 @@ catalogo_view_event
 ## 8. MinIO — Estructura de buckets
 
 ```
-bucket: virtual-closet
-  ├── originals/{mayorista_id}/{prenda_id}/original.jpg   (privado)
-  ├── generated/{prenda_id}/{modelo_ia_id}/resultado.jpg  (presigned URL 24h)
-  ├── thumbnails/{prenda_id}/{modelo_ia_id}/thumb_400.jpg (presigned URL 24h)
-  └── modelos-ia/{modelo_ia_id}/preview.jpg               (público)
+bucket originals (privado)
+  └── {mayorista_id}/{prenda_id}/original.{ext}
+
+bucket generated (presigned URL 24h)
+  └── {mayorista_id}/{generacion_id}.jpg
+
+bucket thumbnails (presigned URL 24h)
+  └── {mayorista_id}/{generacion_id}.jpg   -- 400px
+
+bucket model-thumbnails (público)
+  └── {modelo_ia_id}/preview.jpg
 ```
 
 ---
