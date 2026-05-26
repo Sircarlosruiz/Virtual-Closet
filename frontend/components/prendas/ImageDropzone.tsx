@@ -9,39 +9,59 @@ const MAX_SIZE_MB = 20;
 interface ImageDropzoneProps {
   onFileSelected: (file: File) => void;
   error?: string;
+  onValidationError?: (message: string) => void;
 }
 
-export function ImageDropzone({ onFileSelected, error }: ImageDropzoneProps) {
+function isAcceptedFile(file: File): boolean {
+  if (ACCEPTED_TYPES.includes(file.type)) {
+    return true;
+  }
+  const ext = file.name.split(".").pop()?.toLowerCase();
+  return ext === "jpg" || ext === "jpeg" || ext === "png" || ext === "heic";
+}
+
+export function ImageDropzone({
+  onFileSelected,
+  error,
+  onValidationError,
+}: ImageDropzoneProps) {
   const [preview, setPreview] = useState<string | null>(null);
+  const [localError, setLocalError] = useState<string | null>(null);
 
   const handleFile = useCallback(
     async (file: File) => {
-      if (!ACCEPTED_TYPES.includes(file.type)) {
+      setLocalError(null);
+
+      if (!isAcceptedFile(file)) {
+        const message = "Formato no soportado. Usa JPG, PNG o HEIC.";
+        setLocalError(message);
+        onValidationError?.(message);
         return;
       }
       if (file.size > MAX_SIZE_MB * 1024 * 1024) {
+        const message = `La imagen supera ${MAX_SIZE_MB} MB.`;
+        setLocalError(message);
+        onValidationError?.(message);
         return;
       }
 
-      if (file.type === "image/heic") {
-        const supported = URL.createObjectURL(file);
-        const img = new Image();
-        img.onerror = () => {
-          URL.revokeObjectURL(supported);
-        };
-        img.src = supported;
+      try {
+        const compressed = await imageCompression(file, {
+          maxSizeMB: 5,
+          maxWidthOrHeight: 1024,
+          useWebWorker: typeof Worker !== "undefined",
+        });
+
+        setPreview(URL.createObjectURL(compressed));
+        onFileSelected(compressed);
+      } catch {
+        const message =
+          "No se pudo procesar la imagen. Prueba con JPG o PNG.";
+        setLocalError(message);
+        onValidationError?.(message);
       }
-
-      const compressed = await imageCompression(file, {
-        maxSizeMB: 5,
-        maxWidthOrHeight: 1024,
-        useWebWorker: true,
-      });
-
-      setPreview(URL.createObjectURL(compressed));
-      onFileSelected(compressed);
     },
-    [onFileSelected]
+    [onFileSelected, onValidationError]
   );
 
   const handleDrop = useCallback(
@@ -90,7 +110,9 @@ export function ImageDropzone({ onFileSelected, error }: ImageDropzoneProps) {
           onChange={handleChange}
         />
       </div>
-      {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+      {(error || localError) && (
+        <p className="text-red-500 text-sm mt-2">{error || localError}</p>
+      )}
     </div>
   );
 }

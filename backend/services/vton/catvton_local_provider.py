@@ -8,6 +8,7 @@ class CatVTONLocalProvider(VTONProvider):
     """Self-hosted CatVTON-Flux provider.
 
     Expects a running inference server at CATVTON_LOCAL_URL exposing:
+      POST /classify — multipart: garment (image/jpeg) → {"cloth_type": "upper"|...}
       POST /predict  — multipart: garment (image/jpeg), model (image/jpeg)
                        form field: cloth_type (upper|lower|overall)
       GET  /health   — returns {"status": "ok"}

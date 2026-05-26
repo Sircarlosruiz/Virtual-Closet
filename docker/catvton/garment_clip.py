@@ -1,17 +1,10 @@
-"""Zero-shot garment type classifier using CLIP.
-
-Returns one of: 'upper', 'lower', 'overall'.
-The CLIP model is loaded lazily and cached as a singleton to avoid
-re-loading weights on every job (~600 MB download, ~2 s cold start).
-"""
+"""Zero-shot garment type classifier using CLIP (runs only in the GPU inference container)."""
 
 from __future__ import annotations
 
 import io
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from PIL import Image
+from PIL import Image
 
 _LABELS: dict[str, list[str]] = {
     "upper": ["shirt", "blouse", "top", "jacket", "sweater", "hoodie"],

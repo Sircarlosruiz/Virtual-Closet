@@ -109,7 +109,7 @@ para saber exactamente qué hacer sin necesidad de leer instrucciones.
 Given que acabo de registrarme y entro al dashboard por primera vez
 When la pantalla carga
 Then veo una pantalla de onboarding con CTA único: "Subir tu primera prenda"
-And la pantalla explica: "Tus primeras 5 prendas son gratis, sin tarjeta"
+And la pantalla explica: "30 días gratis en Plan Base, sin tarjeta — hasta 40 prendas al mes"
 And NO hay menú de navegación lateral — solo el CTA
 
 Given que ya subí al menos 1 prenda y recargo el dashboard
@@ -744,6 +744,8 @@ Then ve el contador de vistas de cada catálogo (número simple)
 ### Historia US-601 · Free trial de 30 días
 **Story Key:** `6-1-free-trial`
 
+> Política canónica: `modelo-precios.md` § Política de free trial.
+
 ```
 Como mayorista recién registrado,
 quiero usar el producto gratis durante 30 días,
@@ -753,9 +755,10 @@ para evaluar si vale la pena pagar antes de comprometerme.
 **Criterios de aceptación (BDD):**
 
 ```gherkin
-Given que me registré hace menos de 30 días
+Given que me registré hace menos de 30 días y trial_activo=true
 When uso el dashboard
-Then puedo generar imágenes sin restricción (hasta límite del plan Base: 40/mes)
+Then puedo generar imágenes con los límites del Plan Base (hasta 40 prendas/mes)
+And no existe un tope adicional de "5 prendas gratis" distinto del trial de 30 días
 And veo en el dashboard: "X días restantes de tu prueba gratuita" (barra de progreso)
 
 Given que faltan 5 días o menos para el vencimiento del trial

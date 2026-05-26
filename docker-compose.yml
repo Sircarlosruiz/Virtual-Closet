@@ -132,7 +132,8 @@ services:
       MINIO_BUCKET_MODEL_THUMBNAILS: model-thumbnails
       # VTON_PROVIDER, CATVTON_*, REPLICATE_API_KEY come from env_file (backend/.env)
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
-      # CatVTON-Flux self-hosted: worker needs to reach the inference container by name
+      # CatVTON-Flux self-hosted: worker calls http://catvton:8000/classify + /predict
+      # Requires: docker compose --profile gpu up catvton (when VTON_PROVIDER=catvton_local)
       CATVTON_LOCAL_URL: http://catvton:8000
     depends_on:
       rabbitmq:

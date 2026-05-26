@@ -416,6 +416,17 @@ async def predict(
     return Response(content=buf.getvalue(), media_type="image/jpeg")
 
 
+@app.post("/classify")
+async def classify(
+    garment: UploadFile = File(..., description="Garment/clothing image (JPEG)"),
+) -> dict:
+    """Zero-shot cloth type (upper | lower | overall) via CLIP. No GPU required."""
+    from garment_clip import detect_cloth_type
+
+    garment_bytes = await garment.read()
+    return {"cloth_type": detect_cloth_type(garment_bytes)}
+
+
 @app.get("/health")
 async def health() -> dict:
     return {

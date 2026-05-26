@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
 import { DashboardContent } from "@/components/dashboard/DashboardContent";
+import { OnboardingCard } from "@/components/dashboard/OnboardingCard";
 
 const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:8000";
 
@@ -25,7 +25,7 @@ async function getPrendasCount(): Promise<number | null> {
 export default async function DashboardPage() {
   const prendasCount = await getPrendasCount();
   if (prendasCount === 0) {
-    redirect("/dashboard/onboarding");
+    return <OnboardingCard />;
   }
 
   return <DashboardContent />;

@@ -110,9 +110,9 @@ def generate_vton_task(self, generacion_id: str):
         garment_bytes = storage.get_object_bytes_sync(garment_key, bucket_override="originals")
         model_bytes = storage.get_object_bytes_sync(model_key, bucket_override="model-thumbnails")
 
-        from services.vton.garment_classifier import detect_cloth_type
+        from services.vton.cloth_type_resolver import resolve_cloth_type
 
-        cloth_type = detect_cloth_type(garment_bytes)
+        cloth_type = resolve_cloth_type(garment_bytes)
 
         result_bytes = _run_vton_provider(garment_bytes, model_bytes, cloth_type)
 

@@ -161,7 +161,17 @@ Según el PRFAQ: *"Los primeros 20 mayoristas que se registren recibirán los pr
 - Plan Base: **$39/mes** — 50 revendedores, 40 prendas/mes
 - Plan Pro: **$79/mes** — 150 revendedores, 100 prendas/mes
 - Sin Plan Enterprise en lanzamiento (complejidad de soporte no justificada con < 50 clientes)
-- Trial: **30 días, sin tarjeta**
+- Trial: **30 días, sin tarjeta** (ver política abajo)
 - Moneda: **USD**
+
+### Política de free trial (fuente de verdad)
+
+| Aspecto | Regla |
+| --- | --- |
+| Duración | 30 días desde el registro (`trial_expira_en`) |
+| Plan durante trial | Plan Base ($39/mes) sin cobro ni tarjeta |
+| Límite de uso | Hasta **40 prendas/mes** (cuota del Plan Base); no hay cuota separada de "5 prendas gratis" |
+| Al vencer sin suscripción | Bloqueo de nuevas generaciones; catálogos publicados siguen accesibles |
+| Mensaje onboarding | "30 días gratis en Plan Base, sin tarjeta — hasta 40 prendas al mes" |
 
 *Revisar precios a los 90 días con datos reales de uso y churn.*

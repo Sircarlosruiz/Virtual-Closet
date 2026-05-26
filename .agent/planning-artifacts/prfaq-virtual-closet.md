@@ -61,7 +61,7 @@ Para más información: **[URL del producto]**
 
 **P1: ¿Las imágenes generadas se ven reales o se nota que son de IA?**
 
-Usamos modelos de difusión de última generación (arquitectura análoga a los sistemas que alimentan herramientas como Midjourney o Stable Diffusion XL), entrenados y ajustados específicamente sobre imágenes de moda. El resultado en prendas superiores — blusas, camisas, tops — es fotorrealista: la caída de la tela, las arrugas naturales, el color y la textura se preservan con fidelidad. Para validarlo antes de comprometerse, cada mayorista puede procesar sus primeras 5 prendas de forma gratuita y comparar el resultado con sus fotos actuales. La pregunta correcta no es "¿se nota que es IA?" sino "¿se ve mejor que mi foto de maniquí actual?" — y la respuesta consistente en nuestras pruebas beta es sí.
+Usamos modelos de difusión de última generación (arquitectura análoga a los sistemas que alimentan herramientas como Midjourney o Stable Diffusion XL), entrenados y ajustados específicamente sobre imágenes de moda. El resultado en prendas superiores — blusas, camisas, tops — es fotorrealista: la caída de la tela, las arrugas naturales, el color y la textura se preservan con fidelidad. Para validarlo antes de comprometerse, cada mayorista dispone de 30 días de prueba gratuita en el Plan Base (hasta 40 prendas al mes, sin tarjeta) y puede comparar el resultado con sus fotos actuales. La pregunta correcta no es "¿se nota que es IA?" sino "¿se ve mejor que mi foto de maniquí actual?" — y la respuesta consistente en nuestras pruebas beta es sí.
 
 ---
 

@@ -116,7 +116,7 @@ para saber exactamente qué hacer sin necesidad de leer instrucciones.
 
 Criterios de aceptación:
 - [ ] Al primer login se muestra pantalla de onboarding con CTA único: "Subir tu primera prenda"
-- [ ] La pantalla explica el free trial: "Tus primeras 5 prendas son gratis, sin tarjeta"
+- [ ] La pantalla explica el free trial: "30 días gratis en Plan Base, sin tarjeta — hasta 40 prendas al mes"
 - [ ] No hay menú de navegación en esta pantalla — solo el CTA
 - [ ] Si el mayorista recarga o vuelve más tarde, no se muestra el onboarding si ya subió al menos 1 prenda
 
@@ -424,6 +424,8 @@ Criterios de aceptación:
 
 **US-601 · Free trial de 30 días**
 
+> Política canónica: `modelo-precios.md` § Política de free trial.
+
 ```
 Como mayorista recién registrado,
 quiero usar el producto gratis durante 30 días,
@@ -432,7 +434,7 @@ para evaluar si vale la pena pagar antes de comprometerme.
 
 Criterios de aceptación:
 - [ ] Al registrarse, el plan queda en `base` con `trial_expira_en = now() + 30 días`
-- [ ] Las primeras 5 prendas se procesan sin costo ni restricción
+- [ ] Durante el trial aplican los límites del Plan Base (hasta 40 prendas/mes); no existe cuota aparte de "5 prendas gratis"
 - [ ] El dashboard muestra una barra de progreso del trial: "X días restantes de tu prueba gratuita"
 - [ ] Al llegar a 5 días antes del vencimiento: banner de aviso visible en el dashboard
 - [ ] Al vencer el trial sin suscripción: las funciones de generación quedan bloqueadas — los catálogos publicados siguen accesibles (no se ocultan al revendedor)

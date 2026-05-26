@@ -116,7 +116,10 @@ install-frontend: ## Install frontend npm dependencies
 # ========================
 
 docker-up: ## Start infra only (postgres, minio, rabbitmq, celery). Use docker-app for containerized FE/BE
-	$(DOCKER_COMPOSE) up -d
+	$(DOCKER_COMPOSE) up -d postgres minio rabbitmq celery_worker
+
+docker-catvton:
+	$(DOCKER_COMPOSE) up --profile gpu up catvton
 
 docker-app: ## Start full stack including frontend and fastapi containers
 	$(DOCKER_COMPOSE) --profile app up -d

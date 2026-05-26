@@ -143,7 +143,7 @@ Si el mayorista sube una prenda y no recibe feedback durante 90 segundos, asume 
 
 ### Micro-Emotions
 
-- **Escepticismo del mayorista** → barrera de entrada principal. El free trial de 5 prendas existe para romper esto antes de pedir tarjeta.
+- **Escepticismo del mayorista** → barrera de entrada principal. El free trial de 30 días (Plan Base, sin tarjeta) existe para romper esto antes de pedir tarjeta.
 - **Desconfianza del revendedor** → el catálogo debe evitar cualquier señal visual que parezca edición exagerada. Luz natural, textura visible, caída de tela realista.
 - **Ansiedad en la espera** → 30–90s sin feedback convierte la incertidumbre en frustración. Requiere feedback visual activo y continuo.
 
@@ -155,7 +155,7 @@ Si el mayorista sube una prenda y no recibe feedback durante 90 segundos, asume 
 | Confianza del revendedor | Imágenes grandes, sin filtros exagerados, luz y textura natural visibles |
 | Alivio post-compartir | Pantalla de confirmación celebratoria + botón directo a WhatsApp |
 | Eliminar ansiedad en espera | Barra de progreso con estados: "Extrayendo prenda… Aplicando modelo… Finalizando…" |
-| Romper escepticismo inicial | Onboarding con 5 prendas gratis: el WOW ocurre antes de pedir tarjeta |
+| Romper escepticismo inicial | Onboarding comunica trial de 30 días sin tarjeta; el WOW ocurre al subir la primera prenda |
 
 ### Emotional Design Principles
 

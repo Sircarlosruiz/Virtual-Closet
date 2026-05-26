@@ -14,7 +14,7 @@ test.describe("Registro de mayorista", () => {
     await page.getByRole("button", { name: "Crear cuenta" }).click();
 
     await expect(page).toHaveURL(/.*dashboard\/onboarding/);
-    await expect(page.getByText("Tus primeras 5 prendas son gratis")).toBeVisible();
+    await expect(page.getByText("30 días gratis en Plan Base")).toBeVisible();
   });
 
   test("muestra error si contraseña es menor a 8 caracteres", async ({ page }) => {

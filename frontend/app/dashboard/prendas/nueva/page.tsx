@@ -63,6 +63,13 @@ export default function NuevaPrendaPage() {
         err instanceof Error ? err.message : "Error inesperado al subir";
       if (message.includes("Límite mensual")) {
         toast.error("Límite mensual alcanzado. Considera actualizar tu plan.");
+      } else if (
+        message.includes("MinIO") ||
+        message.includes("no se guardó")
+      ) {
+        toast.error(
+          "No se pudo guardar la imagen. En otra terminal ejecuta: make docker-infra"
+        );
       } else {
         toast.error(message);
       }
@@ -79,7 +86,11 @@ export default function NuevaPrendaPage() {
 
       {step === 1 && (
         <div className="space-y-4">
-          <ImageDropzone onFileSelected={handleFileSelected} error={fileError} />
+          <ImageDropzone
+            onFileSelected={handleFileSelected}
+            error={fileError}
+            onValidationError={setFileError}
+          />
           <Button onClick={handleNext} disabled={!file} className="w-full">
             Continuar
           </Button>

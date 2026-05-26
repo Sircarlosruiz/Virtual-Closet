@@ -1,4 +1,4 @@
-import { redirect } from "next/navigation";
+import { ClientRedirect } from "@/components/dashboard/ClientRedirect";
 import { Toaster } from "@/components/ui/sonner";
 
 const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:8000";
@@ -33,7 +33,7 @@ export default async function DashboardLayout({
   const me = await getMe();
 
   if (!me) {
-    redirect("/login");
+    return <ClientRedirect href="/login" />;
   }
 
   return (

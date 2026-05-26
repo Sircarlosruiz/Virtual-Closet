@@ -347,7 +347,7 @@ Sprint 3 — Catálogo y sharing (1 semana)
 Sprint 4 — Infra producción y lanzamiento (1 semana)
   ├── k3s en Hetzner + Nginx Ingress + cert-manager
   ├── Deploy de todos los servicios en k8s
-  ├── Free trial: 5 prendas sin tarjeta + integración Stripe
+  ├── Free trial: 30 días Plan Base sin tarjeta + integración Stripe
   └── Prometheus + Grafana: monitoreo de costo IA por cliente
 ```
 
