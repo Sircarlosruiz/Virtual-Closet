@@ -10,6 +10,7 @@ from core.database import get_db
 from core.limiter import limiter
 from main import app
 from models.mayorista import Base
+import models.media  # noqa: F401 — ensure GarmentPhoto/ModelPhoto tables are created
 
 TEST_DATABASE_URL = "postgresql+asyncpg://postgres:postgres@localhost:5432/virtual_closet_test"
 

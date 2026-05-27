@@ -6,7 +6,7 @@ app = Celery(
     "vton",
     broker=settings.RABBITMQ_URL,
     backend="rpc://",
-    include=["tasks.generate_vton"],
+    include=["tasks.generate_vton", "tasks.vton_task"],
 )
 
 app.conf.task_routes = {
