@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import UUID
 
 from api.schemas.vton import (
     VTONGenerateRequest,
     VTONJobCreateResponse,
+    VTONJobHistoryResponse,
     VTONJobStatusResponse,
 )
 from core.database import get_db
@@ -94,3 +95,28 @@ async def get_job_status(
         ) from exc
 
     return VTONJobStatusResponse(**status_data)
+
+
+@router.get("/jobs", response_model=VTONJobHistoryResponse)
+async def list_jobs(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    mayorista: Mayorista = Depends(get_current_mayorista),
+    vton_service: VTONJobService = Depends(_get_vton_service),
+):
+    """List mayorista's VTON jobs with pagination.
+
+    Returns paginated job history ordered by creation date (newest first).
+    Completed jobs include a fresh presigned URL for the result image.
+    """
+    items, total = await vton_service.list_jobs(
+        mayorista_id=mayorista.id,
+        page=page,
+        page_size=page_size,
+    )
+    return VTONJobHistoryResponse(
+        items=items,
+        total=total,
+        page=page,
+        page_size=page_size,
+    )

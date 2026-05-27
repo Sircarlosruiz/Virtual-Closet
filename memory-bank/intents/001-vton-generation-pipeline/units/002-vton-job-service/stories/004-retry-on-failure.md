@@ -2,11 +2,11 @@
 id: 004-retry-on-failure
 unit: 002-vton-job-service
 intent: 001-vton-generation-pipeline
-status: draft
+status: complete
 priority: must
-created: 2026-05-26T00:00:00Z
+created: 2026-05-26T00:00:00.000Z
 assigned_bolt: 003-vton-job-service
-implemented: false
+implemented: true
 ---
 
 # Story: 004-retry-on-failure

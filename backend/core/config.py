@@ -39,6 +39,8 @@ class Settings(BaseSettings):
     # VTON / IA
     VTON_PROVIDER: str = "replicate"
     VTON_MAX_RETRIES: int = 3
+    VTON_RETRY_BASE_DELAY_SECONDS: int = 30
+    VTON_RETRY_MAX_DELAY_SECONDS: int = 600
     REPLICATE_API_KEY: str = ""
     LMSTUDIO_BASE_URL: str = "http://localhost:1234"
     LMSTUDIO_MODEL: str = ""

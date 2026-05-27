@@ -39,3 +39,22 @@ class VTONJobStatusResponse(BaseModel):
     result_url: str | None = None
     error_reason: str | None = None
     retry_count: int = 0
+
+
+class VTONJobHistoryItem(BaseModel):
+    job_id: uuid.UUID
+    status: JobStatus
+    cloth_type: ClothType
+    created_at: datetime
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+    result_url: str | None = None
+    error_reason: str | None = None
+    retry_count: int = 0
+
+
+class VTONJobHistoryResponse(BaseModel):
+    items: list[VTONJobHistoryItem]
+    total: int
+    page: int
+    page_size: int

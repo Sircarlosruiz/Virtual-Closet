@@ -122,6 +122,7 @@ class VTONJobService:
         result: dict = {
             "job_id": job.id,
             "status": job.status,
+            "cloth_type": job.cloth_type,
             "created_at": job.created_at,
             "started_at": job.started_at,
             "completed_at": job.completed_at,
@@ -137,3 +138,37 @@ class VTONJobService:
             )
 
         return result
+
+    async def list_jobs(
+        self,
+        mayorista_id: uuid.UUID,
+        page: int = 1,
+        page_size: int = 20,
+    ) -> tuple[list[dict], int]:
+        """List mayorista's VTON jobs with pagination.
+
+        Returns a list of job status dicts (same format as get_job_status)
+        and the total count.
+        """
+        jobs, total = await self._vton_job_repo.list_by_mayorista(
+            mayorista_id, page, page_size
+        )
+        results = []
+        for job in jobs:
+            item: dict = {
+                "job_id": job.id,
+                "status": job.status,
+                "cloth_type": job.cloth_type,
+                "created_at": job.created_at,
+                "started_at": job.started_at,
+                "completed_at": job.completed_at,
+                "result_url": None,
+                "error_reason": job.error_reason,
+                "retry_count": job.retry_count,
+            }
+            if job.status == "completed" and job.result_minio_key:
+                item["result_url"] = await self._minio.get_presigned_url(
+                    bucket="generated", key=job.result_minio_key
+                )
+            results.append(item)
+        return results, total

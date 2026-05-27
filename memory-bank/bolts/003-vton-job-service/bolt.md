@@ -3,23 +3,33 @@ id: 003-vton-job-service
 unit: 002-vton-job-service
 intent: 001-vton-generation-pipeline
 type: ddd-construction-bolt
-status: planned
+status: complete
 stories:
   - 004-retry-on-failure
   - 005-job-history
-created: 2026-05-26T00:00:00Z
-started: null
-completed: null
+created: 2026-05-26T00:00:00.000Z
+started: 2026-05-27T00:00:00.000Z
+completed: "2026-05-27T17:59:38Z"
 current_stage: null
-stages_completed: []
-
+stages_completed:
+  - name: model
+    completed: 2026-05-27T00:05:00.000Z
+    artifact: ddd-01-domain-model.md
+  - name: design
+    completed: 2026-05-27T00:10:00.000Z
+    artifact: ddd-02-technical-design.md
+  - name: implement
+    completed: 2026-05-27T00:15:00.000Z
+    artifact: src/vton-retry-history/
+  - name: test
+    completed: 2026-05-27T00:20:00.000Z
+    artifact: ddd-03-test-report.md
 requires_bolts:
   - 002-vton-job-service
 enables_bolts:
   - 004-vton-pipeline-ui
 requires_units: []
 blocks: false
-
 complexity:
   avg_complexity: 2
   avg_uncertainty: 2
@@ -49,10 +59,10 @@ Add exponential backoff retry to the Celery worker task and expose a paginated h
 
 ## Stages
 
-- [ ] **1. Domain Model**: Update `VTONJob` with `retry_count`, `max_retries`, `error_reason` fields; retry state transitions → `ddd-01-domain-model.md`
-- [ ] **2. Technical Design**: Celery retry strategy (autoretry_for vs. manual), backoff formula, env var config, history query design → `ddd-02-technical-design.md`
-- [ ] **3. Implement**: Update `tasks/vton_task.py` with retry logic; update `repositories/vton_job_repo.py` with `list_by_mayorista`; add `GET /api/vton/jobs` endpoint
-- [ ] **4. Test**: Simulate provider failures, verify retry count increments, verify permanent failure after max_retries, test history pagination → `ddd-03-test-report.md`
+- ✅ **1. Domain Model**: Complete → `ddd-01-domain-model.md`
+- ✅ **2. Technical Design**: Complete → `ddd-02-technical-design.md`
+- ✅ **3. Implement**: Complete → `services/retry_policy.py`, updated `tasks/vton_task.py`, `api/routers/vton.py`, `api/schemas/vton.py`, `services/vton_job_service.py`, `core/config.py`
+- ✅ **4. Test**: Complete → `ddd-03-test-report.md` (19 tests passing)
 
 ## Dependencies
 

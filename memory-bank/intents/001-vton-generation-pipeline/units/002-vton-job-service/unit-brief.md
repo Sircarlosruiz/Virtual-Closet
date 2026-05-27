@@ -2,9 +2,9 @@
 unit: 002-vton-job-service
 intent: 001-vton-generation-pipeline
 phase: inception
-status: draft
-created: 2026-05-26T00:00:00Z
-updated: 2026-05-26T00:00:00Z
+status: complete
+created: 2026-05-26T00:00:00.000Z
+updated: 2026-05-26T00:00:00.000Z
 ---
 
 # Unit Brief: 002-vton-job-service
