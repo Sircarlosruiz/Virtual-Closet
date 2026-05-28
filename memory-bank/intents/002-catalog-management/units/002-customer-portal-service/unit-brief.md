@@ -2,9 +2,9 @@
 unit: 002-customer-portal-service
 intent: 002-catalog-management
 phase: inception
-status: ready
-created: 2026-05-28T00:00:00Z
-updated: 2026-05-28T00:00:00Z
+status: complete
+created: 2026-05-28T00:00:00.000Z
+updated: 2026-05-28T00:00:00.000Z
 default_bolt_type: ddd-construction-bolt
 ---
 

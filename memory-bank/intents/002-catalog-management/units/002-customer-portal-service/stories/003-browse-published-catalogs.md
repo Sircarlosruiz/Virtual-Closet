@@ -2,11 +2,11 @@
 id: 003-browse-published-catalogs
 unit: 002-customer-portal-service
 intent: 002-catalog-management
-status: draft
+status: complete
 priority: must
-created: 2026-05-28T00:00:00Z
+created: 2026-05-28T00:00:00.000Z
 assigned_bolt: 008-customer-portal-service
-implemented: false
+implemented: true
 ---
 
 # Story: 003-browse-published-catalogs

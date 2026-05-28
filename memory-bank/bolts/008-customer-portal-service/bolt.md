@@ -3,24 +3,37 @@ id: 008-customer-portal-service
 unit: 002-customer-portal-service
 intent: 002-catalog-management
 type: ddd-construction-bolt
-status: planned
+status: complete
 stories:
   - 001-register-customer
   - 002-buyer-portal-auth
   - 003-browse-published-catalogs
-created: 2026-05-28T00:00:00Z
-started: null
-completed: null
+created: 2026-05-28T00:00:00.000Z
+started: 2026-05-28T16:30:00.000Z
+completed: "2026-05-28T17:30:23Z"
 current_stage: null
-stages_completed: []
-
+stages_completed:
+  - name: model
+    completed: 2026-05-28T17:00:00.000Z
+    artifact: ddd-01-domain-model.md
+  - name: design
+    completed: 2026-05-28T17:30:00.000Z
+    artifact: ddd-02-technical-design.md
+  - name: adr-analysis
+    completed: 2026-05-28T18:05:00.000Z
+    artifact: adr-001-separate-buyer-auth-context.md, adr-002-token-hashing-strategy.md
+  - name: implement
+    completed: 2026-05-28T18:45:00.000Z
+    artifact: src/customer_portal/
+  - name: test
+    completed: 2026-05-28T19:15:00.000Z
+    artifact: ddd-03-test-report.md
 requires_bolts:
   - 007-catalog-service
 enables_bolts:
   - 010-catalog-management-ui
 requires_units: []
 blocks: false
-
 complexity:
   avg_complexity: 2
   avg_uncertainty: 2

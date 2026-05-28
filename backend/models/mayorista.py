@@ -36,3 +36,4 @@ class Mayorista(Base):
     garment_photos = relationship("GarmentPhoto", back_populates="mayorista", lazy="dynamic")
     model_photos = relationship("ModelPhoto", back_populates="mayorista", lazy="dynamic")
     vton_jobs = relationship("VTONJob", back_populates="mayorista", lazy="dynamic")
+    customers = relationship("Customer", back_populates="mayorista", lazy="dynamic")

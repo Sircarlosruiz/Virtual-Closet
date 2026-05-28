@@ -106,6 +106,34 @@ class CatalogoRepo:
 
         return catalogs, total
 
+    async def list_published_by_mayorista(
+        self, mayorista_id: uuid.UUID, page: int, page_size: int
+    ) -> tuple[list[Catalogo], int]:
+        """List published catalogs for a mayorista with pagination."""
+        offset = (page - 1) * page_size
+
+        count_stmt = select(func.count(Catalogo.id)).where(
+            Catalogo.mayorista_id == mayorista_id,
+            Catalogo.status == "published",
+        )
+        total_result = await self._db.execute(count_stmt)
+        total = total_result.scalar() or 0
+
+        list_stmt = (
+            select(Catalogo)
+            .where(
+                Catalogo.mayorista_id == mayorista_id,
+                Catalogo.status == "published",
+            )
+            .order_by(Catalogo.created_at.desc())
+            .offset(offset)
+            .limit(page_size)
+        )
+        result = await self._db.execute(list_stmt)
+        catalogs = list(result.scalars().all())
+
+        return catalogs, total
+
 
 class CatalogoItemRepo:
     """Data access for CatalogoItem entities."""
