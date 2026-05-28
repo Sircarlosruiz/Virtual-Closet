@@ -2,11 +2,12 @@
 id: 001-catalog-list-page
 unit: 003-catalog-management-ui
 intent: 002-catalog-management
-status: draft
+status: completed
 priority: must
 created: 2026-05-28T00:00:00Z
 assigned_bolt: 009-catalog-management-ui
-implemented: false
+implemented: true
+completed: 2026-05-28T20:00:00Z
 ---
 
 # Story: 001-catalog-list-page
@@ -19,11 +20,11 @@ implemented: false
 
 ## Acceptance Criteria
 
-- [ ] **Given** I navigate to the catalogs section, **When** the page loads, **Then** I see all my catalogs as cards/rows showing: name, status badge (Draft/Published), item count, and last updated date
-- [ ] **Given** I have no catalogs, **When** the page loads, **Then** I see an empty state with a "Create your first catalog" call-to-action
-- [ ] **Given** I click "Create Catalog", **When** a form/modal appears, **Then** I can enter a name and submit to create a new draft catalog
-- [ ] **Given** a new catalog is created, **When** the action completes, **Then** the new catalog appears in the list without a full page reload
-- [ ] **Given** I click on a catalog, **When** navigated, **Then** I go to the catalog detail page
+- [x] **Given** I navigate to the catalogs section, **When** the page loads, **Then** I see all my catalogs as cards/rows showing: name, status badge (Draft/Published), item count, and last updated date
+- [x] **Given** I have no catalogs, **When** the page loads, **Then** I see an empty state with a "Create your first catalog" call-to-action
+- [x] **Given** I click "Create Catalog", **When** a form/modal appears, **Then** I can enter a name and submit to create a new draft catalog
+- [x] **Given** a new catalog is created, **When** the action completes, **Then** the new catalog appears in the list without a full page reload
+- [x] **Given** I click on a catalog, **When** navigated, **Then** I go to the catalog detail page
 
 ## Technical Notes
 

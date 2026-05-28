@@ -2,11 +2,12 @@
 id: 002-catalog-detail-page
 unit: 003-catalog-management-ui
 intent: 002-catalog-management
-status: draft
+status: completed
 priority: must
 created: 2026-05-28T00:00:00Z
 assigned_bolt: 009-catalog-management-ui
-implemented: false
+implemented: true
+completed: 2026-05-28T20:00:00Z
 ---
 
 # Story: 002-catalog-detail-page
@@ -19,11 +20,11 @@ implemented: false
 
 ## Acceptance Criteria
 
-- [ ] **Given** I open a catalog, **When** the page loads, **Then** I see the catalog name, status, and a grid/list of items showing: VTON image, garment name, price, cloth type, and SKU
-- [ ] **Given** I click "Add Item", **When** a picker opens, **Then** I see my completed VTON results and can select one to add with a metadata form (name, price, cloth type, SKU)
-- [ ] **Given** I click "Remove" on an item, **When** confirmed, **Then** the item disappears from the grid and item count updates
-- [ ] **Given** I drag an item to a new position (or use reorder arrows), **When** I drop/confirm, **Then** the new order is saved via PATCH `.../reorder` and reflected immediately
-- [ ] **Given** I click the catalog name, **When** I edit it inline or via modal, **Then** the name updates via PATCH
+- [x] **Given** I open a catalog, **When** the page loads, **Then** I see the catalog name, status, and a grid/list of items showing: VTON image, garment name, price, cloth type, and SKU
+- [x] **Given** I click "Add Item", **When** a picker opens, **Then** I see my completed VTON results and can select one to add with a metadata form (name, price, cloth type, SKU)
+- [x] **Given** I click "Remove" on an item, **When** confirmed, **Then** the item disappears from the grid and item count updates
+- [x] **Given** I drag an item to a new position (or use reorder arrows), **When** I drop/confirm, **Then** the new order is saved via PATCH `.../reorder` and reflected immediately
+- [x] **Given** I click the catalog name, **When** I edit it inline or via modal, **Then** the name updates via PATCH
 
 ## Technical Notes
 

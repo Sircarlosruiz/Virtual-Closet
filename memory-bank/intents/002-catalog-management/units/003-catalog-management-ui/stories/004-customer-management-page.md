@@ -2,11 +2,12 @@
 id: 004-customer-management-page
 unit: 003-catalog-management-ui
 intent: 002-catalog-management
-status: draft
+status: completed
 priority: must
 created: 2026-05-28T00:00:00Z
 assigned_bolt: 010-catalog-management-ui
-implemented: false
+implemented: true
+completed: 2026-05-28T22:30:00Z
 ---
 
 # Story: 004-customer-management-page
@@ -19,10 +20,10 @@ implemented: false
 
 ## Acceptance Criteria
 
-- [ ] **Given** I navigate to the Customers section, **When** the page loads, **Then** I see a list of my registered customers with: name, email, and status (Invited / Active)
-- [ ] **Given** I have no customers, **When** the page loads, **Then** I see an empty state with "Register your first customer" CTA
-- [ ] **Given** I click "Register Customer", **When** a form appears, **Then** I can enter name and email, submit, and see the new customer appear with "Invited" status
-- [ ] **Given** registration succeeds, **When** I check, **Then** a confirmation message confirms an invitation email has been sent
+- [x] **Given** I navigate to the Customers section, **When** the page loads, **Then** I see a list of my registered customers with: name, email, and status (Invited / Active)
+- [x] **Given** I have no customers, **When** the page loads, **Then** I see an empty state with "Register your first customer" CTA
+- [x] **Given** I click "Register Customer", **When** a form appears, **Then** I can enter name and email, submit, and see the new customer appear with "Invited" status
+- [x] **Given** registration succeeds, **When** I check, **Then** a confirmation message confirms an invitation email has been sent
 
 ## Technical Notes
 

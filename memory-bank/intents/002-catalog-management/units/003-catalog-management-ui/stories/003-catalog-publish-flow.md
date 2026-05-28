@@ -2,11 +2,12 @@
 id: 003-catalog-publish-flow
 unit: 003-catalog-management-ui
 intent: 002-catalog-management
-status: draft
+status: completed
 priority: must
 created: 2026-05-28T00:00:00Z
 assigned_bolt: 009-catalog-management-ui
-implemented: false
+implemented: true
+completed: 2026-05-28T20:00:00Z
 ---
 
 # Story: 003-catalog-publish-flow
@@ -19,12 +20,12 @@ implemented: false
 
 ## Acceptance Criteria
 
-- [ ] **Given** I am on the catalog detail page with a draft catalog, **When** I click "Publish", **Then** a confirmation dialog appears summarizing the action
-- [ ] **Given** I confirm publish, **When** the request succeeds, **Then** the status badge changes to "Published" immediately and a success toast appears
-- [ ] **Given** the catalog has 0 items and I click "Publish", **When** I interact, **Then** the button is disabled with a tooltip "Add at least one item before publishing"
-- [ ] **Given** I am on a published catalog, **When** I click "Unpublish", **Then** a confirmation dialog asks me to confirm and warns buyers will lose access
-- [ ] **Given** I confirm unpublish, **When** the request succeeds, **Then** the status badge changes to "Draft"
-- [ ] **Given** I click "Delete Catalog", **When** I confirm the destructive action, **Then** the catalog is deleted and I am redirected to the catalog list
+- [x] **Given** I am on the catalog detail page with a draft catalog, **When** I click "Publish", **Then** a confirmation dialog appears summarizing the action
+- [x] **Given** I confirm publish, **When** the request succeeds, **Then** the status badge changes to "Published" immediately and a success toast appears
+- [x] **Given** the catalog has 0 items and I click "Publish", **When** I interact, **Then** the button is disabled with a tooltip "Add at least one item before publishing"
+- [x] **Given** I am on a published catalog, **When** I click "Unpublish", **Then** a confirmation dialog asks me to confirm and warns buyers will lose access
+- [x] **Given** I confirm unpublish, **When** the request succeeds, **Then** the status badge changes to "Draft"
+- [x] **Given** I click "Delete Catalog", **When** I confirm the destructive action, **Then** the catalog is deleted and I am redirected to the catalog list
 
 ## Technical Notes
 

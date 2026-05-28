@@ -67,6 +67,6 @@
 
 ## Stories by Status
 
-- **Planned/Generated**: 30
+- **Planned/Generated**: 0
 - **In Progress**: 0
-- **Completed**: 14 (all of 001-vton-generation-pipeline)
+- **Completed**: 30 (all stories across both intents)

@@ -2,11 +2,12 @@
 id: 005-buyer-portal-page
 unit: 003-catalog-management-ui
 intent: 002-catalog-management
-status: draft
+status: completed
 priority: must
 created: 2026-05-28T00:00:00Z
 assigned_bolt: 010-catalog-management-ui
-implemented: false
+implemented: true
+completed: 2026-05-28T22:30:00Z
 ---
 
 # Story: 005-buyer-portal-page
@@ -19,11 +20,11 @@ implemented: false
 
 ## Acceptance Criteria
 
-- [ ] **Given** I open my invitation link, **When** the token is valid, **Then** I am authenticated and land on the buyer portal showing a list of published catalogs
-- [ ] **Given** I click on a catalog, **When** it loads, **Then** I see the catalog name and a grid of items each showing: garment image, name, price, cloth type, and SKU
-- [ ] **Given** I access the portal with an expired token, **When** processed, **Then** I see an error page with a "Request a new link" option
-- [ ] **Given** I request a new link via email form, **When** submitted, **Then** I see a confirmation "Check your email for a new access link"
-- [ ] **Given** the mayorista has no published catalogs, **When** I view the portal, **Then** I see an empty state "No collections available yet"
+- [x] **Given** I open my invitation link, **When** the token is valid, **Then** I am authenticated and land on the buyer portal showing a list of published catalogs
+- [x] **Given** I click on a catalog, **When** it loads, **Then** I see the catalog name and a grid of items each showing: garment image, name, price, cloth type, and SKU
+- [x] **Given** I access the portal with an expired token, **When** processed, **Then** I see an error page with a "Request a new link" option
+- [x] **Given** I request a new link via email form, **When** submitted, **Then** I see a confirmation "Check your email for a new access link"
+- [x] **Given** the mayorista has no published catalogs, **When** I view the portal, **Then** I see an empty state "No collections available yet"
 
 ## Technical Notes
 
