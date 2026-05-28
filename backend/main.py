@@ -10,6 +10,7 @@ from api.routers.modelos_ia import router as modelos_ia_router
 from api.routers.generaciones import router as generaciones_router
 from api.routers.media import router as media_router
 from api.routers.vton import router as vton_router
+from api.routers.catalogo import router as catalogo_router
 from core.config import settings
 from core.limiter import limiter
 from core.middleware import TokenRefreshMiddleware
@@ -34,6 +35,7 @@ app.include_router(modelos_ia_router)
 app.include_router(generaciones_router)
 app.include_router(media_router)
 app.include_router(vton_router)
+app.include_router(catalogo_router)
 
 
 @app.exception_handler(RateLimitExceeded)
