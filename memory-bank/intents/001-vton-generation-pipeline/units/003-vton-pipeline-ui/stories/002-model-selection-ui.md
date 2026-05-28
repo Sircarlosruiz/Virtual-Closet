@@ -2,11 +2,11 @@
 id: 002-model-selection-ui
 unit: 003-vton-pipeline-ui
 intent: 001-vton-generation-pipeline
-status: draft
+status: complete
 priority: must
-created: 2026-05-26T00:00:00Z
+created: 2026-05-26T00:00:00.000Z
 assigned_bolt: 004-vton-pipeline-ui
-implemented: false
+implemented: true
 ---
 
 # Story: 002-model-selection-ui

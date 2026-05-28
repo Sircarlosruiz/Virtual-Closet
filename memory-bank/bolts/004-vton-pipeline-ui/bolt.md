@@ -3,17 +3,25 @@ id: 004-vton-pipeline-ui
 unit: 003-vton-pipeline-ui
 intent: 001-vton-generation-pipeline
 type: simple-construction-bolt
-status: planned
+status: complete
 stories:
   - 001-garment-upload-ui
   - 002-model-selection-ui
   - 003-job-submission-ui
-created: 2026-05-26T00:00:00Z
-started: null
-completed: null
+created: 2026-05-26T00:00:00.000Z
+started: 2026-05-27T00:00:00.000Z
+completed: "2026-05-28T13:43:13Z"
 current_stage: null
-stages_completed: []
-
+stages_completed:
+  - name: plan
+    completed: 2026-05-27T00:05:00.000Z
+    artifact: implementation-plan.md
+  - name: implement
+    completed: 2026-05-27T00:15:00.000Z
+    artifact: implementation-walkthrough.md
+  - name: test
+    completed: 2026-05-27T00:20:00.000Z
+    artifact: test-walkthrough.md
 requires_bolts:
   - 001-media-service
   - 002-vton-job-service
@@ -21,7 +29,6 @@ enables_bolts:
   - 005-vton-pipeline-ui
 requires_units: []
 blocks: false
-
 complexity:
   avg_complexity: 2
   avg_uncertainty: 1
