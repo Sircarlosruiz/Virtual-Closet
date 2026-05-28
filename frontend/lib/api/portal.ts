@@ -19,7 +19,7 @@ export interface PortalCatalogItem {
   id: string;
   image_url: string;
   garment_name: string;
-  price: number;
+  price: number | string;
   cloth_type: string;
   sku: string;
   position: number;

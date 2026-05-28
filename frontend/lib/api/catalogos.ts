@@ -19,10 +19,11 @@ export interface CatalogoListResponse {
 export interface CatalogoItem {
   id: string;
   catalog_id: string;
-  vton_job_id: string;
+  vton_job_id: string | null;
+  generacion_id?: string | null;
   image_url: string;
   garment_name: string;
-  price: number;
+  price: number | string;
   cloth_type: "upper_body" | "lower_body" | "dress";
   sku: string;
   position: number;
@@ -38,9 +39,10 @@ export interface CreateCatalogoInput {
 }
 
 export interface AddCatalogoItemInput {
-  vton_job_id: string;
+  vton_job_id?: string;
+  generacion_id?: string;
   garment_name: string;
-  price: number;
+  price: number | string;
   cloth_type: "upper_body" | "lower_body" | "dress";
   sku: string;
 }

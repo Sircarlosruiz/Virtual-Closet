@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { CatalogoItem } from "@/lib/api/catalogos";
+import { formatPrice } from "@/lib/utils";
 import { useRemoveCatalogoItem } from "@/hooks/useCatalogos";
 import { Button } from "@/components/ui/button";
 import {
@@ -53,7 +54,7 @@ export function CatalogItemCard({
         </div>
         <div className="p-3">
           <h4 className="text-sm font-medium truncate">{item.garment_name}</h4>
-          <p className="text-sm text-muted-foreground mt-1">${item.price.toFixed(2)}</p>
+          <p className="text-sm text-muted-foreground mt-1">${formatPrice(item.price)}</p>
           <p className="text-xs text-muted-foreground mt-1">SKU: {item.sku}</p>
           <div className="flex items-center justify-between mt-2">
             <div className="flex gap-1">

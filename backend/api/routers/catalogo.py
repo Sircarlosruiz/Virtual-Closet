@@ -20,6 +20,7 @@ from core.dependencies import get_current_mayorista
 from core.minio_client import MinIOClient
 from models.mayorista import Mayorista
 from repositories.catalogo_repo import CatalogoItemRepo, CatalogoRepo
+from repositories.generacion_repo import GeneracionRepository
 from repositories.vton_job_repo import VTONJobRepo
 from services.catalogo_service import (
     CatalogoItemNotFoundError,
@@ -27,6 +28,9 @@ from services.catalogo_service import (
     CatalogoOwnershipError,
     CatalogoService,
     EmptyCatalogCannotPublishError,
+    GeneracionNotFoundError,
+    GeneracionNotReadyError,
+    GeneracionOwnershipError,
     InvalidCatalogStatusError,
     ReorderValidationError,
     VTONJobNotCompletedError,
@@ -41,9 +45,14 @@ def _get_catalogo_service(db: AsyncSession = Depends(get_db)) -> CatalogoService
     catalogo_repo = CatalogoRepo(db)
     catalogo_item_repo = CatalogoItemRepo(db)
     vton_job_repo = VTONJobRepo(db)
+    generacion_repo = GeneracionRepository(db)
     minio_client = MinIOClient()
     return CatalogoService(
-        catalogo_repo, catalogo_item_repo, vton_job_repo, minio_client
+        catalogo_repo,
+        catalogo_item_repo,
+        vton_job_repo,
+        minio_client,
+        generacion_repo,
     )
 
 
@@ -119,6 +128,7 @@ async def get_catalog(
                 id=item.id,
                 catalog_id=item.catalog_id,
                 vton_job_id=item.vton_job_id,
+                generacion_id=item.generacion_id,
                 image_url=image_url,
                 garment_name=item.garment_name,
                 price=item.price,
@@ -221,6 +231,7 @@ async def add_item(
         item, image_url = await catalogo_service.add_item(
             catalog_id=catalog_id,
             vton_job_id=body.vton_job_id,
+            generacion_id=body.generacion_id,
             garment_name=body.garment_name,
             price=body.price,
             cloth_type=body.cloth_type.value,
@@ -247,11 +258,24 @@ async def add_item(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail=str(exc)
         ) from exc
+    except GeneracionNotFoundError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)
+        ) from exc
+    except GeneracionNotReadyError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)
+        ) from exc
+    except GeneracionOwnershipError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail=str(exc)
+        ) from exc
 
     return CatalogoItemResponse(
         id=item.id,
         catalog_id=item.catalog_id,
         vton_job_id=item.vton_job_id,
+        generacion_id=item.generacion_id,
         image_url=image_url,
         garment_name=item.garment_name,
         price=item.price,

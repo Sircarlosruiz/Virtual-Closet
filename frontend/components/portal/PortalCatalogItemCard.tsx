@@ -1,6 +1,7 @@
 "use client";
 
 import { PortalCatalogItem } from "@/lib/api/portal";
+import { formatPrice } from "@/lib/utils";
 
 interface PortalCatalogItemCardProps {
   item: PortalCatalogItem;
@@ -19,7 +20,7 @@ export function PortalCatalogItemCard({ item }: PortalCatalogItemCardProps) {
       <div className="p-3">
         <h4 className="text-sm font-medium truncate">{item.garment_name}</h4>
         <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50 mt-1">
-          ${item.price.toFixed(2)}
+          ${formatPrice(item.price)}
         </p>
         <p className="text-xs text-muted-foreground mt-1">SKU: {item.sku}</p>
       </div>

@@ -3,21 +3,58 @@ import logging
 
 import resend
 
-from core.config import settings
+from core.config import resend_api_key_is_configured, settings, use_console_email_backend
 
 logger = logging.getLogger(__name__)
 
 resend.api_key = settings.RESEND_API_KEY
 
 
+def _should_use_resend() -> bool:
+    if not resend_api_key_is_configured():
+        return False
+    if use_console_email_backend():
+        logger.warning(
+            "EMAIL_BACKEND=console — emails are NOT sent via Resend. "
+            "Set EMAIL_BACKEND=resend in backend/.env to deliver to inbox."
+        )
+        return False
+    return True
+
+
+def _log_dev_email(kind: str, to: str, url: str) -> None:
+    """Print invitation/magic-link URLs when email is not sent via Resend."""
+    logger.warning(
+        "[EMAIL DEV] %s not sent via Resend (backend=%s, resend_key=%s). "
+        "Open this link as %s:\n  %s",
+        kind,
+        settings.EMAIL_BACKEND,
+        "configured" if resend_api_key_is_configured() else "missing/placeholder",
+        to,
+        url,
+    )
+
+
+async def _run_send(fn) -> None:
+    loop = asyncio.get_event_loop()
+    await loop.run_in_executor(None, fn)
+
+
 async def send_welcome_email(email: str, nombre_negocio: str) -> None:
     """Send welcome email to new mayorista. Non-blocking."""
 
     def _send():
+        if not _should_use_resend():
+            logger.info(
+                "[EMAIL DEV] Welcome email skipped for %s (%s)",
+                email,
+                nombre_negocio,
+            )
+            return
         try:
             resend.Emails.send(
                 {
-                    "from": "Virtual Closet <onboarding@resend.dev>",
+                    "from": settings.RESEND_FROM_EMAIL,
                     "to": email,
                     "subject": f"Bienvenido a Virtual Closet, {nombre_negocio}!",
                     "html": f"""
@@ -28,12 +65,11 @@ async def send_welcome_email(email: str, nombre_negocio: str) -> None:
                     """,
                 }
             )
-            logger.info(f"Welcome email sent to {email}")
+            logger.info("Welcome email sent to %s", email)
         except Exception as e:
-            logger.error(f"Failed to send welcome email to {email}: {e}")
+            logger.error("Failed to send welcome email to %s: %s", email, e)
 
-    loop = asyncio.get_event_loop()
-    await loop.run_in_executor(None, _send)
+    await _run_send(_send)
 
 
 async def send_invitation_email(
@@ -46,10 +82,13 @@ async def send_invitation_email(
     invitation_url = f"{settings.FRONTEND_URL}/portal/auth?token={invitation_token}"
 
     def _send():
+        if not _should_use_resend():
+            _log_dev_email("Invitation", customer_email, invitation_url)
+            return
         try:
             resend.Emails.send(
                 {
-                    "from": "Virtual Closet <onboarding@resend.dev>",
+                    "from": settings.RESEND_FROM_EMAIL,
                     "to": customer_email,
                     "subject": f"{mayorista_name} te ha invitado a Virtual Closet",
                     "html": f"""
@@ -61,12 +100,16 @@ async def send_invitation_email(
                     """,
                 }
             )
-            logger.info(f"Invitation email sent to {customer_email}")
+            logger.info("Invitation email sent to %s", customer_email)
         except Exception as e:
-            logger.error(f"Failed to send invitation email to {customer_email}: {e}")
+            logger.error(
+                "Failed to send invitation email to %s: %s — dev link: %s",
+                customer_email,
+                e,
+                invitation_url,
+            )
 
-    loop = asyncio.get_event_loop()
-    await loop.run_in_executor(None, _send)
+    await _run_send(_send)
 
 
 async def send_magic_link_email(
@@ -78,10 +121,13 @@ async def send_magic_link_email(
     magic_link_url = f"{settings.FRONTEND_URL}/portal/auth?token={magic_link_token}"
 
     def _send():
+        if not _should_use_resend():
+            _log_dev_email("Magic link", customer_email, magic_link_url)
+            return
         try:
             resend.Emails.send(
                 {
-                    "from": "Virtual Closet <onboarding@resend.dev>",
+                    "from": settings.RESEND_FROM_EMAIL,
                     "to": customer_email,
                     "subject": "Tu enlace de acceso a Virtual Closet",
                     "html": f"""
@@ -92,9 +138,13 @@ async def send_magic_link_email(
                     """,
                 }
             )
-            logger.info(f"Magic link email sent to {customer_email}")
+            logger.info("Magic link email sent to %s", customer_email)
         except Exception as e:
-            logger.error(f"Failed to send magic link email to {customer_email}: {e}")
+            logger.error(
+                "Failed to send magic link email to %s: %s — dev link: %s",
+                customer_email,
+                e,
+                magic_link_url,
+            )
 
-    loop = asyncio.get_event_loop()
-    await loop.run_in_executor(None, _send)
+    await _run_send(_send)

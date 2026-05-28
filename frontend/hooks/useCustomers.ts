@@ -25,7 +25,9 @@ export function useRegisterCustomer() {
     mutationFn: (input: RegisterCustomerInput) => registerCustomer(input),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: CUSTOMERS_KEY });
-      toast.success("Cliente registrado. Se ha enviado un correo de invitación.");
+      toast.success(
+        "Cliente registrado. Si el correo no llega en desarrollo, revisa los logs del backend (enlace de invitación)."
+      );
     },
     onError: (err: Error) => {
       if (err.message.includes("already exists")) {

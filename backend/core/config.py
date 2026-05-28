@@ -16,8 +16,10 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRE_DAYS: int = 7
 
-    # Email
+    # Email (Resend). Use EMAIL_BACKEND=console in local dev without Resend.
     RESEND_API_KEY: str = ""
+    EMAIL_BACKEND: str = "resend"  # resend | console
+    RESEND_FROM_EMAIL: str = "Virtual Closet <onboarding@resend.dev>"
 
     # URLs
     FRONTEND_URL: str = "http://localhost:3000"
@@ -65,3 +67,27 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+
+def resend_api_key_is_configured() -> bool:
+    """True when a real Resend API key is set (not empty / placeholder)."""
+    key = settings.RESEND_API_KEY.strip()
+    if not key.startswith("re_"):
+        return False
+    if "XXXX" in key.upper():
+        return False
+    return True
+
+
+def use_console_email_backend() -> bool:
+    """Console backend logs links to stdout instead of calling Resend."""
+    return settings.EMAIL_BACKEND.strip().lower() == "console"
+
+
+def email_backend_status() -> str:
+    """Human-readable email mode for startup logs."""
+    if use_console_email_backend():
+        return "console (links in backend logs, no Resend)"
+    if resend_api_key_is_configured():
+        return "resend (live delivery)"
+    return "disabled (set RESEND_API_KEY or EMAIL_BACKEND=console)"

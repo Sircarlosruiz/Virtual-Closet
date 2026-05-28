@@ -11,3 +11,9 @@ const UUID_RE =
 export function isValidUuid(value: string | null | undefined): boolean {
   return typeof value === "string" && UUID_RE.test(value);
 }
+
+/** API may return Decimal as string; normalizes for display. */
+export function formatPrice(price: number | string): string {
+  const value = typeof price === "number" ? price : Number.parseFloat(price);
+  return Number.isFinite(value) ? value.toFixed(2) : "0.00";
+}

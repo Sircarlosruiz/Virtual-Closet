@@ -4,6 +4,7 @@ from decimal import Decimal
 from core.minio_client import MinIOClient
 from models.catalogo import Catalogo, CatalogoItem
 from repositories.catalogo_repo import CatalogoItemRepo, CatalogoRepo
+from repositories.generacion_repo import GeneracionRepository
 from repositories.vton_job_repo import VTONJobRepo
 
 
@@ -31,6 +32,18 @@ class VTONJobOwnershipError(Exception):
     """VTON job does not belong to the requesting mayorista."""
 
 
+class GeneracionNotFoundError(Exception):
+    """Generacion does not exist."""
+
+
+class GeneracionNotReadyError(Exception):
+    """Generacion must be completed before adding to catalog."""
+
+
+class GeneracionOwnershipError(Exception):
+    """Generacion does not belong to the requesting mayorista."""
+
+
 class ReorderValidationError(Exception):
     """Reorder request does not contain exact bijection of catalog items."""
 
@@ -52,10 +65,12 @@ class CatalogoService:
         catalogo_item_repo: CatalogoItemRepo,
         vton_job_repo: VTONJobRepo,
         minio_client: MinIOClient,
+        generacion_repo: GeneracionRepository | None = None,
     ) -> None:
         self._catalogo_repo = catalogo_repo
         self._item_repo = catalogo_item_repo
         self._vton_job_repo = vton_job_repo
+        self._generacion_repo = generacion_repo
         self._minio = minio_client
 
     async def create_catalog(
@@ -73,16 +88,17 @@ class CatalogoService:
     async def add_item(
         self,
         catalog_id: uuid.UUID,
-        vton_job_id: uuid.UUID,
         garment_name: str,
         price: Decimal,
         cloth_type: str,
         sku: str,
         mayorista_id: uuid.UUID,
+        vton_job_id: uuid.UUID | None = None,
+        generacion_id: uuid.UUID | None = None,
     ) -> tuple[CatalogoItem, str]:
-        """Add a completed VTON result as a catalog item.
+        """Add a completed VTON result or generacion as a catalog item.
 
-        Validates catalog ownership, VTON job completion, and job ownership.
+        Validates catalog ownership and source completion/ownership.
         Returns the created item and a pre-signed URL for the image.
 
         Raises:
@@ -91,7 +107,13 @@ class CatalogoService:
             VTONJobNotFoundError: If VTON job doesn't exist.
             VTONJobNotCompletedError: If VTON job isn't completed.
             VTONJobOwnershipError: If VTON job doesn't belong to mayorista.
+            GeneracionNotFoundError: If generacion doesn't exist.
+            GeneracionNotReadyError: If generacion isn't ready.
+            GeneracionOwnershipError: If generacion doesn't belong to mayorista.
         """
+        if (vton_job_id is None) == (generacion_id is None):
+            raise ValueError("Provide exactly one of vton_job_id or generacion_id")
+
         catalogo = await self._catalogo_repo.get_by_id_and_mayorista(
             catalog_id, mayorista_id
         )
@@ -101,29 +123,61 @@ class CatalogoService:
                 raise CatalogoNotFoundError("Catalog not found")
             raise CatalogoOwnershipError("You do not own this catalog")
 
-        vton_job = await self._vton_job_repo.get_by_id(vton_job_id)
-        if vton_job is None:
-            raise VTONJobNotFoundError("VTON job not found")
+        image_key: str
+        item_vton_job_id: uuid.UUID | None = None
+        item_generacion_id: uuid.UUID | None = None
 
-        if vton_job.status != "completed":
-            raise VTONJobNotCompletedError(
-                "Job must be completed before adding to catalog"
-            )
+        if vton_job_id is not None:
+            vton_job = await self._vton_job_repo.get_by_id(vton_job_id)
+            if vton_job is None:
+                raise VTONJobNotFoundError("VTON job not found")
 
-        if vton_job.mayorista_id != mayorista_id:
-            raise VTONJobOwnershipError("You do not own this VTON job")
+            if vton_job.status != "completed":
+                raise VTONJobNotCompletedError(
+                    "Job must be completed before adding to catalog"
+                )
+
+            if vton_job.mayorista_id != mayorista_id:
+                raise VTONJobOwnershipError("You do not own this VTON job")
+
+            image_key = vton_job.result_minio_key
+            item_vton_job_id = vton_job_id
+        else:
+            if self._generacion_repo is None:
+                raise GeneracionNotFoundError("Generacion repository not configured")
+
+            generacion = await self._generacion_repo.get_by_id(generacion_id)
+            if generacion is None:
+                raise GeneracionNotFoundError("Generacion not found")
+
+            if generacion.estado != "lista":
+                raise GeneracionNotReadyError(
+                    "Generacion must be completed before adding to catalog"
+                )
+
+            if generacion.mayorista_id != mayorista_id:
+                raise GeneracionOwnershipError("You do not own this generacion")
+
+            if not generacion.imagen_generada_key:
+                raise GeneracionNotReadyError(
+                    "Generacion has no generated image yet"
+                )
+
+            image_key = generacion.imagen_generada_key
+            item_generacion_id = generacion_id
 
         max_position = await self._item_repo.get_max_position(catalog_id)
         next_position = max_position + 1
 
         item = CatalogoItem(
             catalog_id=catalog_id,
-            vton_job_id=vton_job_id,
+            vton_job_id=item_vton_job_id,
+            generacion_id=item_generacion_id,
             garment_name=garment_name,
             price=price,
             cloth_type=cloth_type,
             sku=sku,
-            image_key=vton_job.result_minio_key,
+            image_key=image_key,
             position=next_position,
         )
         item = await self._item_repo.create(item)

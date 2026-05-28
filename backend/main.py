@@ -13,7 +13,11 @@ from api.routers.vton import router as vton_router
 from api.routers.catalogo import router as catalogo_router
 from api.routers.customers import router as customers_router
 from api.routers.portal import router as portal_router
-from core.config import settings
+import logging
+
+from core.config import email_backend_status, resend_api_key_is_configured, settings, use_console_email_backend
+
+logger = logging.getLogger(__name__)
 from core.limiter import limiter
 from core.middleware import TokenRefreshMiddleware
 
@@ -57,6 +61,11 @@ async def health():
 
 @app.on_event("startup")
 async def startup_event():
+    logger.info("Email backend: %s", email_backend_status())
+    if resend_api_key_is_configured() and use_console_email_backend():
+        logger.warning(
+            "RESEND_API_KEY is set but EMAIL_BACKEND=console — no emails will reach inboxes."
+        )
     try:
         from core.minio_buckets import ensure_minio_buckets
 

@@ -18,11 +18,8 @@ function GenerationResultScreen() {
   useEffect(() => {
     if (!generacionId) return;
 
-    Promise.all([
-      fetchGeneracion(generacionId),
-      fetchGeneracionesByPrenda("").catch(() => []),
-    ])
-      .then(([gen]) => {
+    fetchGeneracion(generacionId)
+      .then((gen) => {
         setGeneracion(gen);
         return fetchGeneracionesByPrenda(gen.prenda_id);
       })
@@ -85,11 +82,13 @@ function GenerationResultScreen() {
             {showOriginal ? "Ver generado" : "Ver original"}
           </button>
           <button
-            onClick={() => {
-              // Placeholder for Epic 4
-              alert("Próximamente: Agregar al catálogo");
-            }}
-            className="flex-1 rounded-lg bg-blue-600 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+            onClick={() =>
+              router.push(
+                `/dashboard/catalogos/agregar?generacionId=${generacion.id}`
+              )
+            }
+            disabled={generacion.estado !== "lista"}
+            className="flex-1 rounded-lg bg-blue-600 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Agregar al catálogo
           </button>

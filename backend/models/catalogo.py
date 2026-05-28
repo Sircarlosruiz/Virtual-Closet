@@ -79,7 +79,12 @@ class CatalogoItem(Base):
     vton_job_id = Column(
         UUID(as_uuid=True),
         ForeignKey("vton_jobs.id", ondelete="RESTRICT"),
-        nullable=False,
+        nullable=True,
+    )
+    generacion_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("generacion.id", ondelete="RESTRICT"),
+        nullable=True,
     )
     garment_name = Column(String(200), nullable=False)
     price = Column(Numeric(10, 2), nullable=False)

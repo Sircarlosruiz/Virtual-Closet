@@ -1,7 +1,6 @@
-import asyncio
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.schemas.customer import (
@@ -35,6 +34,7 @@ def _get_customer_service(db: AsyncSession = Depends(get_db)) -> CustomerService
 )
 async def register_customer(
     body: CustomerRegisterRequest,
+    background_tasks: BackgroundTasks,
     mayorista: Mayorista = Depends(get_current_mayorista),
     customer_service: CustomerService = Depends(_get_customer_service),
 ):
@@ -52,13 +52,12 @@ async def register_customer(
 
     from services.email_service import send_invitation_email
 
-    asyncio.create_task(
-        send_invitation_email(
-            customer_email=customer.email,
-            customer_name=customer.name,
-            mayorista_name=mayorista.nombre_negocio,
-            invitation_token=invitation_token,
-        )
+    background_tasks.add_task(
+        send_invitation_email,
+        customer_email=customer.email,
+        customer_name=customer.name,
+        mayorista_name=mayorista.nombre_negocio,
+        invitation_token=invitation_token,
     )
 
     return customer

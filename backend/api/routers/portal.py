@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.schemas.customer import (
@@ -84,6 +84,7 @@ async def authenticate_buyer(
 @router.post("/magic-link")
 async def request_magic_link(
     body: MagicLinkRequest,
+    background_tasks: BackgroundTasks,
     customer_service: CustomerService = Depends(_get_customer_service),
 ):
     """Request a magic-link email for re-authentication. Always returns 200."""
@@ -92,16 +93,13 @@ async def request_magic_link(
     if magic_link_token:
         from services.email_service import send_magic_link_email
 
-        import asyncio
-
         customer = await customer_service._customer_repo.get_by_email(body.email)
         if customer:
-            asyncio.create_task(
-                send_magic_link_email(
-                    customer_email=customer.email,
-                    customer_name=customer.name,
-                    magic_link_token=magic_link_token,
-                )
+            background_tasks.add_task(
+                send_magic_link_email,
+                customer_email=customer.email,
+                customer_name=customer.name,
+                magic_link_token=magic_link_token,
             )
 
     return {"message": "If an account exists, a magic link has been sent"}
