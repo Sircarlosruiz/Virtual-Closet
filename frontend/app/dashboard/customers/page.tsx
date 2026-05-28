@@ -13,7 +13,7 @@ export default function CustomersPage() {
 
   if (isLoading) {
     return (
-      <div className="mx-auto w-full max-w-4xl p-6">
+      <>
         <div className="mb-6 flex justify-end">
           <Button disabled>
             <Plus className="w-4 h-4 mr-2" />
@@ -28,17 +28,15 @@ export default function CustomersPage() {
             />
           ))}
         </div>
-      </div>
+      </>
     );
   }
 
   if (error) {
     return (
-      <div className="mx-auto w-full max-w-4xl p-6">
-        <div className="text-center py-12">
-          <p className="text-red-600">Error al cargar clientes</p>
-          <p className="text-sm text-muted-foreground mt-2">{error.message}</p>
-        </div>
+      <div className="py-12 text-center">
+        <p className="text-red-600">Error al cargar clientes</p>
+        <p className="mt-2 text-sm text-muted-foreground">{error.message}</p>
       </div>
     );
   }
@@ -46,7 +44,7 @@ export default function CustomersPage() {
   const customers = data?.customers ?? [];
 
   return (
-    <div className="mx-auto w-full max-w-4xl p-6">
+    <>
       <div className="mb-6 flex justify-end">
         <Button onClick={() => setShowRegisterModal(true)}>
           <Plus className="w-4 h-4 mr-2" />
@@ -68,7 +66,7 @@ export default function CustomersPage() {
           </Button>
         </div>
       ) : (
-        <div className="bg-white dark:bg-zinc-900 rounded-lg border overflow-hidden">
+        <div className="mx-auto w-full max-w-4xl overflow-hidden rounded-lg border bg-white dark:bg-zinc-900">
           <table className="w-full">
             <thead className="bg-zinc-50 dark:bg-zinc-800 border-b">
               <tr>
@@ -119,6 +117,6 @@ export default function CustomersPage() {
         open={showRegisterModal}
         onOpenChange={setShowRegisterModal}
       />
-    </div>
+    </>
   );
 }

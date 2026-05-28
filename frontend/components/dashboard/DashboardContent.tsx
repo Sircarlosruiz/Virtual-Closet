@@ -17,16 +17,16 @@ export function DashboardContent() {
   };
 
   return (
-    <div className="flex flex-1 flex-col p-6">
+    <>
       <PrendaGrid prendas={prendas} isLoading={isLoading} onDelete={handleDelete} />
 
       {hasNextPage && (
-        <div className="flex justify-center mt-6">
+        <div className="mt-6 flex justify-center">
           <Button variant="outline" onClick={() => fetchNextPage()}>
             Cargar más
           </Button>
         </div>
       )}
-    </div>
+    </>
   );
 }

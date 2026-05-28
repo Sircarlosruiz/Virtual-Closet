@@ -79,7 +79,7 @@ export default function NuevaPrendaPage() {
   };
 
   return (
-    <div className="max-w-xl mx-auto space-y-6 py-8">
+    <div className="mx-auto w-full max-w-xl space-y-6">
       <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
         Nueva prenda
       </h1>

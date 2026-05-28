@@ -10,6 +10,7 @@ import { StatusBadge } from "@/components/catalogos/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, Plus, Edit2, Check, X, Trash2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export default function CatalogoDetailPage() {
   const params = useParams();
@@ -91,31 +92,27 @@ export default function CatalogoDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="max-w-6xl mx-auto py-8">
-        <div className="animate-pulse space-y-6">
-          <div className="h-8 w-48 bg-zinc-200 dark:bg-zinc-800 rounded" />
-          <div className="h-64 bg-zinc-200 dark:bg-zinc-800 rounded" />
-        </div>
+      <div className="animate-pulse space-y-6">
+        <div className="h-8 w-48 rounded bg-zinc-200 dark:bg-zinc-800" />
+        <div className="h-64 rounded bg-zinc-200 dark:bg-zinc-800" />
       </div>
     );
   }
 
   if (error || !catalogo) {
     return (
-      <div className="max-w-6xl mx-auto py-8">
-        <div className="text-center py-12">
-          <p className="text-red-600">Error al cargar catálogo</p>
-          <Button variant="outline" className="mt-4" onClick={() => router.push("/dashboard/catalogos")}>
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Volver
-          </Button>
-        </div>
+      <div className="py-12 text-center">
+        <p className="text-red-600">Error al cargar catálogo</p>
+        <Button variant="outline" className="mt-4" onClick={() => router.push("/dashboard/catalogos")}>
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Volver
+        </Button>
       </div>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto py-8">
+    <>
       <div className="mb-6">
         <Button
           variant="ghost"
@@ -210,7 +207,14 @@ export default function CatalogoDetailPage() {
           </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div
+          className={cn(
+            "grid gap-4",
+            items.length <= 3
+              ? "mx-auto w-fit grid-cols-1 sm:grid-cols-2"
+              : "w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+          )}
+        >
           {items.map((item, idx) => (
             <CatalogItemCard
               key={item.id}
@@ -262,6 +266,6 @@ export default function CatalogoDetailPage() {
         isPending={deleteMutation.isPending}
         variant="destructive"
       />
-    </div>
+    </>
   );
 }
