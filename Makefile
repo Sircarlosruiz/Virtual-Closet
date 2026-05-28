@@ -21,7 +21,11 @@ help: ## Show this help
 
 dev: ## Run both backend and frontend in development mode
 	@echo "Starting backend and frontend..."
-	@$(MAKE) -j2 dev-backend dev-frontend
+	@trap 'kill 0' INT TERM EXIT; \
+	$(MAKE) dev-backend & \
+	sleep 2; \
+	$(MAKE) dev-frontend & \
+	wait
 
 dev-backend: ## Run backend FastAPI server with hot reload
 	cd $(BACKEND_DIR) && uv run uvicorn main:app --host 0.0.0.0 --port 8000 --reload
