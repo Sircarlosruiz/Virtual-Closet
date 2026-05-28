@@ -192,3 +192,92 @@ async def test_token_hash_never_exposed_in_responses(client):
     assert "invitation_token_hash" not in data
     assert "token_hash" not in data
     assert "hash" not in str(data).lower()
+
+
+# --- Story 004: List Customers ---
+
+
+@pytest.mark.asyncio
+async def test_should_list_customers(client):
+    await register_user(client, email="mayorista@test.com", nombre_negocio="Test Business")
+    await login_user(client, email="mayorista@test.com")
+
+    await _register_customer(client, email="ana@buyer.com", name="Ana López")
+    await _register_customer(client, email="carlos@buyer.com", name="Carlos Ruiz")
+
+    response = await client.get("/api/customers")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["total"] == 2
+    assert len(data["customers"]) == 2
+    assert data["page"] == 1
+    assert data["page_size"] == 20
+
+
+@pytest.mark.asyncio
+async def test_should_return_empty_list_when_no_customers(client):
+    await register_user(client, email="mayorista@test.com", nombre_negocio="Test Business")
+    await login_user(client, email="mayorista@test.com")
+
+    response = await client.get("/api/customers")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["total"] == 0
+    assert data["customers"] == []
+
+
+@pytest.mark.asyncio
+async def test_should_paginate_customer_list(client):
+    await register_user(client, email="mayorista@test.com", nombre_negocio="Test Business")
+    await login_user(client, email="mayorista@test.com")
+
+    for i in range(5):
+        await _register_customer(client, email=f"buyer{i}@test.com", name=f"Buyer {i}")
+
+    response = await client.get("/api/customers?page=1&page_size=2")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["total"] == 5
+    assert len(data["customers"]) == 2
+    assert data["page"] == 1
+    assert data["page_size"] == 2
+
+
+@pytest.mark.asyncio
+async def test_should_reject_list_customers_without_auth(client):
+    response = await client.get("/api/customers")
+    assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_should_only_list_own_customers(client):
+    await register_user(client, email="mayorista1@test.com", nombre_negocio="Business 1")
+    await login_user(client, email="mayorista1@test.com")
+    await _register_customer(client, email="ana@buyer.com", name="Ana")
+    await client.post("/api/auth/logout")
+
+    await register_user(client, email="mayorista2@test.com", nombre_negocio="Business 2")
+    await login_user(client, email="mayorista2@test.com")
+    await _register_customer(client, email="carlos@buyer.com", name="Carlos")
+
+    response = await client.get("/api/customers")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["total"] == 1
+    assert data["customers"][0]["name"] == "Carlos"
+
+
+@pytest.mark.asyncio
+async def test_should_reject_invalid_page_size(client):
+    await register_user(client, email="mayorista@test.com", nombre_negocio="Test Business")
+    await login_user(client, email="mayorista@test.com")
+
+    response = await client.get("/api/customers?page_size=0")
+    assert response.status_code == 422
+
+    response = await client.get("/api/customers?page_size=101")
+    assert response.status_code == 422

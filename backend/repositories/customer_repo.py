@@ -60,3 +60,27 @@ class CustomerRepo:
             .values(status="active")
         )
         await self._db.commit()
+
+    async def list_by_mayorista(
+        self, mayorista_id: uuid.UUID, page: int, page_size: int
+    ) -> tuple[list[Customer], int]:
+        """List customers owned by mayorista with pagination."""
+        offset = (page - 1) * page_size
+
+        count_query = select(Customer).where(
+            Customer.mayorista_id == mayorista_id
+        )
+        count_result = await self._db.execute(count_query)
+        total = len(count_result.all())
+
+        query = (
+            select(Customer)
+            .where(Customer.mayorista_id == mayorista_id)
+            .order_by(Customer.created_at.desc())
+            .offset(offset)
+            .limit(page_size)
+        )
+        result = await self._db.execute(query)
+        customers = list(result.scalars().all())
+
+        return customers, total

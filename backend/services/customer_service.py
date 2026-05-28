@@ -134,3 +134,11 @@ class CustomerService:
         )
 
         return magic_link_token
+
+    async def list_customers(
+        self, mayorista_id: uuid.UUID, page: int, page_size: int
+    ) -> tuple[list[Customer], int]:
+        """List customers owned by mayorista with pagination."""
+        return await self._customer_repo.list_by_mayorista(
+            mayorista_id, page, page_size
+        )

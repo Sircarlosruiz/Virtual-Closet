@@ -3,15 +3,24 @@ id: 010-catalog-management-ui
 unit: 003-catalog-management-ui
 intent: 002-catalog-management
 type: simple-construction-bolt
-status: planned
+status: complete
 stories:
   - 004-customer-management-page
   - 005-buyer-portal-page
 created: 2026-05-28T00:00:00Z
-started: null
-completed: null
-current_stage: null
-stages_completed: []
+started: 2026-05-28T21:30:00Z
+completed: 2026-05-28T22:30:00Z
+current_stage: test
+stages_completed:
+  - name: plan
+    completed: 2026-05-28T21:30:00Z
+    artifact: implementation-plan.md
+  - name: implement
+    completed: 2026-05-28T22:00:00Z
+    artifact: implementation-walkthrough.md
+  - name: test
+    completed: 2026-05-28T22:30:00Z
+    artifact: test-walkthrough.md
 
 requires_bolts:
   - 008-customer-portal-service
@@ -49,9 +58,9 @@ Build the customer registration UI (mayorista registers buyers) and the buyer-fa
 
 ## Stages
 
-- [ ] **1. plan**: Pending → implementation-plan.md
-- [ ] **2. implement**: Pending → implementation-walkthrough.md
-- [ ] **3. test**: Pending → test-walkthrough.md
+- [x] **1. plan**: Complete → implementation-plan.md
+- [x] **2. implement**: Complete → implementation-walkthrough.md
+- [x] **3. test**: Complete → test-walkthrough.md
 
 ## Dependencies
 
@@ -64,10 +73,10 @@ Build the customer registration UI (mayorista registers buyers) and the buyer-fa
 
 ## Success Criteria
 
-- [ ] All 2 story acceptance criteria pass
-- [ ] Buyer can authenticate via invitation link and browse catalogs end-to-end
-- [ ] Expired token shows "Request new link" flow
-- [ ] Portal is visually distinct from mayorista admin area
+- [x] All 2 story acceptance criteria pass
+- [x] Buyer can authenticate via invitation link and browse catalogs end-to-end
+- [x] Expired token shows "Request new link" flow
+- [x] Portal is visually distinct from mayorista admin area
 
 ## Notes
 

@@ -275,3 +275,47 @@ class TestCustomerService:
 
         assert token is None
         mock_customer_repo.update_token_hash.assert_not_called()
+
+    # --- Story 004: List Customers ---
+
+    @pytest.mark.asyncio
+    async def test_should_list_customers_with_pagination(
+        self, service, mock_customer_repo
+    ):
+        mayorista_id = uuid.uuid4()
+
+        mock_customers = [MagicMock(spec=Customer) for _ in range(3)]
+        mock_customer_repo.list_by_mayorista = AsyncMock(
+            return_value=(mock_customers, 10)
+        )
+
+        customers, total = await service.list_customers(
+            mayorista_id=mayorista_id,
+            page=1,
+            page_size=20,
+        )
+
+        assert len(customers) == 3
+        assert total == 10
+        mock_customer_repo.list_by_mayorista.assert_called_once_with(
+            mayorista_id, 1, 20
+        )
+
+    @pytest.mark.asyncio
+    async def test_should_return_empty_list_when_no_customers(
+        self, service, mock_customer_repo
+    ):
+        mayorista_id = uuid.uuid4()
+
+        mock_customer_repo.list_by_mayorista = AsyncMock(
+            return_value=([], 0)
+        )
+
+        customers, total = await service.list_customers(
+            mayorista_id=mayorista_id,
+            page=1,
+            page_size=20,
+        )
+
+        assert len(customers) == 0
+        assert total == 0

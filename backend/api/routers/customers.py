@@ -1,10 +1,14 @@
 import asyncio
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from api.schemas.customer import CustomerRegisterRequest, CustomerResponse
+from api.schemas.customer import (
+    CustomerListResponse,
+    CustomerRegisterRequest,
+    CustomerResponse,
+)
 from core.database import get_db
 from core.dependencies import get_current_mayorista
 from models.mayorista import Mayorista
@@ -58,3 +62,24 @@ async def register_customer(
     )
 
     return customer
+
+
+@router.get("", response_model=CustomerListResponse)
+async def list_customers(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    mayorista: Mayorista = Depends(get_current_mayorista),
+    customer_service: CustomerService = Depends(_get_customer_service),
+):
+    """List customers owned by the authenticated mayorista."""
+    customers, total = await customer_service.list_customers(
+        mayorista_id=mayorista.id,
+        page=page,
+        page_size=page_size,
+    )
+    return CustomerListResponse(
+        customers=customers,
+        total=total,
+        page=page,
+        page_size=page_size,
+    )

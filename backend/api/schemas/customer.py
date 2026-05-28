@@ -20,6 +20,13 @@ class CustomerResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class CustomerListResponse(BaseModel):
+    customers: list[CustomerResponse]
+    total: int
+    page: int
+    page_size: int
+
+
 class MagicLinkRequest(BaseModel):
     email: EmailStr
 
