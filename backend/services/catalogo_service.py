@@ -308,3 +308,31 @@ class CatalogoService:
         return await self._catalogo_repo.list_by_mayorista(
             mayorista_id, page, page_size
         )
+
+    async def get_catalog_with_items(
+        self, catalog_id: uuid.UUID, mayorista_id: uuid.UUID
+    ) -> tuple[Catalogo, list[tuple[CatalogoItem, str]]]:
+        """Get a catalog with its items and pre-signed image URLs.
+
+        Raises:
+            CatalogoNotFoundError: If catalog doesn't exist.
+            CatalogoOwnershipError: If mayorista doesn't own the catalog.
+        """
+        catalogo = await self._catalogo_repo.get_by_id_and_mayorista(
+            catalog_id, mayorista_id
+        )
+        if catalogo is None:
+            exists = await self._catalogo_repo.get_by_id(catalog_id)
+            if exists is None:
+                raise CatalogoNotFoundError("Catalog not found")
+            raise CatalogoOwnershipError("You do not own this catalog")
+
+        items = await self._item_repo.get_all_by_catalog(catalog_id)
+        items_with_urls = []
+        for item in items:
+            image_url = await self._minio.get_presigned_url(
+                bucket="generated", key=item.image_key
+            )
+            items_with_urls.append((item, image_url))
+
+        return catalogo, items_with_urls

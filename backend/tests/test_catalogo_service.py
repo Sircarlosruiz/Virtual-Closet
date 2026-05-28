@@ -958,3 +958,127 @@ class TestCatalogoService:
 
         assert len(catalogs) == 0
         assert total == 0
+
+    # --- Story 009: Get Catalog with Items ---
+
+    @pytest.mark.asyncio
+    async def test_should_get_catalog_with_items(
+        self, service, mock_catalogo_repo, mock_item_repo, mock_minio
+    ):
+        mayorista_id = uuid.uuid4()
+        catalog_id = uuid.uuid4()
+
+        mock_catalogo = MagicMock(spec=Catalogo)
+        mock_catalogo.id = catalog_id
+        mock_catalogo.mayorista_id = mayorista_id
+        mock_catalogo.name = "Test Catalog"
+        mock_catalogo.status = "draft"
+        mock_catalogo.item_count = 2
+        mock_catalogo.created_at = datetime.now(timezone.utc)
+        mock_catalogo.updated_at = datetime.now(timezone.utc)
+        mock_catalogo_repo.get_by_id_and_mayorista = AsyncMock(
+            return_value=mock_catalogo
+        )
+
+        mock_item1 = MagicMock(spec=CatalogoItem)
+        mock_item1.id = uuid.uuid4()
+        mock_item1.catalog_id = catalog_id
+        mock_item1.vton_job_id = uuid.uuid4()
+        mock_item1.garment_name = "Blazer"
+        mock_item1.price = Decimal("89.99")
+        mock_item1.cloth_type = "upper_body"
+        mock_item1.sku = "BLZ-001"
+        mock_item1.image_key = "results/1.jpg"
+        mock_item1.position = 1
+        mock_item1.created_at = datetime.now(timezone.utc)
+
+        mock_item2 = MagicMock(spec=CatalogoItem)
+        mock_item2.id = uuid.uuid4()
+        mock_item2.catalog_id = catalog_id
+        mock_item2.vton_job_id = uuid.uuid4()
+        mock_item2.garment_name = "Pants"
+        mock_item2.price = Decimal("49.99")
+        mock_item2.cloth_type = "lower_body"
+        mock_item2.sku = "PNT-001"
+        mock_item2.image_key = "results/2.jpg"
+        mock_item2.position = 2
+        mock_item2.created_at = datetime.now(timezone.utc)
+
+        mock_item_repo.get_all_by_catalog = AsyncMock(
+            return_value=[mock_item1, mock_item2]
+        )
+
+        catalogo, items_with_urls = await service.get_catalog_with_items(
+            catalog_id=catalog_id,
+            mayorista_id=mayorista_id,
+        )
+
+        assert catalogo.name == "Test Catalog"
+        assert catalogo.item_count == 2
+        assert len(items_with_urls) == 2
+        assert items_with_urls[0][0].garment_name == "Blazer"
+        assert items_with_urls[0][1] == "http://minio/presigned"
+        assert items_with_urls[1][0].garment_name == "Pants"
+        assert items_with_urls[1][1] == "http://minio/presigned"
+
+    @pytest.mark.asyncio
+    async def test_should_get_catalog_with_no_items(
+        self, service, mock_catalogo_repo, mock_item_repo
+    ):
+        mayorista_id = uuid.uuid4()
+        catalog_id = uuid.uuid4()
+
+        mock_catalogo = MagicMock(spec=Catalogo)
+        mock_catalogo.id = catalog_id
+        mock_catalogo.mayorista_id = mayorista_id
+        mock_catalogo.name = "Empty Catalog"
+        mock_catalogo.status = "draft"
+        mock_catalogo.item_count = 0
+        mock_catalogo_repo.get_by_id_and_mayorista = AsyncMock(
+            return_value=mock_catalogo
+        )
+
+        mock_item_repo.get_all_by_catalog = AsyncMock(return_value=[])
+
+        catalogo, items_with_urls = await service.get_catalog_with_items(
+            catalog_id=catalog_id,
+            mayorista_id=mayorista_id,
+        )
+
+        assert catalogo.name == "Empty Catalog"
+        assert catalogo.item_count == 0
+        assert items_with_urls == []
+
+    @pytest.mark.asyncio
+    async def test_should_reject_get_catalog_not_found(
+        self, service, mock_catalogo_repo
+    ):
+        mayorista_id = uuid.uuid4()
+        catalog_id = uuid.uuid4()
+
+        mock_catalogo_repo.get_by_id_and_mayorista = AsyncMock(return_value=None)
+        mock_catalogo_repo.get_by_id = AsyncMock(return_value=None)
+
+        with pytest.raises(CatalogoNotFoundError, match="Catalog not found"):
+            await service.get_catalog_with_items(
+                catalog_id=catalog_id,
+                mayorista_id=mayorista_id,
+            )
+
+    @pytest.mark.asyncio
+    async def test_should_reject_get_catalog_not_owned(
+        self, service, mock_catalogo_repo
+    ):
+        mayorista_id = uuid.uuid4()
+        catalog_id = uuid.uuid4()
+
+        mock_catalogo_repo.get_by_id_and_mayorista = AsyncMock(return_value=None)
+        mock_catalogo_repo.get_by_id = AsyncMock(return_value=MagicMock())
+
+        with pytest.raises(
+            CatalogoOwnershipError, match="You do not own this catalog"
+        ):
+            await service.get_catalog_with_items(
+                catalog_id=catalog_id,
+                mayorista_id=mayorista_id,
+            )

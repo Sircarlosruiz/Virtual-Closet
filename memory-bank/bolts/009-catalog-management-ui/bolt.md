@@ -3,16 +3,19 @@ id: 009-catalog-management-ui
 unit: 003-catalog-management-ui
 intent: 002-catalog-management
 type: simple-construction-bolt
-status: planned
+status: complete
 stories:
   - 001-catalog-list-page
   - 002-catalog-detail-page
   - 003-catalog-publish-flow
 created: 2026-05-28T00:00:00Z
-started: null
-completed: null
-current_stage: null
-stages_completed: []
+started: 2026-05-28T19:30:00Z
+completed: 2026-05-28T21:00:00Z
+current_stage: test
+stages_completed:
+  - plan
+  - implement
+  - test
 
 requires_bolts:
   - 006-catalog-service
@@ -52,9 +55,9 @@ Build the mayorista's core catalog management UI: browse and create catalogs, ma
 
 ## Stages
 
-- [ ] **1. plan**: Pending → implementation-plan.md
-- [ ] **2. implement**: Pending → implementation-walkthrough.md
-- [ ] **3. test**: Pending → test-walkthrough.md
+- [x] **1. plan**: Complete → implementation-plan.md
+- [x] **2. implement**: Complete → implementation-walkthrough.md
+- [x] **3. test**: Complete → test-walkthrough.md
 
 ## Dependencies
 
@@ -67,10 +70,10 @@ Build the mayorista's core catalog management UI: browse and create catalogs, ma
 
 ## Success Criteria
 
-- [ ] All 3 story acceptance criteria pass
-- [ ] Mayorista can complete full catalog lifecycle end-to-end via UI
-- [ ] Empty catalog publish button is disabled
-- [ ] Reorder persists correctly after page refresh
+- [x] All 3 story acceptance criteria pass
+- [x] Mayorista can complete full catalog lifecycle end-to-end via UI
+- [x] Empty catalog publish button is disabled
+- [x] Reorder persists correctly after page refresh
 
 ## Notes
 

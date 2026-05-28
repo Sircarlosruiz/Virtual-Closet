@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.schemas.catalogo import (
     CatalogoCreateRequest,
+    CatalogoDetailResponse,
     CatalogoItemAddRequest,
     CatalogoItemResponse,
     CatalogoListResponse,
@@ -82,6 +83,52 @@ async def list_catalogs(
         total=total,
         page=page,
         page_size=page_size,
+    )
+
+
+@router.get("/{catalog_id}", response_model=CatalogoDetailResponse)
+async def get_catalog(
+    catalog_id: UUID,
+    mayorista: Mayorista = Depends(get_current_mayorista),
+    catalogo_service: CatalogoService = Depends(_get_catalogo_service),
+):
+    """Get a catalog with its items and pre-signed image URLs."""
+    try:
+        catalogo, items_with_urls = await catalogo_service.get_catalog_with_items(
+            catalog_id=catalog_id,
+            mayorista_id=mayorista.id,
+        )
+    except CatalogoNotFoundError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)
+        ) from exc
+    except CatalogoOwnershipError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail=str(exc)
+        ) from exc
+
+    return CatalogoDetailResponse(
+        id=catalogo.id,
+        name=catalogo.name,
+        status=catalogo.status,
+        item_count=catalogo.item_count,
+        created_at=catalogo.created_at,
+        updated_at=catalogo.updated_at,
+        items=[
+            CatalogoItemResponse(
+                id=item.id,
+                catalog_id=item.catalog_id,
+                vton_job_id=item.vton_job_id,
+                image_url=image_url,
+                garment_name=item.garment_name,
+                price=item.price,
+                cloth_type=item.cloth_type,
+                sku=item.sku,
+                position=item.position,
+                created_at=item.created_at,
+            )
+            for item, image_url in items_with_urls
+        ],
     )
 
 

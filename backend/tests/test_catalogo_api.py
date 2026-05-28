@@ -363,3 +363,58 @@ async def test_should_reject_invalid_page_size(client):
 
     response = await client.get("/api/catalogos?page_size=101")
     assert response.status_code == 422
+
+
+# --- Story 009: Get Catalog Detail ---
+
+
+@pytest.mark.asyncio
+async def test_should_get_catalog_detail(client):
+    await register_user(client, email="catalog@test.com", nombre_negocio="Catalog Test")
+    await login_user(client, email="catalog@test.com")
+
+    catalog = await _create_catalog(client, "Detail Test")
+
+    response = await client.get(f"/api/catalogos/{catalog['id']}")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["id"] == catalog["id"]
+    assert data["name"] == "Detail Test"
+    assert data["status"] == "draft"
+    assert data["item_count"] == 0
+    assert data["items"] == []
+    assert "created_at" in data
+    assert "updated_at" in data
+
+
+@pytest.mark.asyncio
+async def test_should_reject_get_detail_nonexistent_catalog(client):
+    await register_user(client, email="catalog@test.com", nombre_negocio="Catalog Test")
+    await login_user(client, email="catalog@test.com")
+
+    response = await client.get(f"/api/catalogos/{uuid.uuid4()}")
+
+    assert response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_should_reject_get_detail_without_auth(client):
+    response = await client.get(f"/api/catalogos/{uuid.uuid4()}")
+
+    assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_should_reject_get_detail_other_users_catalog(client):
+    await register_user(client, email="user1@test.com", nombre_negocio="User 1")
+    await login_user(client, email="user1@test.com")
+    catalog = await _create_catalog(client, "User 1 Catalog")
+    await client.post("/api/auth/logout")
+
+    await register_user(client, email="user2@test.com", nombre_negocio="User 2")
+    await login_user(client, email="user2@test.com")
+
+    response = await client.get(f"/api/catalogos/{catalog['id']}")
+
+    assert response.status_code == 403

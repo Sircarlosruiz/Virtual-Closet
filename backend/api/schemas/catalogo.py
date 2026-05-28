@@ -99,3 +99,13 @@ class CatalogoReorderItemResponse(BaseModel):
 
 class CatalogoReorderResponse(BaseModel):
     items: list[CatalogoReorderItemResponse]
+
+
+class CatalogoDetailResponse(BaseModel):
+    id: uuid.UUID
+    name: str
+    status: CatalogStatus
+    item_count: int
+    created_at: datetime
+    updated_at: datetime
+    items: list[CatalogoItemResponse]
