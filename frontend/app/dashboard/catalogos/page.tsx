@@ -13,11 +13,8 @@ export default function CatalogosPage() {
 
   if (isLoading) {
     return (
-      <div className="max-w-6xl mx-auto py-8">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
-            Catálogos
-          </h1>
+      <div className="mx-auto w-full max-w-6xl p-6">
+        <div className="mb-6 flex justify-end">
           <Button disabled>
             <Plus className="w-4 h-4 mr-2" />
             Crear catálogo
@@ -37,7 +34,7 @@ export default function CatalogosPage() {
 
   if (error) {
     return (
-      <div className="max-w-6xl mx-auto py-8">
+      <div className="mx-auto w-full max-w-6xl p-6">
         <div className="text-center py-12">
           <p className="text-red-600">Error al cargar catálogos</p>
           <p className="text-sm text-muted-foreground mt-2">{error.message}</p>
@@ -49,11 +46,8 @@ export default function CatalogosPage() {
   const catalogs = data?.catalogs ?? [];
 
   return (
-    <div className="max-w-6xl mx-auto py-8">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
-          Catálogos
-        </h1>
+    <div className="mx-auto w-full max-w-6xl p-6">
+      <div className="mb-6 flex justify-end">
         <Button onClick={() => setShowCreateModal(true)}>
           <Plus className="w-4 h-4 mr-2" />
           Crear catálogo

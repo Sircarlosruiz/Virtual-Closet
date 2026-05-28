@@ -1,9 +1,11 @@
 import { ClientRedirect } from "@/components/dashboard/ClientRedirect";
+import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { Toaster } from "@/components/ui/sonner";
+import type { MayoristaProfile } from "@/lib/api/auth";
 
 const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:8000";
 
-async function getMe(): Promise<{ prendas_count: number } | null> {
+async function getMe(): Promise<MayoristaProfile | null> {
   try {
     const { cookies } = await import("next/headers");
     const cookieStore = await cookies();
@@ -37,9 +39,16 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
+    <DashboardShell
+      user={{
+        nombre_negocio: me.nombre_negocio,
+        email: me.email,
+        plan: me.plan,
+        trial_activo: me.trial_activo,
+      }}
+    >
       {children}
       <Toaster />
-    </div>
+    </DashboardShell>
   );
 }

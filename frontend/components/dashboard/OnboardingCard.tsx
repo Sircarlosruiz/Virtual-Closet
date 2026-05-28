@@ -10,7 +10,7 @@ import {
 
 export function OnboardingCard() {
   return (
-    <div className="flex min-h-screen items-center justify-center px-4">
+    <div className="flex flex-1 items-center justify-center px-4 py-12">
       <Card className="w-full max-w-md text-center">
         <CardHeader>
           <CardTitle className="text-2xl">Bienvenido a Virtual Closet</CardTitle>

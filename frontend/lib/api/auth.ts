@@ -13,3 +13,7 @@ export interface MayoristaProfile {
 export async function fetchMe(): Promise<MayoristaProfile> {
   return apiFetch("/api/auth/me");
 }
+
+export async function logout(): Promise<void> {
+  await apiFetch("/api/auth/logout", { method: "POST" });
+}
