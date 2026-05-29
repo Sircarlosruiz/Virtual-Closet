@@ -1,0 +1,10 @@
+# Inference server deps. torch/torchvision come from the base image + Dockerfile.
+# The fashn-vton package (and its deps: fashn-human-parser, onnxruntime-gpu,
+# opencv-python, einops, dwpose) is installed from source in the Dockerfile.
+fastapi>=0.115.0
+uvicorn[standard]>=0.32.0
+python-multipart>=0.0.12
+pillow>=10.4.0
+huggingface-hub>=0.26.0
+# CLIP for the /classify endpoint
+transformers>=4.45.0,<5.0

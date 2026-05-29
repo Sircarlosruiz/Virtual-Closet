@@ -36,13 +36,22 @@ def _run_vton_provider(
         raise ValueError(
             "REPLICATE_API_KEY no configurada. Obtén un token en "
             "https://replicate.com/account/api-tokens y añádelo en backend/.env, "
-            "luego reinicia el worker: docker compose up -d celery_worker"
+            "luego reinicia el worker: docker compose up -d --force-recreate celery_worker"
         )
 
     import asyncio
+    import logging
     from services.vton import get_provider
 
+    logger = logging.getLogger(__name__)
     provider = get_provider()
+    logger.info(
+        "VTON generate: provider=%s cloth_type=%s garment_kb=%.1f model_kb=%.1f",
+        settings.VTON_PROVIDER,
+        cloth_type,
+        len(garment_bytes) / 1024,
+        len(model_bytes) / 1024,
+    )
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     try:

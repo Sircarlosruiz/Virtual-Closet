@@ -62,6 +62,12 @@ class Settings(BaseSettings):
     # HuggingFace token — required to download gated FLUX.1-Fill-dev weights
     HF_TOKEN: str = ""
 
+    # FASHN VTON v1.5 self-hosted (docker compose --profile gpu up fashn)
+    # Maskless try-on, ~8 GB VRAM. Used when VTON_PROVIDER=fashn_local.
+    FASHN_LOCAL_URL: str = "http://fashn:8000"
+    # Garment input type: "flat-lay" (product/hanger shot) | "model" (worn).
+    FASHN_GARMENT_PHOTO_TYPE: str = "flat-lay"
+
     # RabbitMQ / Celery
     RABBITMQ_URL: str = "amqp://guest:guest@rabbitmq:5672/"
 

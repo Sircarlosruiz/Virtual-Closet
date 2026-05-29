@@ -88,7 +88,9 @@ class PrendaService:
 
         prenda_id = uuid4()
         object_key = f"{mayorista_id}/{prenda_id}/original.{extension}"
-        upload_url = await self.storage_service.generate_upload_url(object_key)
+        upload_url = await self.storage_service.generate_upload_url(
+            object_key, bucket_override="originals"
+        )
         return {"upload_url": upload_url, "prenda_id": prenda_id, "object_key": object_key}
 
     async def confirmar_subida(

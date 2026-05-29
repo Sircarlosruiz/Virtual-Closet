@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useId, useState } from "react";
 import imageCompression from "browser-image-compression";
 
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/heic"];
@@ -25,7 +25,9 @@ export function ImageDropzone({
   error,
   onValidationError,
 }: ImageDropzoneProps) {
+  const inputId = useId();
   const [preview, setPreview] = useState<string | null>(null);
+  const [processing, setProcessing] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
 
   const handleFile = useCallback(
@@ -45,20 +47,29 @@ export function ImageDropzone({
         return;
       }
 
+      setProcessing(true);
       try {
-        const compressed = await imageCompression(file, {
-          maxSizeMB: 5,
-          maxWidthOrHeight: 1024,
-          useWebWorker: typeof Worker !== "undefined",
-        });
+        let uploadFile = file;
+        try {
+          uploadFile = await imageCompression(file, {
+            maxSizeMB: 5,
+            maxWidthOrHeight: 1024,
+            useWebWorker: false,
+            preserveExif: false,
+          });
+        } catch {
+          uploadFile = file;
+        }
 
-        setPreview(URL.createObjectURL(compressed));
-        onFileSelected(compressed);
+        setPreview(URL.createObjectURL(uploadFile));
+        onFileSelected(uploadFile);
       } catch {
         const message =
           "No se pudo procesar la imagen. Prueba con JPG o PNG.";
         setLocalError(message);
         onValidationError?.(message);
+      } finally {
+        setProcessing(false);
       }
     },
     [onFileSelected, onValidationError]
@@ -87,9 +98,13 @@ export function ImageDropzone({
         onDrop={handleDrop}
         onDragOver={(e) => e.preventDefault()}
         className="border-2 border-dashed border-zinc-300 dark:border-zinc-600 rounded-lg p-8 text-center cursor-pointer hover:border-zinc-400 dark:hover:border-zinc-500 transition-colors"
-        onClick={() => document.getElementById("file-input")?.click()}
+        onClick={() => !processing && document.getElementById(inputId)?.click()}
       >
-        {preview ? (
+        {processing ? (
+          <div className="text-zinc-500 dark:text-zinc-400">
+            <p className="text-lg font-medium">Procesando imagen...</p>
+          </div>
+        ) : preview ? (
           <img
             src={preview}
             alt="Preview"
@@ -103,10 +118,11 @@ export function ImageDropzone({
           </div>
         )}
         <input
-          id="file-input"
+          id={inputId}
           type="file"
-          accept=".jpg,.jpeg,.png,.heic"
+          accept=".jpg,.jpeg,.png,.heic,image/jpeg,image/png,image/heic"
           className="hidden"
+          disabled={processing}
           onChange={handleChange}
         />
       </div>

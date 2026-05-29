@@ -18,7 +18,7 @@ RUN pip install --no-cache-dir -r requirements.txt \
     && pip uninstall -y opencv-python \
     && pip install --no-cache-dir --force-reinstall opencv-python-headless
 
-COPY main.py garment_clip.py .
+COPY main.py garment_clip.py ./
 
 ENV PYTHONUNBUFFERED=1 \
     HF_HOME=/app/model_cache \

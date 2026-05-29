@@ -4,7 +4,7 @@
 .PHONY: help dev dev-backend dev-frontend test test-backend test-frontend \
         db-up db-down db-migrate db-seed db-reset lint lint-backend lint-frontend \
         build build-frontend build-backend install install-backend install-frontend \
-        fix-backend-venv docker-up docker-down docker-build clean
+        fix-backend-venv docker-up docker-down docker-build docker-catvton docker-fashn clean
 
 # Variables
 BACKEND_DIR := backend
@@ -122,8 +122,11 @@ install-frontend: ## Install frontend npm dependencies
 docker-up: ## Start infra only (postgres, minio, rabbitmq, celery). Use docker-app for containerized FE/BE
 	$(DOCKER_COMPOSE) up -d postgres minio rabbitmq celery_worker
 
-docker-catvton:
-	$(DOCKER_COMPOSE) up --profile gpu up catvton
+docker-catvton: ## Start CatVTON-Flux GPU inference server (~24 GB VRAM)
+	$(DOCKER_COMPOSE) --profile gpu up catvton
+
+docker-fashn: ## Start FASHN VTON v1.5 GPU inference server (~8 GB VRAM, recomendado)
+	$(DOCKER_COMPOSE) --profile gpu up fashn
 
 docker-app: ## Start full stack including frontend and fastapi containers
 	$(DOCKER_COMPOSE) --profile app up -d

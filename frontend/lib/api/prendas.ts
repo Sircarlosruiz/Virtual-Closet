@@ -104,8 +104,17 @@ function putFileWithProgress(
   });
 }
 
-/** Presigned URL upload (same flow as modelos IA) — reliable with auth cookies. */
+/** Upload via API multipart (server stores in MinIO). Most reliable in local dev. */
 export async function subirPrenda(
+  file: File,
+  nombre?: string,
+  onProgress?: (percent: number) => void
+): Promise<PrendaResponse> {
+  return subirPrendaDirecta(file, nombre, onProgress);
+}
+
+/** Presigned URL upload — browser PUT to MinIO (fallback / large files). */
+export async function subirPrendaPresigned(
   file: File,
   nombre?: string,
   onProgress?: (percent: number) => void
@@ -120,7 +129,7 @@ export async function subirPrenda(
   });
 }
 
-/** Direct multipart upload to the API (fallback). */
+/** Direct multipart upload to the API. */
 export async function subirPrendaDirecta(
   file: File,
   nombre?: string,

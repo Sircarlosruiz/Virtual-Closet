@@ -19,6 +19,9 @@ Environment variables:
   HF_TOKEN          — required to download gated FLUX.1-Fill-dev weights
   CATVTON_STEPS     — inference steps (default: 50)
   CATVTON_GUIDANCE  — guidance scale (default: 30.0)
+  CATVTON_WIDTH     — try-on panel width  (default: 576, training distribution)
+  CATVTON_HEIGHT    — try-on panel height (default: 768, training distribution)
+  CATVTON_SEED      — RNG seed for reproducible generations (default: 42)
   HF_HOME           — model cache directory (default: /app/model_cache)
   ENABLE_UPSCALE    — enable 2x Real-ESRGAN upscale (default: false)
 """
@@ -54,6 +57,16 @@ _CLOTH_CLASSES: dict[str, list[int]] = {
     "lower": [5, 6],       # skirt, pants
     "overall": [4, 5, 6, 7],
 }
+
+# In-context prompt required by CatVTON-Flux: it tells the transformer that the
+# left panel ([IMAGE1]) is the garment and the right panel ([IMAGE2]) is the
+# model wearing it. Without this the model has no notion of the try-on task.
+_TRYON_PROMPT = (
+    "The pair of images highlights a clothing and its styling on a model, "
+    "high resolution, 4K, 8K; "
+    "[IMAGE1] Detailed product shot of a clothing "
+    "[IMAGE2] The same cloth is worn by a model in a lifestyle setting."
+)
 
 _models: dict = {}
 
@@ -153,15 +166,26 @@ def _remove_garment_background(image: Image.Image) -> Image.Image:
     return result.convert("RGB")
 
 
-def _normalize_garment(image: Image.Image, target_h: int = 768) -> Image.Image:
-    w, h = image.size
-    scale = target_h / h
-    new_w, new_h = int(w * scale), target_h
-    image = image.resize((new_w, new_h), Image.LANCZOS)
+def _normalize_garment(image: Image.Image, aspect_w: int = 3, aspect_h: int = 4) -> Image.Image:
+    """Pad the garment to the try-on panel aspect ratio (default 3:4) on white.
 
-    size = max(new_w, new_h)
-    canvas = Image.new("RGB", (size, size), (255, 255, 255))
-    canvas.paste(image, ((size - new_w) // 2, (size - new_h) // 2))
+    The garment is later resized to the exact panel size in `_run_tryon`; padding
+    here to the same aspect ratio avoids distorting the garment while keeping its
+    color signal strong (no large square white border like before).
+    """
+    w, h = image.size
+    target_ratio = aspect_h / aspect_w  # height / width
+
+    if h / w < target_ratio:
+        # Too wide → pad vertically.
+        new_h = int(round(w * target_ratio))
+        canvas = Image.new("RGB", (w, new_h), (255, 255, 255))
+        canvas.paste(image, (0, (new_h - h) // 2))
+    else:
+        # Too tall → pad horizontally.
+        new_w = int(round(h / target_ratio))
+        canvas = Image.new("RGB", (new_w, h), (255, 255, 255))
+        canvas.paste(image, ((new_w - w) // 2, 0))
     return canvas
 
 
@@ -300,47 +324,52 @@ def _get_clothing_mask(image: Image.Image, cloth_type: ClothType) -> Image.Image
     return Image.fromarray(mask)
 
 
-def _resize_keep_aspect(img: Image.Image, height: int) -> Image.Image:
-    w = max(8, (img.width * height // img.height // 8) * 8)
-    return img.resize((w, height), Image.LANCZOS)
-
-
 def _run_tryon(person: Image.Image, garment: Image.Image, cloth_type: ClothType) -> Image.Image:
     pipe = _models["pipe"]
-    target_h = 1024
+
+    # Generate at the training distribution (576x768). Higher resolution is
+    # obtained afterwards via the optional Real-ESRGAN upscale.
+    W = int(os.environ.get("CATVTON_WIDTH", "576"))
+    H = int(os.environ.get("CATVTON_HEIGHT", "768"))
 
     preserve_mask = _get_preservation_mask(person)
 
-    person_r = _resize_keep_aspect(person, target_h)
-    garment_r = _resize_keep_aspect(garment, target_h)
-
-    w = max(person_r.width, garment_r.width)
-    person_r = person_r.resize((w, target_h), Image.LANCZOS)
-    garment_r = garment_r.resize((w, target_h), Image.LANCZOS)
-
-    combined_w = w * 2
-    combined = Image.new("RGB", (combined_w, target_h))
-    combined.paste(person_r, (0, 0))
-    combined.paste(garment_r, (w, 0))
+    # Both panels are squished to the exact panel size, exactly as the model was
+    # trained (no aspect-preserving resize, no forced equal-width distortion).
+    person_r = person.resize((W, H), Image.LANCZOS)
+    garment_r = garment.resize((W, H), Image.LANCZOS)
 
     cloth_mask = _get_clothing_mask(person_r, cloth_type)
-    combined_mask = Image.new("L", (combined_w, target_h), 0)
-    combined_mask.paste(cloth_mask, (0, 0))
+
+    # Training order: garment on the LEFT ([IMAGE1]), person on the RIGHT
+    # ([IMAGE2]); the inpainting mask covers only the person (right) panel.
+    combined_w = W * 2
+    combined = Image.new("RGB", (combined_w, H))
+    combined.paste(garment_r, (0, 0))
+    combined.paste(person_r, (W, 0))
+
+    combined_mask = Image.new("L", (combined_w, H), 0)
+    combined_mask.paste(cloth_mask, (W, 0))
 
     steps = int(os.environ.get("CATVTON_STEPS", "50"))
     guidance = float(os.environ.get("CATVTON_GUIDANCE", "30.0"))
+    seed = int(os.environ.get("CATVTON_SEED", "42"))
+    generator = torch.Generator(device="cpu").manual_seed(seed)
 
     result = pipe(
+        prompt=_TRYON_PROMPT,
         image=combined,
         mask_image=combined_mask,
-        height=target_h,
+        height=H,
         width=combined_w,
         num_inference_steps=steps,
         guidance_scale=guidance,
+        generator=generator,
         max_sequence_length=512,
     ).images[0]
 
-    result = result.crop((0, 0, w, target_h))
+    # Keep the RIGHT half (the person wearing the garment).
+    result = result.crop((W, 0, combined_w, H))
     result_resized = result.resize(person.size, Image.LANCZOS)
 
     result_final = _restore_preserved_regions(person, result_resized, preserve_mask)

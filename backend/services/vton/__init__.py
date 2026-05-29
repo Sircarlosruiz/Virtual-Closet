@@ -5,6 +5,7 @@ from services.vton.lmstudio_provider import LMStudioProvider
 from services.vton.compose_provider import ComposeProvider
 from services.vton.catvton_replicate_provider import CatVTONReplicateProvider
 from services.vton.catvton_local_provider import CatVTONLocalProvider
+from services.vton.fashn_local_provider import FashnLocalProvider
 from core.config import settings
 
 
@@ -20,4 +21,6 @@ def get_provider() -> VTONProvider:
         return CatVTONReplicateProvider()
     if provider_type == "catvton_local":
         return CatVTONLocalProvider()
+    if provider_type == "fashn_local":
+        return FashnLocalProvider()
     return ReplicateProvider()
