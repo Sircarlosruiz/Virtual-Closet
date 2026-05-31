@@ -1,9 +1,9 @@
 # Global Story Index
 
 ## Overview
-- **Total stories**: 30
-- **Generated**: 30
-- **Last updated**: 2026-05-28
+- **Total stories**: 36
+- **Generated**: 36
+- **Last updated**: 2026-05-31
 
 ---
 
@@ -65,8 +65,26 @@
 
 ---
 
+---
+
+### 003-fashn-provider-upgrade
+
+#### Unit: 001-fashn-postprocess
+
+- [x] **001-hand-compositing-tuning** ✅ GENERATED — Tune Hand Compositing to Eliminate Artifacts — Must
+- [x] **002-long-pants-threshold-validation** ✅ GENERATED — Validate and Tune Long-Pants Detection Thresholds — Must
+- [x] **003-segmentation-free-ab-test** ✅ GENERATED — A/B Test segmentation_free for One-Pieces — Should
+- [x] **004-full-resolution-model-image** ✅ GENERATED — Compare Thumbnail vs Full-Res Model Input — Could
+
+#### Unit: 002-fashn-validation
+
+- [x] **001-container-deployment-reliability** ✅ GENERATED — Fix Stale Container; Add Version Logging — Must
+- [x] **002-multi-subject-test-suite** ✅ GENERATED — Source ≥3 Subjects; Run and Document Test Suite — Must
+
+---
+
 ## Stories by Status
 
-- **Planned/Generated**: 0
+- **Planned/Generated**: 6 (003-fashn-provider-upgrade)
 - **In Progress**: 0
-- **Completed**: 30 (all stories across both intents)
+- **Completed**: 30 (intents 001 and 002)

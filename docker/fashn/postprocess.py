@@ -18,8 +18,49 @@ logger = logging.getLogger(__name__)
 
 _parser = None
 
-# Lower-body pants coverage above this → run dark-leg artifact repair.
+# Lower-body pants coverage ratio threshold in the detection window (y > 42%, x: 15%-85%).
+# Empirically set: long-pants subjects typically yield 0.03-0.08; shorts/skirts stay below 0.02.
 _PANTS_AREA_RATIO = 0.025
+
+# Luminance ceiling for identifying dark artifact pixels in the leg repair band.
+# Pixels with mean RGB < 130 are candidates for repair (dark pants remnants).
+# Set to avoid false-positives on shadows (typical shadow luminance: 90-120).
+_DARK_PIXEL_LUMINANCE = 130
+
+# Minimum Euclidean color distance from sampled skin reference to flag a pixel as artifact.
+# Prevents repairing actual skin pixels that happen to be dark (e.g., tanned skin).
+# Empirically tuned: skin typically within 15-25 distance; artifacts exceed 30+.
+_SKIN_COLOR_DISTANCE = 28
+
+# Bilateral filter diameter for smoothing the repaired leg band.
+# d=7 balances artifact removal with edge preservation at garment hem boundary.
+_BILATERAL_FILTER_D = 7
+
+# Bilateral filter color similarity sigma.
+# sigmaColor=50 allows smoothing across moderate color variations in the repair band
+# without bleeding into the garment region above.
+_BILATERAL_SIGMA_COLOR = 50
+
+# Bilateral filter spatial proximity sigma.
+# sigmaSpace=50 limits smoothing influence to ~2*sigma=100px radius, keeping
+# the repair localized to the artifact band below the hem.
+_BILATERAL_SIGMA_SPACE = 50
+
+# Vertical offset factor below detected garment hem where repair begins.
+# 1.2% of image height provides a small buffer to avoid repairing the hem itself.
+_REPAIR_TOP_OFFSET_FACTOR = 0.012
+
+# Fraction of image height where the repair band ends (feet restoration takes over).
+# 88% leaves the bottom 12% for feet/sandals blending via restore_feet_only().
+_REPAIR_BAND_END = 0.88
+
+# Erosion kernel size (NxN) for shrinking the hand preserve mask away from dress boundary.
+# 5x5 (up from 3x3) provides stronger retraction to eliminate dress color bleed at finger edges.
+_HAND_EROSION_KERNEL = 5
+
+# Gaussian blur kernel size for softening the hand/arms blend boundary.
+# 11 (down from 15) sharpens finger edges while maintaining smooth transition at wrists.
+_HAND_BLEND_BLUR = 11
 
 
 def _get_parser():
@@ -86,7 +127,7 @@ def _limb_mask_from_original(orig: np.ndarray) -> np.ndarray:
     skin = _skin_like_mask(orig, seg)
     preserve = cv2.bitwise_and(hands, skin)
     preserve[garment] = 0
-    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (_HAND_EROSION_KERNEL, _HAND_EROSION_KERNEL))
     preserve = cv2.erode(preserve, kernel, iterations=1)
     preserve = cv2.dilate(preserve, kernel, iterations=1)
     return preserve
@@ -99,7 +140,7 @@ def preserve_hands_and_arms(original: Image.Image, generated: Image.Image) -> Im
     if mask.max() == 0:
         logger.debug("No hands/arms detected; skipping limb preservation")
         return generated
-    out = _blend_original_mask(orig, gen, mask, blur_kernel=15)
+    out = _blend_original_mask(orig, gen, mask, blur_kernel=_HAND_BLEND_BLUR)
     return Image.fromarray(out)
 
 
@@ -178,24 +219,29 @@ def fix_one_piece_legs(original: Image.Image, generated: Image.Image) -> Image.I
         return restore_feet_only(original, generated)
 
     skin = _sample_skin_color(gen, seg)
-    repair_top = min(h - 1, hem_y + max(6, int(h * 0.012)))
+    repair_top = min(h - 1, hem_y + max(6, int(h * _REPAIR_TOP_OFFSET_FACTOR)))
     out = gen.astype(np.float32)
 
     for y in range(repair_top, h):
         row = gen[y].astype(np.float32)
         lum = row.mean(axis=1)
         dist = np.linalg.norm(row - skin, axis=1)
-        artifact = (lum < 130) & (dist > 28)
+        artifact = (lum < _DARK_PIXEL_LUMINANCE) & (dist > _SKIN_COLOR_DISTANCE)
         if not artifact.any():
             continue
         t = (y - repair_top) / max(h - repair_top, 1)
         target = skin * (0.90 + 0.10 * min(t * 2.0, 1.0))
         out[y, artifact] = target
 
-    band_end = int(h * 0.88)
+    band_end = int(h * _REPAIR_BAND_END)
     if band_end > repair_top:
         band = out[repair_top:band_end].astype(np.uint8)
-        band = cv2.bilateralFilter(band, d=7, sigmaColor=50, sigmaSpace=50)
+        band = cv2.bilateralFilter(
+            band,
+            d=_BILATERAL_FILTER_D,
+            sigmaColor=_BILATERAL_SIGMA_COLOR,
+            sigmaSpace=_BILATERAL_SIGMA_SPACE,
+        )
         out[repair_top:band_end] = band.astype(np.float32)
 
     feet_mask = _feet_mask_from_original(orig)

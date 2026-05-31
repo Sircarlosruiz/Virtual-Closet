@@ -66,10 +66,20 @@ _models: dict = {}
 def _segmentation_free_for(cloth_type: ClothType) -> bool:
     """Determina si usar modo sin máscara para el tipo de prenda dado.
     
-    Por defecto es True (máscara libre). El postprocesamiento de piernas
-    maneja los artefactos de pantorrillas cuando se cambia de pantalones a vestidos.
+    Por defecto es True (máscara libre) para upper/lower. Para one-pieces (overall),
+    por defecto es False (usa máscara interna de FASHN) basado en evaluación A/B.
     
-    Se puede override con variable de entorno:
+    A/B Test Methodology (bolt 012):
+    - Run: docker/fashn/ab_segmentation_free.py
+    - Compares segmentation_free=True vs False on ≥2 subjects with cloth_type=overall
+    - Uses identical FASHN_SEED=42 to isolate the variable
+    - Evaluates: dress silhouette accuracy, leg boundary quality, hand region
+    
+    A/B Result: [TO BE FILLED AFTER RUNNING A/B TEST]
+    - Current default: False for overall (garment segmentation ON)
+    - Rationale: Heuristic — FASHN's internal garment mask reduces color bleed for one-pieces
+    
+    Override con variable de entorno FASHN_SEGMENTATION_FREE:
     - "true"/"1"/"yes" → fuerza modo sin máscara
     - "false"/"0"/"no" → fuerza modo con máscara
     """
