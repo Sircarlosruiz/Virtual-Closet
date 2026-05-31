@@ -19,18 +19,13 @@ help: ## Show this help
 # Development
 # ========================
 
-dev: ## Run both backend and frontend in development mode
-	@echo "Starting backend and frontend..."
-	@trap 'kill 0' INT TERM EXIT; \
-	$(MAKE) dev-backend & \
-	sleep 2; \
-	$(MAKE) dev-frontend & \
-	wait
+dev: ## Run full stack in Docker (postgres, minio, rabbitmq, celery, API + FE with hot reload)
+	$(DOCKER_COMPOSE) up --build
 
-dev-backend: ## Run backend FastAPI server with hot reload
+dev-backend: ## Run backend locally with hot reload (requires make docker-up for infra)
 	cd $(BACKEND_DIR) && uv run uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 
-dev-frontend: ## Run Next.js frontend dev server
+dev-frontend: ## Run frontend locally (requires backend reachable at localhost:8000)
 	cd $(FRONTEND_DIR) && pnpm dev
 
 # ========================
@@ -119,7 +114,7 @@ install-frontend: ## Install frontend npm dependencies
 # Docker
 # ========================
 
-docker-up: ## Start infra only (postgres, minio, rabbitmq, celery). Use docker-app for containerized FE/BE
+docker-up: ## Start infra only (postgres, minio, rabbitmq, celery) — for local dev-backend/dev-frontend
 	$(DOCKER_COMPOSE) up -d postgres minio rabbitmq celery_worker
 
 docker-catvton: ## Start CatVTON-Flux GPU inference server (~24 GB VRAM)
@@ -128,8 +123,8 @@ docker-catvton: ## Start CatVTON-Flux GPU inference server (~24 GB VRAM)
 docker-fashn: ## Start FASHN VTON v1.5 GPU inference server (~8 GB VRAM, recomendado)
 	$(DOCKER_COMPOSE) --profile gpu up fashn
 
-docker-app: ## Start full stack including frontend and fastapi containers
-	$(DOCKER_COMPOSE) --profile app up -d
+docker-app: ## Start full stack in background (same as make dev, detached)
+	$(DOCKER_COMPOSE) up -d --build
 
 docker-down: ## Stop all docker compose services
 	$(DOCKER_COMPOSE) down
@@ -140,7 +135,7 @@ docker-build: ## Build all docker compose images
 docker-logs: ## Show docker compose logs
 	$(DOCKER_COMPOSE) logs -f
 
-docker-infra: ## Alias for docker-up (infra only; run make dev for local FE/BE)
+docker-infra: ## Alias for docker-up (infra only; use make dev for full containerized stack)
 	$(MAKE) docker-up
 
 # ========================
