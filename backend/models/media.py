@@ -1,8 +1,8 @@
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Index, Integer, String
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Index, Integer, String, Text
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
@@ -61,4 +61,34 @@ class ModelPhoto(Base):
     __table_args__ = (
         Index("idx_model_photos_mayorista", "mayorista_id"),
         Index("idx_model_photos_curated", "is_curated"),
+    )
+
+
+class MediaItem(Base):
+    """A media item in the library — extracted garments, VTON results, or other generated media."""
+
+    __tablename__ = "media_items"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    mayorista_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("mayorista.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    minio_key = Column(String(512), unique=True, nullable=False)
+    media_type = Column(String(50), nullable=False)  # e.g., "extracted_garment", "vton_result"
+    filename = Column(String(255), nullable=False)
+    content_type = Column(String(50), nullable=False)
+    size_bytes = Column(Integer, nullable=False)
+    item_metadata = Column("metadata", JSONB, nullable=True)  # Flexible metadata: garment_type, source_job_id, etc.
+    created_at = Column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+    mayorista = relationship("Mayorista", back_populates="media_items")
+
+    __table_args__ = (
+        Index("idx_media_items_mayorista", "mayorista_id"),
+        Index("idx_media_items_mayorista_created", "mayorista_id", "created_at"),
+        Index("idx_media_items_type", "media_type"),
     )

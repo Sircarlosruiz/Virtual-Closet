@@ -65,8 +65,15 @@ class Settings(BaseSettings):
     # FASHN VTON v1.5 self-hosted (docker compose --profile gpu up fashn)
     # Maskless try-on, ~8 GB VRAM. Used when VTON_PROVIDER=fashn_local.
     FASHN_LOCAL_URL: str = "http://fashn:8000"
-    # Garment input type: "flat-lay" (product/hanger shot) | "model" (worn).
+    # Garment input type: upper | lower | overall
     FASHN_GARMENT_PHOTO_TYPE: str = "flat-lay"
+
+    # TryOff garment extraction (FLUX.2-klein + virtual-tryoff-lora)
+    # Self-hosted inference server (docker compose --profile gpu up tryoff-model)
+    TRYOFF_MODEL_URL: str = "http://tryoff-model:8000"
+    TRYOFF_MODEL_TIMEOUT_SECONDS: int = 120
+    TRYOFF_MAX_RETRIES: int = 2
+    TRYOFF_RETRY_BASE_DELAY_SECONDS: int = 30
 
     # RabbitMQ / Celery
     RABBITMQ_URL: str = "amqp://guest:guest@rabbitmq:5672/"

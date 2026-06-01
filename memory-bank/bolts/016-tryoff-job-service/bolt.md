@@ -3,31 +3,37 @@ id: 016-tryoff-job-service
 unit: 002-tryoff-job-service
 intent: 004-tryoff-garment-extraction
 type: ddd-construction-bolt
-status: in-progress
+status: complete
 stories:
   - 001-submit-tryoff-job
   - 002-process-job-celery
   - 003-multi-garment-queue
-created: 2026-05-31T00:00:00Z
-started: 2026-05-31T15:00:00Z
-completed: null
-current_stage: implementation
+created: 2026-05-31T00:00:00.000Z
+started: 2026-05-31T15:00:00.000Z
+completed: "2026-06-01T02:26:23Z"
+current_stage: null
 stages_completed:
   - name: domain-model
-    completed: 2026-05-31T15:30:00Z
+    completed: 2026-05-31T15:30:00.000Z
     artifact: ddd-01-domain-model.md
   - name: technical-design
-    completed: 2026-05-31T16:00:00Z
+    completed: 2026-05-31T16:00:00.000Z
     artifact: ddd-02-technical-design.md
   - name: adr-analysis
-    completed: 2026-05-31T16:30:00Z
+    completed: 2026-05-31T16:30:00.000Z
     artifact: adr-001-separate-celery-queue.md
-
-requires_bolts: [015-tryoff-model-service]
-enables_bolts: [017-tryoff-job-service]
+  - name: implementation
+    completed: 2026-05-31T17:00:00.000Z
+    artifact: backend-code
+  - name: testing
+    completed: 2026-05-31T18:00:00.000Z
+    artifact: ddd-03-test-report.md
+requires_bolts:
+  - 015-tryoff-model-service
+enables_bolts:
+  - 017-tryoff-job-service
 requires_units: []
 blocks: false
-
 complexity:
   avg_complexity: 2
   avg_uncertainty: 2

@@ -3,16 +3,25 @@ id: 017-tryoff-job-service
 unit: 002-tryoff-job-service
 intent: 004-tryoff-garment-extraction
 type: ddd-construction-bolt
-status: planned
+status: in-progress
 stories:
   - 004-poll-job-status
   - 005-media-library-save
   - 006-retry-on-failure
 created: 2026-05-31T00:00:00Z
-started: null
+started: 2026-05-31T18:30:00Z
 completed: null
-current_stage: null
-stages_completed: []
+current_stage: implementation
+stages_completed:
+  - name: domain-model
+    completed: 2026-05-31T19:00:00Z
+    artifact: ddd-01-domain-model.md
+  - name: technical-design
+    completed: 2026-05-31T19:30:00Z
+    artifact: ddd-02-technical-design.md
+  - name: implementation
+    completed: 2026-05-31T19:45:00Z
+    artifact: implementation changes
 
 requires_bolts: [016-tryoff-job-service]
 enables_bolts: [018-tryoff-job-service, 019-tryoff-pipeline-ui]
@@ -49,10 +58,11 @@ Complete the backend pipeline: after extraction succeeds, the garment is saved t
 
 ## Stages
 
-- [ ] **1. Domain Model**: MediaItem metadata extension (`type`, `garment_type`, `source_job_id`); retry state in TryoffJob
-- [ ] **2. Technical Design**: GET /jobs/{id} contract; MinIO upload path; retry decorator config; idempotency for re-uploads
-- [ ] **3. Implementation**: Status endpoint + MinIO upload + MediaItem creation + Celery retry config
-- [ ] **4. Test**: Verify media library entry created on completion; verify retry on 503 from model; verify 3rd failure sets `failed` status
+- [x] **1. Domain Model**: MediaItem metadata extension (`type`, `garment_type`, `source_job_id`); retry state in TryoffJob
+- [x] **2. Technical Design**: GET /jobs/{id} contract; MinIO upload path; retry decorator config; idempotency for re-uploads
+- [ ] **3. ADR Analysis**: Evaluate if new architectural decisions warrant ADRs
+- [ ] **4. Implementation**: Status endpoint + MinIO upload + MediaItem creation + Celery retry config
+- [ ] **5. Test**: Verify media library entry created on completion; verify retry on 503 from model; verify 3rd failure sets `failed` status
 
 ## Dependencies
 

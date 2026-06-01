@@ -10,6 +10,7 @@ from api.routers.modelos_ia import router as modelos_ia_router
 from api.routers.generaciones import router as generaciones_router
 from api.routers.media import router as media_router
 from api.routers.vton import router as vton_router
+from api.routers.tryoff import router as tryoff_router
 from api.routers.catalogo import router as catalogo_router
 from api.routers.customers import router as customers_router
 from api.routers.portal import router as portal_router
@@ -41,6 +42,7 @@ app.include_router(modelos_ia_router)
 app.include_router(generaciones_router)
 app.include_router(media_router)
 app.include_router(vton_router)
+app.include_router(tryoff_router)
 app.include_router(catalogo_router)
 app.include_router(customers_router)
 app.include_router(portal_router)

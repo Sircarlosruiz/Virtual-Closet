@@ -2,11 +2,11 @@
 id: 001-submit-tryoff-job
 unit: 002-tryoff-job-service
 intent: 004-tryoff-garment-extraction
-status: draft
+status: complete
 priority: must
-created: 2026-05-31T00:00:00Z
+created: 2026-05-31T00:00:00.000Z
 assigned_bolt: 016-tryoff-job-service
-implemented: false
+implemented: true
 ---
 
 # Story: 001-submit-tryoff-job
