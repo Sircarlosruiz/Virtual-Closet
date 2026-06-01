@@ -3,21 +3,33 @@ id: 014-tryoff-model-service
 unit: 001-tryoff-model-service
 intent: 004-tryoff-garment-extraction
 type: ddd-construction-bolt
-status: planned
+status: complete
 stories:
   - 001-flux-container-setup
   - 002-tryoff-inference-api
-created: 2026-05-31T00:00:00Z
-started: null
-completed: null
+created: 2026-05-31T00:00:00.000Z
+started: 2026-05-31T12:00:00.000Z
+completed: "2026-06-01T01:27:23Z"
 current_stage: null
-stages_completed: []
-
+stages_completed:
+  - name: domain-model
+    completed: 2026-05-31T12:15:00.000Z
+    artifact: ddd-01-domain-model.md
+  - name: technical-design
+    completed: 2026-05-31T12:30:00.000Z
+    artifact: ddd-02-technical-design.md
+  - name: adr-analysis
+    completed: 2026-05-31T12:45:00.000Z
+    artifact: adr-003-build-time-weight-download.md
+  - name: implement
+    completed: 2026-05-31T13:00:00.000Z
+    artifact: source-code
 requires_bolts: []
-enables_bolts: [015-tryoff-model-service, 016-tryoff-job-service]
+enables_bolts:
+  - 015-tryoff-model-service
+  - 016-tryoff-job-service
 requires_units: []
-blocks: true  # BLOCKER: FLUX.2-klein-base-9B HuggingFace commercial license not confirmed
-
+blocks: false
 complexity:
   avg_complexity: 3
   avg_uncertainty: 2

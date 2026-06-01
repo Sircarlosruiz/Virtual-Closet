@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-05-28T18:05:00Z
-total_decisions: 2
+last_updated: 2026-05-31T12:45:00Z
+total_decisions: 3
 ---
 
 # Decision Index
@@ -19,6 +19,14 @@ Use this to find relevant prior decisions when working on related features.
 ## Decisions
 
 <!-- Entries are appended below in reverse chronological order (newest first) -->
+
+### ADR-003: Build-Time Weight Download for FLUX.2-klein Model
+- **Status**: accepted
+- **Date**: 2026-05-31
+- **Bolt**: 014-tryoff-model-service (001-tryoff-model-service)
+- **Path**: `bolts/014-tryoff-model-service/adr-003-build-time-weight-download.md`
+- **Summary**: The TryOff model service requires FLUX.2-klein-base-9B (~18 GB) and virtual-tryoff-lora weights. Download weights at Docker image build time rather than runtime to ensure deterministic startup and avoid 30+ minute first-start latency.
+- **Read when**: Setting up new AI model containers, designing Docker images for GPU services, evaluating weight management strategies, planning CI/CD for ML inference services
 
 ### ADR-002: Token Hashing Strategy (bcrypt)
 - **Status**: accepted

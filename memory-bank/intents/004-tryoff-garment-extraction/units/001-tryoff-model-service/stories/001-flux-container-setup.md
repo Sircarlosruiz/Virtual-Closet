@@ -2,11 +2,11 @@
 id: 001-flux-container-setup
 unit: 001-tryoff-model-service
 intent: 004-tryoff-garment-extraction
-status: draft
+status: complete
 priority: must
-created: 2026-05-31T00:00:00Z
+created: 2026-05-31T00:00:00.000Z
 assigned_bolt: 014-tryoff-model-service
-implemented: false
+implemented: true
 ---
 
 # Story: 001-flux-container-setup

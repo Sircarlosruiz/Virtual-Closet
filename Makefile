@@ -4,7 +4,8 @@
 .PHONY: help dev dev-backend dev-frontend test test-backend test-frontend \
         db-up db-down db-migrate db-seed db-reset lint lint-backend lint-frontend \
         build build-frontend build-backend install install-backend install-frontend \
-        fix-backend-venv docker-up docker-down docker-build docker-catvton docker-fashn clean
+        fix-backend-venv docker-up docker-down docker-build docker-catvton docker-fashn \
+        docker-tryoff tryoff-restart tryoff-test clean
 
 # Variables
 BACKEND_DIR := backend
@@ -140,6 +141,29 @@ fashn-test: ## Run FASHN multi-subject test suite (requires test subjects in doc
 		-v $$(pwd)/docs/imgs/test-subjects:/app/test-subjects:ro \
 		-v $$(pwd)/docs/imgs/test-output:/app/test-output \
 		fashn python run_test_suite.py
+
+docker-tryoff: ## Start TryOff FLUX garment extraction GPU inference server (~24 GB VRAM)
+	$(DOCKER_COMPOSE) --profile gpu up tryoff-model
+
+tryoff-restart: ## Kill orphan TryOff process on :8003 and rebuild container
+	@echo "Killing any process on port 8003..."
+	@lsof -ti:8003 | xargs kill -9 2>/dev/null || echo "No process on :8003"
+	@echo "Rebuilding TryOff container..."
+	$(DOCKER_COMPOSE) --profile gpu up --build -d tryoff-model
+	@echo "Waiting for container to be ready..."
+	@sleep 5
+	@echo "Checking health..."
+	@curl -s http://localhost:8003/health || echo "Container not ready yet, check logs: make docker-logs"
+
+tryoff-test: ## Run TryOff inference test against running container
+	@test -f docs/imgs/test-tryoff.jpg || (echo "No test image found at docs/imgs/test-tryoff.jpg" && exit 1)
+	@echo "Running TryOff inference test..."
+	@curl -s -X POST http://localhost:8003/tryoff \
+		-F "image=@docs/imgs/test-tryoff.jpg" \
+		-F "garment_type=upper" \
+		-o /tmp/tryoff-output.png -w "HTTP %{http_code} in %{time_total}s\n" \
+	&& echo "Output saved to /tmp/tryoff-output.png" \
+	|| echo "Test failed"
 
 docker-app: ## Start full stack in background (same as make dev, detached)
 	$(DOCKER_COMPOSE) up -d --build
