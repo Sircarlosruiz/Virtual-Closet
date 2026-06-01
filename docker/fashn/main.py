@@ -155,6 +155,8 @@ def _load_pipeline() -> None:
 async def lifespan(app: FastAPI):
     """Ciclo de vida de la aplicación FastAPI."""
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
+    build_tag = os.environ.get("FASHN_BUILD_TAG", "dev")
+    print(f"FASHN container version: {build_tag}")
     print("Loading FASHN VTON v1.5 pipeline…")
     _load_pipeline()
     print("Ready.")

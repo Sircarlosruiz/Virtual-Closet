@@ -2,11 +2,11 @@
 unit: 002-fashn-validation
 intent: 003-fashn-provider-upgrade
 phase: inception
-status: ready
+status: complete
 unit_type: backend
 default_bolt_type: simple-construction-bolt
-created: 2026-05-31T00:00:00Z
-updated: 2026-05-31T00:00:00Z
+created: 2026-05-31T00:00:00.000Z
+updated: 2026-05-31T00:00:00.000Z
 ---
 
 # Unit Brief: fashn-validation

@@ -1,9 +1,9 @@
 ---
 intent: 003-fashn-provider-upgrade
 phase: inception
-status: inception-complete
-created: 2026-05-31T00:00:00Z
-updated: 2026-05-31T00:00:00Z
+status: complete
+created: 2026-05-31T00:00:00.000Z
+updated: 2026-05-31T00:00:00.000Z
 ---
 
 # Requirements: FASHN Provider Upgrade

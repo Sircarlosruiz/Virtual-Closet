@@ -123,6 +123,24 @@ docker-catvton: ## Start CatVTON-Flux GPU inference server (~24 GB VRAM)
 docker-fashn: ## Start FASHN VTON v1.5 GPU inference server (~8 GB VRAM, recomendado)
 	$(DOCKER_COMPOSE) --profile gpu up fashn
 
+fashn-restart: ## Kill orphan FASHN process on :8002 and rebuild container (ensures latest code)
+	@echo "Killing any process on port 8002..."
+	@lsof -ti:8002 | xargs kill -9 2>/dev/null || echo "No process on :8002"
+	@echo "Rebuilding FASHN container..."
+	$(DOCKER_COMPOSE) --profile gpu up --build -d fashn
+	@echo "Waiting for container to be ready..."
+	@sleep 5
+	@echo "Checking health..."
+	@curl -s http://localhost:8002/health || echo "Container not ready yet, check logs: make docker-logs"
+
+fashn-test: ## Run FASHN multi-subject test suite (requires test subjects in docs/imgs/test-subjects/)
+	@test -d docs/imgs/test-subjects || (echo "No test subjects found. See docs/imgs/test-subjects/README.md" && exit 1)
+	@echo "Mounting test subjects and running test suite..."
+	$(DOCKER_COMPOSE) --profile gpu run --rm \
+		-v $$(pwd)/docs/imgs/test-subjects:/app/test-subjects:ro \
+		-v $$(pwd)/docs/imgs/test-output:/app/test-output \
+		fashn python run_test_suite.py
+
 docker-app: ## Start full stack in background (same as make dev, detached)
 	$(DOCKER_COMPOSE) up -d --build
 

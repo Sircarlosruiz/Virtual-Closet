@@ -3,23 +3,30 @@ id: 013-fashn-validation
 unit: 002-fashn-validation
 intent: 003-fashn-provider-upgrade
 type: simple-construction-bolt
-status: planned
+status: complete
 stories:
   - 001-container-deployment-reliability
   - 002-multi-subject-test-suite
-created: 2026-05-31T00:00:00Z
-started: null
-completed: null
+created: 2026-05-31T00:00:00.000Z
+started: 2026-05-31T14:00:00.000Z
+completed: "2026-06-01T00:01:02Z"
 current_stage: null
-stages_completed: []
-
+stages_completed:
+  - name: plan
+    completed: 2026-05-31T14:15:00.000Z
+    artifact: implementation-plan.md
+  - name: implement
+    completed: 2026-05-31T14:30:00.000Z
+    artifact: implementation-walkthrough.md
+  - name: test
+    completed: 2026-05-31T14:45:00.000Z
+    artifact: test-walkthrough.md
 requires_bolts:
   - 011-fashn-postprocess
   - 012-fashn-postprocess
 enables_bolts: []
 requires_units: []
 blocks: false
-
 complexity:
   avg_complexity: 1
   avg_uncertainty: 2

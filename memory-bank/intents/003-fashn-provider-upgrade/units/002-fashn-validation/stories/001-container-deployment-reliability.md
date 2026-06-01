@@ -2,11 +2,11 @@
 id: 001-container-deployment-reliability
 unit: 002-fashn-validation
 intent: 003-fashn-provider-upgrade
-status: draft
+status: complete
 priority: must
-created: 2026-05-31T00:00:00Z
+created: 2026-05-31T00:00:00.000Z
 assigned_bolt: 013-fashn-validation
-implemented: false
+implemented: true
 ---
 
 # Story: 001-container-deployment-reliability
