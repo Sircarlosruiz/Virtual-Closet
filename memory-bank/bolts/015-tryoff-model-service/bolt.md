@@ -3,20 +3,29 @@ id: 015-tryoff-model-service
 unit: 001-tryoff-model-service
 intent: 004-tryoff-garment-extraction
 type: ddd-construction-bolt
-status: planned
+status: complete
 stories:
   - 003-container-health-monitoring
-created: 2026-05-31T00:00:00Z
-started: null
-completed: null
+created: 2026-05-31T00:00:00.000Z
+started: 2026-05-31T14:00:00.000Z
+completed: "2026-06-01T01:30:03Z"
 current_stage: null
-stages_completed: []
-
-requires_bolts: [014-tryoff-model-service]
-enables_bolts: [016-tryoff-job-service]
+stages_completed:
+  - name: domain-model
+    completed: 2026-05-31T14:15:00.000Z
+    artifact: ddd-01-domain-model.md
+  - name: technical-design
+    completed: 2026-05-31T14:30:00.000Z
+    artifact: ddd-02-technical-design.md
+  - name: implement
+    completed: 2026-05-31T14:35:00.000Z
+    artifact: verified-existing-implementation
+requires_bolts:
+  - 014-tryoff-model-service
+enables_bolts:
+  - 016-tryoff-job-service
 requires_units: []
 blocks: false
-
 complexity:
   avg_complexity: 1
   avg_uncertainty: 1

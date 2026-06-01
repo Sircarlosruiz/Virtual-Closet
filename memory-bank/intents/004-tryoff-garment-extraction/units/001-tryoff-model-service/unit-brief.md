@@ -2,9 +2,9 @@
 unit: 001-tryoff-model-service
 intent: 004-tryoff-garment-extraction
 phase: inception
-status: draft
-created: 2026-05-31T00:00:00Z
-updated: 2026-05-31T00:00:00Z
+status: complete
+created: 2026-05-31T00:00:00.000Z
+updated: 2026-05-31T00:00:00.000Z
 default_bolt_type: ddd-construction-bolt
 ---
 
