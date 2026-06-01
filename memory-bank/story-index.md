@@ -1,8 +1,8 @@
 # Global Story Index
 
 ## Overview
-- **Total stories**: 36
-- **Generated**: 36
+- **Total stories**: 51
+- **Generated**: 51
 - **Last updated**: 2026-05-31
 
 ---
@@ -83,8 +83,38 @@
 
 ---
 
+---
+
+### 004-tryoff-garment-extraction
+
+#### Unit: 001-tryoff-model-service
+
+- [x] **001-flux-container-setup** ✅ GENERATED — FLUX.2-klein Container with LoRA Weights — Must
+- [x] **002-tryoff-inference-api** ✅ GENERATED — POST /tryoff Inference Endpoint — Must
+- [x] **003-container-health-monitoring** ✅ GENERATED — Health Check + Auto-Restart — Must
+
+#### Unit: 002-tryoff-job-service
+
+- [x] **001-submit-tryoff-job** ✅ GENERATED — Submit TryOff Extraction Job — Must
+- [x] **002-process-job-celery** ✅ GENERATED — Process Extraction Job via Celery — Must
+- [x] **003-multi-garment-queue** ✅ GENERATED — Queue Multiple Garments from One Image — Must
+- [x] **004-poll-job-status** ✅ GENERATED — Poll Job Status and Retrieve Output — Must
+- [x] **005-media-library-save** ✅ GENERATED — Auto-Save Extracted Garment to Media Library — Must
+- [x] **006-retry-on-failure** ✅ GENERATED — Auto-Retry Failed Jobs — Should
+- [x] **007-job-history** ✅ GENERATED — TryOff Job History — Should
+
+#### Unit: 003-tryoff-pipeline-ui
+
+- [x] **001-source-image-upload-page** ✅ GENERATED — Source Image Upload Page — Must
+- [x] **002-garment-type-selector** ✅ GENERATED — Garment Type Multi-Selector — Must
+- [x] **003-extraction-status-display** ✅ GENERATED — Extraction Job Status Display — Must
+- [x] **004-extracted-garment-gallery** ✅ GENERATED — Extracted Garments in Media Library — Must
+- [x] **005-vton-handoff-action** ✅ GENERATED — One-Click VTON Handoff — Should
+
+---
+
 ## Stories by Status
 
-- **Planned/Generated**: 6 (003-fashn-provider-upgrade)
+- **Planned/Generated**: 21 (intents 003 and 004)
 - **In Progress**: 0
 - **Completed**: 30 (intents 001 and 002)
