@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-05-31T12:45:00Z
-total_decisions: 3
+last_updated: 2026-05-31T16:30:00Z
+total_decisions: 4
 ---
 
 # Decision Index
@@ -19,6 +19,14 @@ Use this to find relevant prior decisions when working on related features.
 ## Decisions
 
 <!-- Entries are appended below in reverse chronological order (newest first) -->
+
+### ADR-004: Separate Celery Queue for TryOff Jobs
+- **Status**: accepted
+- **Date**: 2026-05-31
+- **Bolt**: 016-tryoff-job-service (002-tryoff-job-service)
+- **Path**: `bolts/016-tryoff-job-service/adr-001-separate-celery-queue.md`
+- **Summary**: Use a dedicated Celery queue named `tryoff` for all TryOff job processing, separate from the existing `vton` queue, to prevent job starvation and ensure predictable processing times.
+- **Read when**: Implementing async job processing, designing Celery task routing, adding new AI-powered features that require background processing, configuring worker pools, troubleshooting job queue performance
 
 ### ADR-003: Build-Time Weight Download for FLUX.2-klein Model
 - **Status**: accepted
