@@ -2,11 +2,11 @@
 id: 005-vton-handoff-action
 unit: 003-tryoff-pipeline-ui
 intent: 004-tryoff-garment-extraction
-status: draft
+status: complete
 priority: should
-created: 2026-05-31T00:00:00Z
+created: 2026-05-31T00:00:00.000Z
 assigned_bolt: 020-tryoff-pipeline-ui
-implemented: false
+implemented: true
 ---
 
 # Story: 005-vton-handoff-action

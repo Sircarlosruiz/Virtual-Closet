@@ -3,8 +3,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import UUID
 
 from api.schemas.media import (
+    ExtractedGarmentResponse,
     GarmentPhotoResponse,
     ModelPhotoResponse,
+    PaginatedExtractedGarments,
     PaginatedGarmentPhotos,
     PaginatedModelPhotos,
 )
@@ -12,7 +14,8 @@ from core.database import get_db
 from core.dependencies import get_current_mayorista
 from core.minio_client import MinIOClient
 from models.mayorista import Mayorista
-from repositories.media_repo import GarmentPhotoRepo, ModelPhotoRepo
+from repositories.media_repo import GarmentPhotoRepo, MediaItemRepo, ModelPhotoRepo
+from services.media_library_service import MediaLibraryService
 from services.media_service import (
     EmptyFileError,
     FileTooLargeError,
@@ -35,6 +38,12 @@ def _get_library_service(db: AsyncSession = Depends(get_db)) -> ModelLibraryServ
     model_repo = ModelPhotoRepo(db)
     minio_client = MinIOClient()
     return ModelLibraryService(model_repo, minio_client)
+
+
+def _get_media_library_service(db: AsyncSession = Depends(get_db)) -> MediaLibraryService:
+    media_item_repo = MediaItemRepo(db)
+    minio_client = MinIOClient()
+    return MediaLibraryService(media_item_repo, minio_client)
 
 
 # --- Garment Photo Upload ---
@@ -200,3 +209,62 @@ async def list_curated_models(
         )
         for model, presigned_url in items
     ]
+
+
+# --- Extracted Garments ---
+
+
+@router.get("/extracted-garments", response_model=PaginatedExtractedGarments)
+async def list_extracted_garments(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    mayorista: Mayorista = Depends(get_current_mayorista),
+    library_service: MediaLibraryService = Depends(_get_media_library_service),
+):
+    """List extracted garments for the authenticated mayorista."""
+    items, total = await library_service.list_extracted_garments(
+        mayorista.id, page, page_size
+    )
+    garment_responses = []
+    for item in items:
+        presigned_url = await library_service.get_presigned_url(item.minio_key)
+        metadata = item.item_metadata or {}
+        garment_responses.append(
+            ExtractedGarmentResponse(
+                id=item.id,
+                presigned_url=presigned_url,
+                filename=item.filename,
+                garment_type=metadata.get("garment_type", "unknown"),
+                source_image_id=uuid.UUID(metadata["source_image_id"]),
+                source_job_id=uuid.UUID(metadata["source_job_id"]),
+                created_at=item.created_at,
+            )
+        )
+    return PaginatedExtractedGarments(
+        items=garment_responses, total=total, page=page, page_size=page_size
+    )
+
+
+@router.get("/extracted-garments/{garment_id}", response_model=ExtractedGarmentResponse)
+async def get_extracted_garment(
+    garment_id: UUID,
+    mayorista: Mayorista = Depends(get_current_mayorista),
+    library_service: MediaLibraryService = Depends(_get_media_library_service),
+):
+    """Get a single extracted garment by ID."""
+    item = await library_service.get_garment_by_id(garment_id, mayorista.id)
+    if not item:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Garment not found"
+        )
+    presigned_url = await library_service.get_presigned_url(item.minio_key)
+    metadata = item.item_metadata or {}
+    return ExtractedGarmentResponse(
+        id=item.id,
+        presigned_url=presigned_url,
+        filename=item.filename,
+        garment_type=metadata.get("garment_type", "unknown"),
+        source_image_id=uuid.UUID(metadata["source_image_id"]),
+        source_job_id=uuid.UUID(metadata["source_job_id"]),
+        created_at=item.created_at,
+    )

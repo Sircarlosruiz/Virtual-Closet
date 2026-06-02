@@ -2,11 +2,11 @@
 id: 004-extracted-garment-gallery
 unit: 003-tryoff-pipeline-ui
 intent: 004-tryoff-garment-extraction
-status: draft
+status: complete
 priority: must
-created: 2026-05-31T00:00:00Z
+created: 2026-05-31T00:00:00.000Z
 assigned_bolt: 020-tryoff-pipeline-ui
-implemented: false
+implemented: true
 ---
 
 # Story: 004-extracted-garment-gallery

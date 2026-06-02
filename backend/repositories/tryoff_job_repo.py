@@ -29,6 +29,19 @@ class SourceImageRepo:
         )
         return result.scalar_one_or_none()
 
+    async def get_by_ids(
+        self, image_ids: list[uuid.UUID], mayorista_id: uuid.UUID
+    ) -> list[SourceImage]:
+        if not image_ids:
+            return []
+        result = await self._db.execute(
+            select(SourceImage).where(
+                SourceImage.id.in_(image_ids),
+                SourceImage.mayorista_id == mayorista_id,
+            )
+        )
+        return list(result.scalars().all())
+
     async def list_by_mayorista(
         self,
         mayorista_id: uuid.UUID,
@@ -89,6 +102,19 @@ class TryoffJobRepo:
             )
         )
         return result.scalar_one_or_none()
+
+    async def get_by_ids(
+        self, job_ids: list[uuid.UUID], mayorista_id: uuid.UUID
+    ) -> list[TryoffJob]:
+        if not job_ids:
+            return []
+        result = await self._db.execute(
+            select(TryoffJob).where(
+                TryoffJob.id.in_(job_ids),
+                TryoffJob.mayorista_id == mayorista_id,
+            )
+        )
+        return list(result.scalars().all())
 
     async def update_status(
         self,

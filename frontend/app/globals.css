@@ -49,14 +49,31 @@
 }
 
 :root {
+  /* Virtual Closet design tokens */
+  --vc-primary: #6366F1;
+  --vc-primary-hover: #4F46E5;
+  --vc-primary-soft: #EEF0FF;
+  --vc-accent: #EC4899;
+  --vc-accent-hover: #DB2777;
+  --vc-accent-soft: #FCE7F3;
+  --vc-success: #10B981;
+  --vc-success-soft: #D1FAE5;
+  --vc-warning: #F59E0B;
+  --vc-error: #EF4444;
+  --vc-text: #111827;
+  --vc-muted: #6B7280;
+  --vc-border: #E5E7EB;
+  --vc-bg: #FFFFFF;
+  --vc-bg-subtle: #F9FAFB;
+
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.627 0.225 266.5);
+  --primary-foreground: oklch(1 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
@@ -75,8 +92,8 @@
   --radius: 0.625rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.627 0.225 266.5);
+  --sidebar-primary-foreground: oklch(1 0 0);
   --sidebar-accent: oklch(0.97 0 0);
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);

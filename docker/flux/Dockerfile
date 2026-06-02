@@ -1,8 +1,8 @@
 # TryOff garment extraction inference server.
 # Modelo: FLUX.2-klein-base-9B + virtual-tryoff-lora — extracción de prendas desde fotos de personas.
-# Imagen base: PyTorch 2.4.1 con CUDA 12.1 y cuDNN 9, variant runtime.
+# Imagen base: PyTorch 2.5.1 con CUDA 12.1 y cuDNN 9 (diffusers 0.37+ / Flux2Klein).
 # Requiere ~24 GB VRAM (GPU dedicada, no compartida con FASHN).
-FROM pytorch/pytorch:2.4.1-cuda12.1-cudnn9-runtime
+FROM pytorch/pytorch:2.5.1-cuda12.1-cudnn9-runtime
 
 WORKDIR /app
 

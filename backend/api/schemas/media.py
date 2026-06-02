@@ -38,3 +38,22 @@ class PaginatedModelPhotos(BaseModel):
     total: int
     page: int
     page_size: int
+
+
+class ExtractedGarmentResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    presigned_url: str
+    filename: str
+    garment_type: str = Field(description="upper, lower, or dress")
+    source_image_id: uuid.UUID
+    source_job_id: uuid.UUID
+    created_at: datetime
+
+
+class PaginatedExtractedGarments(BaseModel):
+    items: list[ExtractedGarmentResponse]
+    total: int
+    page: int
+    page_size: int

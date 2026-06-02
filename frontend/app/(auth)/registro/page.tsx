@@ -6,22 +6,12 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { apiFetch } from "@/lib/api";
 import Link from "next/link";
 
+import { apiFetch } from "@/lib/api";
+
 const registerSchema = z.object({
-  email: z.string().email("Email inválido"),
+  email: z.string().min(1, "El correo es obligatorio").email("Email inválido"),
   password: z.string().min(8, "La contraseña debe tener al menos 8 caracteres"),
   nombre_negocio: z.string().min(1, "El nombre del negocio es obligatorio"),
 });
@@ -63,69 +53,97 @@ export default function RegisterPage() {
     }
   };
 
+  const inputClass =
+    "h-12 w-full rounded-xl border px-4 text-base outline-none transition-all " +
+    "focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 " +
+    "placeholder:text-gray-400";
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Crear cuenta</CardTitle>
-        <CardDescription>
-          Registra tu mayorista y comienza a generar catálogos con IA
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="nombre_negocio">Nombre del negocio</Label>
-            <Input
-              id="nombre_negocio"
-              type="text"
-              placeholder="Mi Mayorista"
-              {...register("nombre_negocio")}
-            />
-            {errors.nombre_negocio && (
-              <p className="text-sm text-red-500">
-                {errors.nombre_negocio.message}
-              </p>
-            )}
-          </div>
+    <>
+      <h1 className="text-2xl font-extrabold tracking-tight mb-1 text-gray-900">
+        Creá tu cuenta
+      </h1>
+      <p className="text-sm mb-7 text-gray-500">
+        30 días gratis en Plan Base · sin tarjeta.
+      </p>
 
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="tu@email.com"
-              {...register("email")}
-            />
-            {errors.email && (
-              <p className="text-sm text-red-500">{errors.email.message}</p>
-            )}
-          </div>
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+        {/* Nombre del negocio */}
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="nombre_negocio" className="text-sm font-semibold text-gray-800">
+            Nombre del negocio
+          </label>
+          <input
+            id="nombre_negocio"
+            type="text"
+            placeholder="Boutique Karla"
+            className={inputClass}
+            style={{ borderColor: errors.nombre_negocio ? "#EF4444" : "#E5E7EB" }}
+            {...register("nombre_negocio")}
+          />
+          {errors.nombre_negocio && (
+            <p className="text-xs text-red-500">{errors.nombre_negocio.message}</p>
+          )}
+        </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="password">Contraseña</Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="Mínimo 8 caracteres"
-              {...register("password")}
-            />
-            {errors.password && (
-              <p className="text-sm text-red-500">{errors.password.message}</p>
-            )}
-          </div>
+        {/* Correo */}
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="email" className="text-sm font-semibold text-gray-800">
+            Correo
+          </label>
+          <input
+            id="email"
+            type="email"
+            placeholder="karla@boutique.ni"
+            className={inputClass}
+            style={{ borderColor: errors.email ? "#EF4444" : "#E5E7EB" }}
+            {...register("email")}
+          />
+          {errors.email && (
+            <p className="text-xs text-red-500">{errors.email.message}</p>
+          )}
+        </div>
 
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Creando cuenta..." : "Crear cuenta"}
-          </Button>
-        </form>
+        {/* Contraseña */}
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="password" className="text-sm font-semibold text-gray-800">
+            Contraseña
+          </label>
+          <input
+            id="password"
+            type="password"
+            placeholder="Mínimo 8 caracteres"
+            className={inputClass}
+            style={{ borderColor: errors.password ? "#EF4444" : "#E5E7EB" }}
+            {...register("password")}
+          />
+          <span className="text-xs text-gray-400">Usá 8 caracteres o más.</span>
+          {errors.password && (
+            <p className="text-xs text-red-500">{errors.password.message}</p>
+          )}
+        </div>
 
-        <p className="mt-4 text-center text-sm text-zinc-600 dark:text-zinc-400">
-          ¿Ya tienes cuenta?{" "}
-          <Link href="/login" className="text-blue-600 hover:underline">
-            Inicia sesión
-          </Link>
-        </p>
-      </CardContent>
-    </Card>
+        {/* Submit */}
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="mt-1 h-12 w-full rounded-full text-base font-semibold text-white transition-colors hover:bg-indigo-700 disabled:opacity-50"
+          style={{ background: "#6366F1", boxShadow: "0 4px 14px rgba(99,102,241,.32)" }}
+        >
+          {isLoading ? "Creando cuenta..." : "Crear cuenta gratis"}
+        </button>
+      </form>
+
+      <p className="mt-6 text-center text-sm text-gray-500">
+        ¿Ya tenés cuenta?{" "}
+        <Link href="/login" className="font-semibold text-indigo-600 hover:text-indigo-700">
+          Iniciá sesión
+        </Link>
+      </p>
+
+      <p className="mt-3 text-center text-xs text-gray-400">
+        Al crear tu cuenta aceptás los Términos y la Política de privacidad.
+      </p>
+    </>
   );
 }

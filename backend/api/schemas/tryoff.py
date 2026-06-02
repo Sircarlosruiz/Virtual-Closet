@@ -18,6 +18,13 @@ class TryoffJobStatus(str, Enum):
     failed = "failed"
 
 
+class SourceImageUploadResponse(BaseModel):
+    id: uuid.UUID
+    presigned_url: str
+    filename: str
+    uploaded_at: datetime
+
+
 class TryoffJobRequest(BaseModel):
     source_image_id: uuid.UUID
     garment_type: GarmentType
@@ -47,6 +54,7 @@ class TryoffJobStatusResponse(BaseModel):
     started_at: datetime | None = None
     completed_at: datetime | None = None
     result_url: str | None = None
+    output_media_id: uuid.UUID | None = None
     error_reason: str | None = None
     retry_count: int = 0
 
@@ -59,6 +67,7 @@ class TryoffJobHistoryItem(BaseModel):
     started_at: datetime | None = None
     completed_at: datetime | None = None
     result_url: str | None = None
+    output_media_id: uuid.UUID | None = None
     error_reason: str | None = None
     retry_count: int = 0
 

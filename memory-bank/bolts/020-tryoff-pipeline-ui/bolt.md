@@ -3,21 +3,27 @@ id: 020-tryoff-pipeline-ui
 unit: 003-tryoff-pipeline-ui
 intent: 004-tryoff-garment-extraction
 type: simple-construction-bolt
-status: planned
+status: complete
 stories:
   - 004-extracted-garment-gallery
   - 005-vton-handoff-action
-created: 2026-05-31T00:00:00Z
-started: null
-completed: null
+created: 2026-05-31T00:00:00.000Z
+started: 2026-06-01T14:35:00.000Z
+completed: "2026-06-01T14:58:06Z"
 current_stage: null
-stages_completed: []
-
-requires_bolts: [018-tryoff-job-service, 019-tryoff-pipeline-ui]
+stages_completed:
+  - name: plan
+    completed: 2026-06-01T14:40:00.000Z
+    artifact: implementation-plan.md
+  - name: implement
+    completed: 2026-06-01T14:50:00.000Z
+    artifact: implementation-walkthrough.md
+requires_bolts:
+  - 018-tryoff-job-service
+  - 019-tryoff-pipeline-ui
 enables_bolts: []
 requires_units: []
 blocks: false
-
 complexity:
   avg_complexity: 1
   avg_uncertainty: 1

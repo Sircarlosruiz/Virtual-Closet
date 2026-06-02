@@ -1,6 +1,8 @@
-diffusers>=0.30.0
+# PyTorch 2.5.x (see Dockerfile). diffusers 0.37+ registers FA3 custom ops that break on 2.4.x.
+diffusers>=0.37.0,<0.38.0
 transformers>=4.45.0,<5.0
 accelerate>=1.0.0
+peft>=0.14.0
 safetensors>=0.4.0
 huggingface-hub>=0.26.0
 fastapi>=0.115.0

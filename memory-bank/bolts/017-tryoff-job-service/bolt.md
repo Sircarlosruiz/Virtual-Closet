@@ -3,15 +3,15 @@ id: 017-tryoff-job-service
 unit: 002-tryoff-job-service
 intent: 004-tryoff-garment-extraction
 type: ddd-construction-bolt
-status: in-progress
+status: complete
 stories:
   - 004-poll-job-status
   - 005-media-library-save
   - 006-retry-on-failure
 created: 2026-05-31T00:00:00Z
 started: 2026-05-31T18:30:00Z
-completed: null
-current_stage: implementation
+completed: 2026-05-31T20:00:00Z
+current_stage: complete
 stages_completed:
   - name: domain-model
     completed: 2026-05-31T19:00:00Z
@@ -22,6 +22,9 @@ stages_completed:
   - name: implementation
     completed: 2026-05-31T19:45:00Z
     artifact: implementation changes
+  - name: test
+    completed: 2026-05-31T20:00:00Z
+    artifact: ddd-03-test-report.md
 
 requires_bolts: [016-tryoff-job-service]
 enables_bolts: [018-tryoff-job-service, 019-tryoff-pipeline-ui]
@@ -60,25 +63,16 @@ Complete the backend pipeline: after extraction succeeds, the garment is saved t
 
 - [x] **1. Domain Model**: MediaItem metadata extension (`type`, `garment_type`, `source_job_id`); retry state in TryoffJob
 - [x] **2. Technical Design**: GET /jobs/{id} contract; MinIO upload path; retry decorator config; idempotency for re-uploads
-- [ ] **3. ADR Analysis**: Evaluate if new architectural decisions warrant ADRs
-- [ ] **4. Implementation**: Status endpoint + MinIO upload + MediaItem creation + Celery retry config
-- [ ] **5. Test**: Verify media library entry created on completion; verify retry on 503 from model; verify 3rd failure sets `failed` status
-
-## Dependencies
-
-### Requires
-- 016-tryoff-job-service (job must exist and be processable)
-
-### Enables
-- 018-tryoff-job-service (history API)
-- 019-tryoff-pipeline-ui (status page uses this polling endpoint)
+- [x] **3. ADR Analysis**: Skipped - no ADR-worthy decisions identified
+- [x] **4. Implementation**: Status endpoint + MinIO upload + MediaItem creation + Celery retry config
+- [x] **5. Test**: Unit tests passing, integration tests verified
 
 ## Success Criteria
 
-- [ ] GET /api/tryoff/jobs/{id} returns complete status with signed output URL
-- [ ] Extracted garment appears in media library tagged as `extracted_garment`
-- [ ] Job retries on transient error; third failure sets status to `failed`
-- [ ] MinIO upload is idempotent (retry overwrites same key)
+- [x] GET /api/tryoff/jobs/{id} returns complete status with signed output URL
+- [x] Extracted garment appears in media library tagged as `extracted_garment`
+- [x] Job retries on transient error; third failure sets status to `failed`
+- [x] MinIO upload is idempotent (retry overwrites same key)
 
 ## Notes
 

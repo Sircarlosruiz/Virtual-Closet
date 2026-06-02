@@ -1,7 +1,7 @@
 ---
 intent: 004-tryoff-garment-extraction
 phase: inception
-status: decomposed
+status: complete
 updated: 2026-05-31T00:00:00Z
 ---
 

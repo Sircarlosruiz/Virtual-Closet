@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import UUID
 
 from api.schemas.tryoff import (
+    SourceImageUploadResponse,
     TryoffBatchRequest,
     TryoffBatchResponse,
     TryoffJobHistoryResponse,
@@ -21,6 +22,12 @@ from services.tryoff_job_service import (
     TryoffJobOwnershipError,
     TryoffJobService,
 )
+from services.tryoff_source_image_service import (
+    EmptyFileError,
+    FileTooLargeError,
+    InvalidFileTypeError,
+    TryoffSourceImageService,
+)
 
 router = APIRouter(prefix="/api/tryoff", tags=["tryoff"])
 
@@ -30,6 +37,55 @@ def _get_tryoff_service(db: AsyncSession = Depends(get_db)) -> TryoffJobService:
     source_image_repo = SourceImageRepo(db)
     minio_client = MinIOClient()
     return TryoffJobService(tryoff_job_repo, source_image_repo, minio_client)
+
+
+def _get_source_image_service(
+    db: AsyncSession = Depends(get_db),
+) -> TryoffSourceImageService:
+    source_image_repo = SourceImageRepo(db)
+    minio_client = MinIOClient()
+    return TryoffSourceImageService(source_image_repo, minio_client)
+
+
+@router.post(
+    "/source-images",
+    response_model=SourceImageUploadResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def upload_source_image(
+    file: UploadFile = File(...),
+    mayorista: Mayorista = Depends(get_current_mayorista),
+    upload_service: TryoffSourceImageService = Depends(_get_source_image_service),
+):
+    """Upload a TryOff source image (JPG/PNG, max 10MB)."""
+    file_bytes = await file.read()
+
+    try:
+        source_image, presigned_url = await upload_service.upload(
+            mayorista_id=mayorista.id,
+            file_bytes=file_bytes,
+            filename=file.filename or "unknown",
+            content_type=file.content_type,
+        )
+    except EmptyFileError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)
+        ) from exc
+    except FileTooLargeError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)
+        ) from exc
+    except InvalidFileTypeError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)
+        ) from exc
+
+    return SourceImageUploadResponse(
+        id=source_image.id,
+        presigned_url=presigned_url,
+        filename=source_image.filename,
+        uploaded_at=source_image.uploaded_at,
+    )
 
 
 @router.post(
@@ -132,18 +188,32 @@ async def get_job_status(
     return TryoffJobStatusResponse(**status_data)
 
 
-@router.get("/jobs", response_model=TryoffJobHistoryResponse)
+@router.get("/jobs")
 async def list_jobs(
+    job_ids: str | None = Query(
+        None,
+        description="Comma-separated job UUIDs for status polling",
+    ),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
     mayorista: Mayorista = Depends(get_current_mayorista),
     tryoff_service: TryoffJobService = Depends(_get_tryoff_service),
 ):
-    """List mayorista's TryOff jobs with pagination.
+    """List jobs: paginated history, or poll specific IDs via job_ids."""
+    if job_ids:
+        try:
+            ids = [UUID(part.strip()) for part in job_ids.split(",") if part.strip()]
+        except ValueError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid job_ids format",
+            ) from exc
+        items = await tryoff_service.get_jobs_by_ids(
+            job_ids=ids,
+            mayorista_id=mayorista.id,
+        )
+        return [TryoffJobStatusResponse(**item) for item in items]
 
-    Returns paginated job history ordered by creation date (newest first).
-    Complete jobs include a fresh presigned URL for the result image.
-    """
     items, total = await tryoff_service.list_jobs(
         mayorista_id=mayorista.id,
         page=page,

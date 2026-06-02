@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
@@ -11,16 +11,36 @@ import { GarmentUploader } from "@/components/vton/GarmentUploader";
 import { ModelSelector } from "@/components/vton/ModelSelector";
 import { ClothTypeSelector } from "@/components/vton/ClothTypeSelector";
 import { apiFetch } from "@/lib/api";
+import { getExtractedGarment, ExtractedGarment } from "@/lib/api/extracted-garments";
 
 type ClothType = "upper_body" | "lower_body" | "dress";
 
 export default function GeneratePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
-  const [garmentId, setGarmentId] = useState<string | null>(null);
+  const garmentIdParam = searchParams.get("garment_id");
+  const [garmentId, setGarmentId] = useState<string | null>(garmentIdParam);
   const [modelId, setModelId] = useState<string | null>(null);
   const [clothType, setClothType] = useState<ClothType | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [preloadedGarment, setPreloadedGarment] = useState<ExtractedGarment | null>(null);
+  const hasLoadedRef = useRef(false);
+
+  // Fetch preloaded garment details when garment_id param is present
+  useEffect(() => {
+    if (garmentIdParam && !hasLoadedRef.current) {
+      hasLoadedRef.current = true;
+      getExtractedGarment(garmentIdParam)
+        .then((garment) => {
+          setPreloadedGarment(garment);
+          toast.success("Prenda extraída seleccionada");
+        })
+        .catch(() => {
+          toast.error("No se pudo cargar la prenda extraída");
+        });
+    }
+  }, [garmentIdParam]);
 
   const canSubmit = Boolean(garmentId && modelId && clothType) && !isSubmitting;
 
@@ -67,13 +87,37 @@ export default function GeneratePage() {
         <CardHeader>
           <CardTitle className="text-lg">1. Sube la Prenda</CardTitle>
           <CardDescription>
-            Arrastra o selecciona una foto de la prenda (JPG/PNG, máx 10MB)
+            {preloadedGarment
+              ? "Prenda extraída seleccionada — puedes cambiarla si lo deseas"
+              : "Arrastra o selecciona una foto de la prenda (JPG/PNG, máx 10MB)"}
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {preloadedGarment && (
+            <div className="mb-4 rounded-lg border overflow-hidden">
+              <div className="relative">
+                <img
+                  src={preloadedGarment.presigned_url}
+                  alt={preloadedGarment.filename}
+                  className="w-full h-48 object-cover"
+                />
+                <div className="absolute top-2 left-2">
+                  <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-1 text-xs font-medium text-primary">
+                    Extraída: {preloadedGarment.garment_type}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
           <GarmentUploader
-            onUploaded={setGarmentId}
-            onClear={() => setGarmentId(null)}
+            onUploaded={(id) => {
+              setGarmentId(id);
+              setPreloadedGarment(null);
+            }}
+            onClear={() => {
+              setGarmentId(null);
+              setPreloadedGarment(null);
+            }}
             uploadedId={garmentId}
           />
         </CardContent>

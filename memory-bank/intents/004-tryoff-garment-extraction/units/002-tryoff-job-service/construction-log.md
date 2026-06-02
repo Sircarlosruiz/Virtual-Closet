@@ -28,8 +28,8 @@ last_updated: 2026-05-31T18:00:00Z
 | Bolt ID | Stories | Status | Changed |
 |---------|---------|--------|---------|
 | 016-tryoff-job-service | 001, 002, 003 | ✅ complete | - |
-| 017-tryoff-job-service | 004, 005, 006 | ⏳ in-progress | - |
-| 018-tryoff-job-service | 007 | [ ] planned | - |
+| 017-tryoff-job-service | 004, 005, 006 | ✅ complete | - |
+| 018-tryoff-job-service | 007 | ✅ complete | - |
 
 ## Execution History
 
@@ -47,6 +47,10 @@ last_updated: 2026-05-31T18:00:00Z
 | 2026-05-31T19:00:00Z | 017-tryoff-job-service | stage-complete | Domain Model → Technical Design |
 | 2026-05-31T19:30:00Z | 017-tryoff-job-service | stage-complete | Technical Design → Implementation |
 | 2026-05-31T19:45:00Z | 017-tryoff-job-service | stage-complete | Implementation → Testing |
+| 2026-05-31T20:00:00Z | 017-tryoff-job-service | stage-complete | Testing → Complete |
+| 2026-05-31T20:00:00Z | 017-tryoff-job-service | completed | All 5 stages done |
+| 2026-05-31T20:05:00Z | 018-tryoff-job-service | started | Stage 1: Domain Model |
+| 2026-05-31T20:10:00Z | 018-tryoff-job-service | completed | All stages done (already implemented in bolt 017) |
 
 ## Execution Summary
 
@@ -54,9 +58,9 @@ last_updated: 2026-05-31T18:00:00Z
 |--------|-------|
 | Original bolts planned | 3 |
 | Current bolt count | 3 |
-| Bolts completed | 1 |
-| Bolts in progress | 1 |
-| Bolts remaining | 1 |
+| Bolts completed | 3 |
+| Bolts in progress | 0 |
+| Bolts remaining | 0 |
 | Replanning events | 0 |
 
 ## Notes

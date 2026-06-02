@@ -82,6 +82,7 @@ class TryoffJob(Base):
     max_retries = Column(Integer, nullable=False, default=2)
     error_reason = Column(Text, nullable=True)
     output_minio_key = Column(String(512), unique=True, nullable=True)
+    output_media_id = Column(UUID(as_uuid=True), nullable=True)
     created_at = Column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )

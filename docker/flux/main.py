@@ -1,10 +1,13 @@
-"""Servidor de inferencia TryOff — extracción de prendas con FLUX.2-klein + virtual-tryoff-lora.
+"""Servidor de inferencia TryOff — extracción de prendas con virtual-tryoff-lora (fal).
 
-   Modelo: black-forest-labs/FLUX.2-klein-base-9B + fal/virtual-tryoff-lora
-   Pipeline: FluxPipeline (diffusers) con LoRA fusionado en startup.
+   LoRA de inferencia: fal/virtual-tryoff-lora (Apache-2.0, ~135 MB en HF).
+   Base obligatoria (no incluida en el repo del LoRA): FLUX.2-klein-base-9B de BFL.
+   Ver https://huggingface.co/fal/virtual-tryoff-lora — fal documenta los dos pasos.
 
-   Por qué FLUX.2-klein (vs alternativas):
-     - Modelo open-weight con LoRA específico para extracción de prendas
+   Pipeline: Flux2KleinPipeline + LoRA fusionado en startup.
+
+   Por qué hace falta la base:
+     - Un LoRA solo modifica pesos de un modelo grande ya cargado (~18 GB)
      - ~24 GB VRAM (requiere GPU dedicada, no compartida con FASHN)
      - LoRA fusionado en startup → sin overhead por request
      - Output: prenda sobre fondo blanco, sin partes humanas visibles
@@ -20,6 +23,8 @@
      TRYOFF_HEIGHT      — alto de la imagen de salida (default: 1024)
      TRYOFF_WIDTH       — ancho de la imagen de salida (default: 768)
      HF_HOME            — directorio de caché de modelos (default: /app/model_cache)
+     HF_TOKEN           — token HF para descargar la base gated (no para el LoRA fal)
+     TRYOFF_BASE_MODEL  — repo o ruta local de la base (default: FLUX.2-klein-base-9B)
 """
 
 import asyncio
@@ -52,25 +57,53 @@ _models: dict = {}
 _inference_lock = asyncio.Lock()
 _model_ready = False
 
+_DEFAULT_BASE_MODEL = "black-forest-labs/FLUX.2-klein-base-9B"
+_TRYOFF_LORA_REPO = "fal/virtual-tryoff-lora"
+_TRYOFF_LORA_WEIGHT = "virtual-tryoff-lora_diffusers.safetensors"
+_TRYOFF_LORA_ADAPTER = "vtoff"
+
+
+def _hf_token() -> str | None:
+    """Token de Hugging Face para repos gated (misma convención que catvton)."""
+    token = os.environ.get("HF_TOKEN") or os.environ.get("HUGGINGFACE_HUB_TOKEN")
+    return token.strip() if token and token.strip() else None
+
+
+def _base_model_id() -> str:
+    return os.environ.get("TRYOFF_BASE_MODEL", _DEFAULT_BASE_MODEL).strip() or _DEFAULT_BASE_MODEL
+
 
 def _load_pipeline() -> None:
-    """Carga FLUX.2-klein + virtual-tryoff-lora y fusiona el LoRA.
-
-    Descarga pesos desde HuggingFace si no están en caché.
-    Fusiona el LoRA en startup para evitar overhead por request.
-    """
+    """Carga base FLUX.2-klein + LoRA fal/virtual-tryoff-lora (mismo flujo que la card de fal)."""
     global _model_ready
-    from diffusers import FluxPipeline
+    from diffusers import Flux2KleinPipeline
 
-    print("Loading FLUX.2-klein-base-9B pipeline…")
-    pipe = FluxPipeline.from_pretrained(
-        "black-forest-labs/FLUX.2-klein-base-9B",
+    base_model = _base_model_id()
+    hf_token = _hf_token()
+    if base_model.startswith("black-forest-labs/") and not hf_token:
+        raise RuntimeError(
+            f"HF_TOKEN is required to download the gated base model ({base_model}). "
+            "fal/virtual-tryoff-lora is only the adapter (~135 MB); it cannot run alone. "
+            "Accept the BFL license at "
+            f"https://huggingface.co/{base_model} "
+            f"(LoRA docs: https://huggingface.co/{_TRYOFF_LORA_REPO})"
+        )
+
+    print(f"Loading FLUX.2-klein base ({base_model})…")
+    pipe = Flux2KleinPipeline.from_pretrained(
+        base_model,
         torch_dtype=torch.bfloat16,
+        token=hf_token,
     )
 
-    print("Loading virtual-tryoff-lora weights…")
-    pipe.load_lora_weights("fal/virtual-tryoff-lora")
-    pipe.fuse_lora(lora_scale=1.0)
+    print(f"Loading TryOff LoRA ({_TRYOFF_LORA_REPO})…")
+    pipe.load_lora_weights(
+        _TRYOFF_LORA_REPO,
+        weight_name=_TRYOFF_LORA_WEIGHT,
+        adapter_name=_TRYOFF_LORA_ADAPTER,
+    )
+    pipe.set_adapters(_TRYOFF_LORA_ADAPTER, adapter_weights=1.0)
+    pipe.fuse_lora(adapter_names=[_TRYOFF_LORA_ADAPTER], lora_scale=1.0)
 
     pipe.to("cuda")
     _models["pipe"] = pipe
@@ -87,8 +120,35 @@ async def lifespan(app: FastAPI):
     print(f"TryOff container version: {build_tag}")
     try:
         _load_pipeline()
-    except Exception:
-        logger.exception("Failed to load FLUX pipeline")
+    except Exception as exc:
+        from huggingface_hub.errors import GatedRepoError, HfHubHTTPError
+
+        base_model = _base_model_id()
+        err_text = str(exc).lower()
+
+        if isinstance(exc, GatedRepoError):
+            logger.error(
+                "Hugging Face gated base model access denied (%s). "
+                "Accept the license at https://huggingface.co/%s with the HF_TOKEN account. "
+                "See docker/flux/README.md",
+                base_model,
+                base_model,
+            )
+        elif isinstance(exc, HfHubHTTPError) and "public gated" in err_text:
+            logger.error(
+                "HF_TOKEN is fine-grained but missing 'Access public gated repositories'. "
+                "Create a classic Read token or enable that permission in "
+                "https://huggingface.co/settings/tokens — then update backend/.env. "
+                "Model: %s — see docker/flux/README.md",
+                base_model,
+            )
+        elif "peft backend is required" in err_text:
+            logger.error(
+                "Missing Python package 'peft' required by diffusers to load LoRA weights. "
+                "Rebuild the image after updating docker/flux/requirements.txt."
+            )
+        else:
+            logger.exception("Failed to load FLUX pipeline")
         raise SystemExit(1)
     yield
     _models.clear()

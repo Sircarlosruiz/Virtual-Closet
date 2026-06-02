@@ -1,5 +1,6 @@
 import uuid
 
+from core.minio_client import MinIOClient
 from models.media import MediaItem
 from repositories.media_repo import MediaItemRepo
 
@@ -7,8 +8,9 @@ from repositories.media_repo import MediaItemRepo
 class MediaLibraryService:
     """Handles media library operations for extracted garments and other media."""
 
-    def __init__(self, media_item_repo: MediaItemRepo) -> None:
+    def __init__(self, media_item_repo: MediaItemRepo, minio_client: MinIOClient | None = None) -> None:
         self._media_item_repo = media_item_repo
+        self._minio = minio_client or MinIOClient()
 
     async def save_extracted_garment(
         self,
@@ -53,3 +55,31 @@ class MediaLibraryService:
             },
         )
         return await self._media_item_repo.create(media_item)
+
+    async def list_extracted_garments(
+        self,
+        mayorista_id: uuid.UUID,
+        page: int = 1,
+        page_size: int = 20,
+    ) -> tuple[list[MediaItem], int]:
+        """List extracted garments for a mayorista with pagination."""
+        return await self._media_item_repo.list_by_type(
+            mayorista_id, "extracted_garment", page, page_size
+        )
+
+    async def get_garment_by_id(
+        self,
+        garment_id: uuid.UUID,
+        mayorista_id: uuid.UUID,
+    ) -> MediaItem | None:
+        """Get a single extracted garment by ID, enforcing ownership."""
+        item = await self._media_item_repo.get_by_id(garment_id, mayorista_id)
+        if item and item.media_type != "extracted_garment":
+            return None
+        return item
+
+    async def get_presigned_url(self, minio_key: str) -> str:
+        """Generate a presigned URL for a media item."""
+        return await self._minio.get_presigned_url(
+            bucket="originals", key=minio_key
+        )

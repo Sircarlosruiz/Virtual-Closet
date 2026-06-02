@@ -6,7 +6,7 @@ app = Celery(
     "vton",
     broker=settings.RABBITMQ_URL,
     backend="rpc://",
-    include=["tasks.generate_vton", "tasks.vton_task"],
+    include=["tasks.generate_vton", "tasks.vton_task", "tasks.tryoff_task"],
 )
 
 app.conf.task_routes = {
@@ -21,6 +21,7 @@ app.conf.task_queues = {
     "vton.generation.normal": {},
     "vton.generation.priority": {},
     "vton.generation.dead": {},
+    "tryoff": {},
 }
 
 

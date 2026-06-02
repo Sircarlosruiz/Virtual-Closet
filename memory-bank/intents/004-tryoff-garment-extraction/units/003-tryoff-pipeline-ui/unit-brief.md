@@ -2,11 +2,11 @@
 unit: 003-tryoff-pipeline-ui
 intent: 004-tryoff-garment-extraction
 phase: inception
-status: draft
+status: complete
 unit_type: frontend
 default_bolt_type: simple-construction-bolt
-created: 2026-05-31T00:00:00Z
-updated: 2026-05-31T00:00:00Z
+created: 2026-05-31T00:00:00.000Z
+updated: 2026-05-31T00:00:00.000Z
 ---
 
 # Unit Brief: tryoff-pipeline-ui

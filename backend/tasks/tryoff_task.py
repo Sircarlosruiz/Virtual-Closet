@@ -34,7 +34,7 @@ def process_tryoff_job(self, job_id: str) -> None:
     import asyncio
 
     from sqlalchemy import create_engine, select
-    from sqlalchemy.orm import sessionmaker
+    from sqlalchemy.orm import joinedload, sessionmaker
 
     from models.media import MediaItem
     from models.tryoff_job import TryoffJob
@@ -52,7 +52,9 @@ def process_tryoff_job(self, job_id: str) -> None:
     with Session() as session:
         # Step 1: Re-read job — idempotency guard
         result = session.execute(
-            select(TryoffJob).where(TryoffJob.id == uuid.UUID(job_id))
+            select(TryoffJob)
+            .options(joinedload(TryoffJob.source_image))
+            .where(TryoffJob.id == uuid.UUID(job_id))
         )
         job = result.scalar_one_or_none()
 
@@ -113,6 +115,7 @@ def process_tryoff_job(self, job_id: str) -> None:
             # Step 7: Update status → complete
             job.status = "complete"
             job.output_minio_key = output_key
+            job.output_media_id = media_item.id
             job.completed_at = datetime.now(timezone.utc)
             session.commit()
 

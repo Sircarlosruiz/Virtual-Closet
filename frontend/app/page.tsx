@@ -1,69 +1,60 @@
 import Link from "next/link";
-import { Button, buttonVariants } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
 import {
   Sparkles,
   Camera,
-  Share2,
-  Clock,
-  Zap,
-  Shirt,
   CheckCircle2,
   ArrowRight,
+  Shirt,
   MessageCircle,
-  BarChart3,
-  ShoppingBag,
-  Layers,
-  ChevronRight,
-  ShieldCheck,
 } from "lucide-react";
+
+const StarIcon = () => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4 text-yellow-400">
+    <path d="m12 2 2.9 6.3 6.9.7-5.1 4.6 1.4 6.8L12 17.8 6 20.4l1.4-6.8L2.3 9l6.9-.7z" />
+  </svg>
+);
 
 export default function HomePage() {
   return (
-    <div className="flex flex-col w-full">
+    <div className="flex flex-col w-full min-h-screen" style={{ fontFamily: "Inter, -apple-system, system-ui, sans-serif" }}>
       {/* Header */}
-      <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-md">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-foreground">
-              <Shirt className="h-4 w-4 text-background" />
+      <header className="sticky top-0 z-50 w-full border-b" style={{ background: "rgba(255,255,255,0.92)", backdropFilter: "blur(12px)", borderColor: "#E5E7EB" }}>
+        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
+          {/* Logo */}
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg" style={{ background: "#111827" }}>
+              <Shirt className="h-4 w-4 text-white" />
             </div>
-            <span className="text-lg font-semibold tracking-tight">
-              NikaCommerce
+            <span className="text-base font-bold tracking-tight" style={{ color: "#111827" }}>
+              Virtual Closet
             </span>
           </div>
+
+          {/* Nav — desktop only */}
           <nav className="hidden items-center gap-6 text-sm font-medium md:flex">
-            <Link
-              href="#funcionalidades"
-              className="text-muted-foreground transition-colors hover:text-foreground"
-            >
-              Funcionalidades
-            </Link>
-            <Link
-              href="#como-funciona"
-              className="text-muted-foreground transition-colors hover:text-foreground"
-            >
+            <a href="#como-funciona" className="transition-colors hover:text-indigo-600" style={{ color: "#6B7280" }}>
               Cómo funciona
-            </Link>
-            <Link
-              href="#testimonios"
-              className="text-muted-foreground transition-colors hover:text-foreground"
-            >
-              Testimonios
-            </Link>
+            </a>
+            <a href="#funcionalidades" className="transition-colors hover:text-indigo-600" style={{ color: "#6B7280" }}>
+              Funcionalidades
+            </a>
+            <a href="#precios" className="transition-colors hover:text-indigo-600" style={{ color: "#6B7280" }}>
+              Precios
+            </a>
           </nav>
-          <div className="flex items-center gap-3">
+
+          {/* Auth buttons */}
+          <div className="flex items-center gap-2">
             <Link
               href="/login"
-              className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
+              className="hidden sm:inline-flex items-center px-4 py-2 text-sm font-semibold rounded-full transition-colors hover:bg-gray-100"
+              style={{ color: "#111827" }}
             >
               Iniciar sesión
             </Link>
             <Link
               href="/registro"
-              className={cn(buttonVariants({ size: "sm" }))}
+              className="inline-flex items-center px-4 py-2 text-sm font-semibold rounded-full text-white bg-indigo-500 transition-colors hover:bg-indigo-600"
             >
               Crear cuenta
             </Link>
@@ -72,433 +63,308 @@ export default function HomePage() {
       </header>
 
       {/* Hero */}
-      <section className="relative overflow-hidden bg-slate-950 px-4 py-24 text-white sm:px-6 sm:py-32 lg:px-8">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-indigo-900/20 via-transparent to-transparent" />
-        <div className="relative mx-auto max-w-7xl">
-          <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
-            <div className="flex flex-col items-start gap-6">
-              <Badge
-                variant="secondary"
-                className="bg-indigo-500/10 text-indigo-300 hover:bg-indigo-500/20"
+      <section className="relative overflow-hidden text-white" style={{ background: "#0B1020" }}>
+        {/* Radial glow decorations */}
+        <div
+          className="pointer-events-none absolute -top-32 right-0 h-[500px] w-[500px] rounded-full opacity-20"
+          style={{ background: "radial-gradient(circle, #6366F1, transparent 70%)" }}
+        />
+        <div
+          className="pointer-events-none absolute bottom-0 left-0 h-[300px] w-[300px] rounded-full opacity-10"
+          style={{ background: "radial-gradient(circle, #EC4899, transparent 70%)" }}
+        />
+
+        <div className="relative mx-auto max-w-6xl px-4 sm:px-6" style={{ padding: "88px 24px" }}>
+          <div className="grid items-center gap-14 lg:grid-cols-2">
+            {/* Left: copy */}
+            <div className="flex flex-col items-start gap-5">
+              {/* Badge */}
+              <span
+                className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold"
+                style={{ background: "rgba(99,102,241,.18)", color: "#C7D2FE", border: "1px solid rgba(99,102,241,.3)" }}
               >
-                <Sparkles className="mr-1 h-3 w-3" />
-                Ahora con IDM-VTON integrado
-              </Badge>
-              <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl lg:text-6xl">
+                <Sparkles className="h-3 w-3" />
+                Catálogos con IA para mayoristas
+              </span>
+
+              <h1 className="text-4xl font-extrabold tracking-tight leading-tight sm:text-5xl">
                 Catálogos profesionales{" "}
-                <span className="text-indigo-400">sin sesiones fotográficas</span>
+                <span style={{ color: "#EC4899" }}>sin sesiones de fotos</span>
               </h1>
-              <p className="max-w-lg text-lg leading-8 text-slate-300">
-                Transforma fotos planas o en maniquí de tus prendas en catálogos
-                visuales sobre modelos reales usando Inteligencia Artificial, en
-                menos de 5 minutos.
+
+              <p className="max-w-lg text-base leading-relaxed" style={{ color: "#94A3B8" }}>
+                Subí una foto plana o en maniquí de tu prenda y la IA la viste sobre un modelo real.
+                Tu catálogo listo para WhatsApp en menos de 5 minutos.
               </p>
+
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Link
                   href="/registro"
-                  className={cn(
-                    buttonVariants({ size: "lg" }),
-                    "bg-indigo-600 text-white hover:bg-indigo-500"
-                  )}
+                  className="inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-base font-semibold text-white transition-colors"
+                  style={{ background: "#6366F1", boxShadow: "0 4px 14px rgba(99,102,241,.4)" }}
                 >
                   Empezar gratis
-                  <ArrowRight className="ml-2 h-4 w-4" />
+                  <ArrowRight className="h-4 w-4" />
                 </Link>
-                <Link
+                <a
                   href="#como-funciona"
-                  className={cn(
-                    buttonVariants({ variant: "outline", size: "lg" }),
-                    "border-slate-700 bg-transparent text-white hover:bg-slate-800 hover:text-white"
-                  )}
+                  className="inline-flex items-center justify-center rounded-full px-6 py-3 text-base font-semibold transition-colors"
+                  style={{ border: "1.5px solid rgba(255,255,255,.2)", color: "#fff", background: "transparent" }}
                 >
                   Ver cómo funciona
-                </Link>
+                </a>
               </div>
-              <div className="flex items-center gap-4 text-sm text-slate-400">
-                <div className="flex items-center gap-1.5">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-                  <span>Sin tarjeta de crédito</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-                  <span>Prueba gratis de 14 días</span>
-                </div>
-              </div>
-            </div>
 
-            {/* Abstract Visual */}
-            <div className="relative hidden lg:block">
-              <div className="grid grid-cols-2 gap-4">
-                <Card className="border-slate-800 bg-slate-900/60 backdrop-blur">
-                  <CardContent className="flex flex-col items-center justify-center p-6 text-center">
-                    <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-800">
-                      <Camera className="h-5 w-5 text-slate-300" />
-                    </div>
-                    <p className="text-sm font-medium text-slate-200">
-                      Foto plana o maniquí
-                    </p>
-                    <p className="mt-1 text-xs text-slate-400">
-                      Sube tu imagen original
-                    </p>
-                  </CardContent>
-                </Card>
-                <Card className="border-indigo-500/30 bg-indigo-950/40 backdrop-blur">
-                  <CardContent className="flex flex-col items-center justify-center p-6 text-center">
-                    <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-indigo-500/20">
-                      <Sparkles className="h-5 w-5 text-indigo-300" />
-                    </div>
-                    <p className="text-sm font-medium text-indigo-100">
-                      Procesamiento IA
-                    </p>
-                    <p className="mt-1 text-xs text-indigo-200/70">
-                      IDM-VTON en segundos
-                    </p>
-                  </CardContent>
-                </Card>
-                <Card className="col-span-2 border-emerald-500/20 bg-emerald-950/30 backdrop-blur">
-                  <CardContent className="flex flex-col items-center justify-center p-6 text-center">
-                    <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/20">
-                      <Share2 className="h-5 w-5 text-emerald-300" />
-                    </div>
-                    <p className="text-sm font-medium text-emerald-100">
-                      Catálogo listo para compartir
-                    </p>
-                    <p className="mt-1 text-xs text-emerald-200/70">
-                      Enlace directo por WhatsApp a tus revendedores
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>
-              {/* Decorative elements */}
-              <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-indigo-500/10 blur-3xl" />
-              <div className="absolute -bottom-8 -left-8 h-32 w-32 rounded-full bg-emerald-500/10 blur-3xl" />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Trust Bar */}
-      <section className="border-b border-border bg-background px-4 py-10 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-7xl">
-          <p className="mb-6 text-center text-sm font-medium uppercase tracking-wider text-muted-foreground">
-            Confiado por mayoristas de ropa en toda la región
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-8 opacity-60 grayscale transition-all hover:grayscale-0 sm:gap-12">
-            {["ModaCentro", "Textiles del Sur", "RopaMayor", "EstiloB2B", "FashionHub"].map(
-              (brand) => (
-                <span
-                  key={brand}
-                  className="text-lg font-bold tracking-tight text-foreground"
-                >
-                  {brand}
+              <div className="flex items-center gap-5 text-sm" style={{ color: "#94A3B8" }}>
+                <span className="flex items-center gap-1.5">
+                  <CheckCircle2 className="h-4 w-4" style={{ color: "#34D399" }} />
+                  Sin tarjeta de crédito
                 </span>
-              )
-            )}
+                <span className="flex items-center gap-1.5">
+                  <CheckCircle2 className="h-4 w-4" style={{ color: "#34D399" }} />
+                  30 días de prueba
+                </span>
+              </div>
+            </div>
+
+            {/* Right: hero cards */}
+            <div className="hidden lg:grid grid-cols-2 gap-4">
+              {/* Card 1: Camera */}
+              <div
+                className="rounded-2xl p-5"
+                style={{ background: "rgba(148,163,184,.1)", border: "1px solid rgba(148,163,184,.15)" }}
+              >
+                <div
+                  className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl"
+                  style={{ background: "rgba(148,163,184,.2)", color: "#CBD5E1" }}
+                >
+                  <Camera className="h-5 w-5" />
+                </div>
+                <div className="text-sm font-semibold text-white">Foto plana o maniquí</div>
+                <div className="mt-1 text-xs" style={{ color: "#94A3B8" }}>Subí tu imagen original</div>
+              </div>
+
+              {/* Card 2: Sparkles */}
+              <div
+                className="rounded-2xl p-5"
+                style={{ background: "rgba(99,102,241,.14)", border: "1px solid rgba(99,102,241,.3)" }}
+              >
+                <div
+                  className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl"
+                  style={{ background: "rgba(99,102,241,.25)", color: "#C7D2FE" }}
+                >
+                  <Sparkles className="h-5 w-5" />
+                </div>
+                <div className="text-sm font-semibold" style={{ color: "#E0E7FF" }}>La IA viste el modelo</div>
+                <div className="mt-1 text-xs" style={{ color: "#C7D2FE" }}>En segundos, look real</div>
+              </div>
+
+              {/* Card 3: WhatsApp — full width */}
+              <div
+                className="col-span-2 rounded-2xl p-5"
+                style={{ background: "rgba(236,72,153,.12)", border: "1px solid rgba(236,72,153,.28)" }}
+              >
+                <div
+                  className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl"
+                  style={{ background: "rgba(236,72,153,.22)", color: "#FBCFE8" }}
+                >
+                  <MessageCircle className="h-5 w-5" />
+                </div>
+                <div className="text-sm font-semibold" style={{ color: "#FCE7F3" }}>Catálogo listo para compartir</div>
+                <div className="mt-1 text-xs" style={{ color: "#FBCFE8" }}>
+                  Link directo por WhatsApp a tus revendedoras
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Problem / Solution */}
-      <section id="como-funciona" className="bg-background px-4 py-24 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-7xl">
-          <div className="mx-auto max-w-2xl text-center">
-            <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-              Olvídate de los altos costos de fotografía
+      {/* Cómo funciona */}
+      <section id="como-funciona" className="py-20 px-4 sm:px-6" style={{ background: "#FFFFFF" }}>
+        <div className="mx-auto max-w-6xl">
+          <div className="text-center mb-12">
+            <div
+              className="mb-3 inline-block text-xs font-bold uppercase tracking-widest"
+              style={{ color: "#6366F1" }}
+            >
+              Cómo funciona
+            </div>
+            <h2 className="text-3xl font-extrabold tracking-tight" style={{ color: "#111827" }}>
+              Tu catálogo en tres pasos
             </h2>
-            <p className="mt-4 text-lg text-muted-foreground">
-              Las sesiones fotográficas tradicionales retrasan tus lanzamientos y
-              consumen tu margen. Con Virtual Closet, subes tus fotos y la IA
-              hace el resto.
+            <p className="mt-4 max-w-xl mx-auto text-base" style={{ color: "#6B7280" }}>
+              Sin fotógrafo, sin estudio, sin esperar semanas. Vos subís, la IA trabaja, vos compartís.
             </p>
           </div>
 
-          <div className="mt-16 grid gap-8 md:grid-cols-3">
+          <div className="grid gap-8 md:grid-cols-3">
             {[
               {
-                icon: Camera,
-                title: "Sube tus prendas",
-                description:
-                  "Fotos planas, en maniquí o colgadas. No necesitas equipo profesional ni modelos.",
-                color: "bg-slate-100 text-slate-700",
+                Icon: Camera,
+                bg: "#EEF0FF",
+                color: "#6366F1",
+                num: "01",
+                title: "Subí tu prenda",
+                desc: "Foto plana, en percha o maniquí. No necesitás equipo profesional ni modelos.",
               },
               {
-                icon: Zap,
-                title: "IA genera el catálogo",
-                description:
-                  "Nuestro motor IDM-VTON virtualiza tus prendas sobre modelos reales automáticamente.",
-                color: "bg-indigo-100 text-indigo-700",
+                Icon: Sparkles,
+                bg: "#EEF0FF",
+                color: "#6366F1",
+                num: "02",
+                title: "La IA la viste",
+                desc: "Vestimos tu prenda sobre un modelo real con luz natural, automáticamente.",
               },
               {
-                icon: Share2,
-                title: "Comparte y vende más",
-                description:
-                  "Envía catálogos digitales interactivos a tus revendedores vía WhatsApp en segundos.",
-                color: "bg-emerald-100 text-emerald-700",
+                Icon: MessageCircle,
+                bg: "#FCE7F3",
+                color: "#EC4899",
+                num: "03",
+                title: "Compartí y vendé",
+                desc: "Armás un catálogo con link único y lo mandás por WhatsApp a tus revendedoras.",
               },
-            ].map((step, idx) => (
-              <div key={step.title} className="relative flex flex-col items-center text-center">
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl ${step.color}">
-                  <step.icon className="h-6 w-6" />
+            ].map((step) => (
+              <div key={step.num} className="flex flex-col items-center text-center px-4">
+                <div
+                  className="flex h-14 w-14 items-center justify-center rounded-2xl mb-4"
+                  style={{ background: step.bg, color: step.color }}
+                >
+                  <step.Icon className="h-6 w-6" />
                 </div>
-                <div className="mt-4 flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-600">
-                  0{idx + 1}
+                <div
+                  className="text-xs font-bold mb-2"
+                  style={{ color: "#6366F1" }}
+                >
+                  {step.num}
                 </div>
-                <h3 className="mt-4 text-lg font-semibold">{step.title}</h3>
-                <p className="mt-2 text-muted-foreground">{step.description}</p>
-                {idx < 2 && (
-                  <ChevronRight className="absolute right-0 top-16 hidden h-6 w-6 text-border md:block" />
-                )}
+                <h3 className="text-lg font-bold mb-2" style={{ color: "#111827" }}>{step.title}</h3>
+                <p className="text-sm leading-relaxed" style={{ color: "#6B7280" }}>{step.desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Features */}
-      <section id="funcionalidades" className="bg-slate-50 px-4 py-24 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-7xl">
-          <div className="mx-auto max-w-2xl text-center">
-            <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-              Todo lo que necesitas para escalar tus ventas
-            </h2>
-            <p className="mt-4 text-lg text-muted-foreground">
-              Diseñado específicamente para mayoristas de ropa que quieren
-              profesionalizar su presentación sin aumentar costos.
-            </p>
-          </div>
-
-          <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {[
-              {
-                icon: Sparkles,
-                title: "Virtualización IA",
-                desc: "Tecnología IDM-VTON que viste modelos reales con tus prendas en minutos.",
-              },
-              {
-                icon: Clock,
-                title: "Menos de 5 min",
-                desc: "Olvídate de jornadas de fotos. Genera cientos de looks en una mañana.",
-              },
-              {
-                icon: Layers,
-                title: "Catálogos digitales",
-                desc: "Crea colecciones interactivas con precios, talles y stock en tiempo real.",
-              },
-              {
-                icon: MessageCircle,
-                title: "Comparte fácil",
-                desc: "Enlaces directos para WhatsApp, email o redes sociales. Sin apps extra.",
-              },
-              {
-                icon: ShoppingBag,
-                title: "Gestión de stock",
-                desc: "Sincroniza disponibilidad para que tus revendedores vean solo lo que hay.",
-              },
-              {
-                icon: BarChart3,
-                title: "Analytics simple",
-                desc: "Sabe qué prendas generan más interés y optimiza tu inventario.",
-              },
-              {
-                icon: ShieldCheck,
-                title: "Seguridad B2B",
-                desc: "Catálogos privados por cliente. Controla quién ve qué precios y productos.",
-              },
-              {
-                icon: Zap,
-                title: "Alto rendimiento",
-                desc: "Plataforma optimizada para cargar rápido incluso con cientos de imágenes.",
-              },
-            ].map((feature) => (
-              <Card
-                key={feature.title}
-                className="group border-border bg-white transition-all hover:border-indigo-200 hover:shadow-sm"
-              >
-                <CardContent className="flex flex-col items-start p-6">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 transition-colors group-hover:bg-indigo-100">
-                    <feature.icon className="h-5 w-5 text-slate-700 transition-colors group-hover:text-indigo-600" />
-                  </div>
-                  <h3 className="mt-4 font-semibold">{feature.title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                    {feature.desc}
-                  </p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials */}
-      <section id="testimonios" className="bg-background px-4 py-24 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-7xl">
-          <div className="mx-auto max-w-2xl text-center">
-            <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+      {/* Social proof */}
+      <section id="funcionalidades" className="py-20 px-4 sm:px-6" style={{ background: "#F9FAFB" }}>
+        <div className="mx-auto max-w-6xl">
+          <div className="text-center mb-10">
+            <div
+              className="mb-3 inline-block text-xs font-bold uppercase tracking-widest"
+              style={{ color: "#6366F1" }}
+            >
+              Confían en nosotras
+            </div>
+            <h2 className="text-3xl font-extrabold tracking-tight" style={{ color: "#111827" }}>
               Mayoristas que ya transformaron su negocio
             </h2>
-            <p className="mt-4 text-lg text-muted-foreground">
-              Cientos de empresas confían en Virtual Closet para presentar sus
-              colecciones.
-            </p>
           </div>
 
-          <div className="mt-16 grid gap-8 md:grid-cols-3">
+          {/* Brand logos row */}
+          <div className="flex flex-wrap items-center justify-center gap-6 mb-12">
+            {["ModaCentro", "Textiles del Sur", "RopaMayor", "EstiloB2B", "FashionHub"].map((b) => (
+              <span
+                key={b}
+                className="text-base font-bold"
+                style={{ color: "#9CA3AF" }}
+              >
+                {b}
+              </span>
+            ))}
+          </div>
+
+          {/* Stats */}
+          <div className="grid grid-cols-3 gap-6 mb-12 max-w-2xl mx-auto text-center">
+            {[
+              { big: "5 min", label: "para tu primer catálogo" },
+              { big: "$0", label: "en fotógrafo o estudio" },
+              { big: "+3x", label: "más rápido al lanzar" },
+            ].map((s) => (
+              <div key={s.label}>
+                <div className="text-4xl font-extrabold tracking-tight" style={{ color: "#6366F1" }}>
+                  {s.big}
+                </div>
+                <div className="mt-1 text-sm" style={{ color: "#6B7280" }}>{s.label}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Testimonials */}
+          <div className="grid gap-6 md:grid-cols-3">
             {[
               {
-                quote:
-                  "Antes pagábamos miles por cada sesión fotográfica. Ahora generamos catálogos semanales en una tarde y nuestros revendedores reciben todo por WhatsApp.",
-                author: "Mariana López",
-                role: "Directora comercial, ModaCentro",
+                q: "Antes pagábamos miles por cada sesión. Ahora armo el catálogo en una tarde y mis revendedoras reciben todo por WhatsApp.",
+                a: "Mariana López",
+                r: "ModaCentro, Managua",
               },
               {
-                quote:
-                  "La virtualización con IA es sorprendente. La calidad visual es tan buena que nuestros clientes ni se dan cuenta de que no usamos modelos reales.",
-                author: "Carlos Ríos",
-                role: "CEO, Textiles del Sur",
+                q: "La calidad es tan buena que mis clientas ni se dan cuenta de que no usé modelos reales.",
+                a: "Carla Ríos",
+                r: "Boutique Karla, León",
               },
               {
-                quote:
-                  "Redujimos el tiempo de lanzamiento de nuevas colecciones de 3 semanas a 3 días. Eso se traduce en ventas más rápidas y menos stock estancado.",
-                author: "Andrea Fernández",
-                role: "Gerente de producto, FashionHub",
+                q: "Pasé de 3 semanas a 3 días para lanzar una colección nueva. Vendo más y me queda menos stock.",
+                a: "Andrea Fernández",
+                r: "EstiloB2B, Estelí",
               },
             ].map((t) => (
-              <Card key={t.author} className="border-border">
-                <CardContent className="flex flex-col justify-between p-8">
-                  <div>
-                    <div className="flex gap-0.5">
-                      {[...Array(5)].map((_, i) => (
-                        <Sparkles
-                          key={i}
-                          className="h-4 w-4 fill-indigo-500 text-indigo-500"
-                        />
-                      ))}
-                    </div>
-                    <p className="mt-4 text-sm leading-relaxed text-foreground italic">
-                      &ldquo;{t.quote}&rdquo;
-                    </p>
-                  </div>
-                  <div className="mt-6">
-                    <p className="text-sm font-semibold">{t.author}</p>
-                    <p className="text-xs text-muted-foreground">{t.role}</p>
-                  </div>
-                </CardContent>
-              </Card>
+              <div
+                key={t.a}
+                className="rounded-2xl p-6"
+                style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", boxShadow: "0 1px 3px rgba(17,24,39,.05)" }}
+              >
+                <div className="flex gap-0.5 mb-3">
+                  {[0, 1, 2, 3, 4].map((i) => <StarIcon key={i} />)}
+                </div>
+                <p className="text-sm leading-relaxed mb-4 italic" style={{ color: "#374151" }}>
+                  &ldquo;{t.q}&rdquo;
+                </p>
+                <div>
+                  <div className="text-sm font-bold" style={{ color: "#111827" }}>{t.a}</div>
+                  <div className="text-xs" style={{ color: "#6B7280" }}>{t.r}</div>
+                </div>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
       {/* Final CTA */}
-      <section className="bg-slate-950 px-4 py-24 text-white sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-4xl text-center">
-          <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl">
-            Empieza a vender más hoy mismo
+      <section id="precios" className="py-24 px-4 sm:px-6 text-center" style={{ background: "#0B1020", color: "#fff" }}>
+        <div className="mx-auto max-w-2xl">
+          <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl mb-4">
+            Empezá a vender más hoy mismo
           </h2>
-          <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-slate-300">
-            Únete a los mayoristas que ya eliminaron los costos de fotografía y
-            aceleraron sus ventas con catálogos profesionales generados por IA.
+          <p className="text-base mb-8" style={{ color: "#94A3B8" }}>
+            Unite a las mayoristas que ya eliminaron los costos de fotografía y aceleraron sus ventas
+            con catálogos generados por IA.
           </p>
-          <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <Link
-              href="/registro"
-              className={cn(
-                buttonVariants({ size: "lg" }),
-                "bg-indigo-600 text-white hover:bg-indigo-500"
-              )}
-            >
-              Crear cuenta gratis
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Link>
-            <Button
-              size="lg"
-              variant="outline"
-              className="border-slate-700 bg-transparent text-white hover:bg-slate-800 hover:text-white"
-            >
-              Hablar con ventas
-            </Button>
-          </div>
-          <p className="mt-6 text-sm text-slate-400">
-            Prueba gratuita de 14 días. Sin compromisos, sin tarjeta.
+          <Link
+            href="/registro"
+            className="inline-flex items-center gap-2 rounded-full px-8 py-4 text-base font-bold text-white"
+            style={{ background: "#6366F1", boxShadow: "0 4px 14px rgba(99,102,241,.4)" }}
+          >
+            Crear cuenta gratis
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+          <p className="mt-5 text-sm" style={{ color: "#64748B" }}>
+            Prueba de 30 días · sin compromiso · sin tarjeta.
           </p>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border bg-background px-4 py-12 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-7xl">
-          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-            <div>
-              <div className="flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-foreground">
-                  <Shirt className="h-4 w-4 text-background" />
-                </div>
-                <span className="text-lg font-semibold">NikaCommerce</span>
-              </div>
-              <p className="mt-4 text-sm text-muted-foreground">
-                La plataforma B2B para mayoristas de ropa que quieren catálogos
-                profesionales sin costos fotográficos.
-              </p>
+      <footer className="border-t py-6 px-4 sm:px-6" style={{ background: "#0B1020", borderColor: "rgba(255,255,255,.08)" }}>
+        <div className="mx-auto max-w-6xl flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="flex items-center gap-2" style={{ color: "#fff" }}>
+            <div className="flex h-6 w-6 items-center justify-center rounded-md" style={{ background: "#111827" }}>
+              <Shirt className="h-3 w-3 text-white" />
             </div>
-            <div>
-              <h4 className="text-sm font-semibold">Producto</h4>
-              <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
-                <li>
-                  <Link href="#funcionalidades" className="hover:text-foreground">
-                    Funcionalidades
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="hover:text-foreground">
-                    Precios
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="hover:text-foreground">
-                    Integraciones
-                  </Link>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-sm font-semibold">Empresa</h4>
-              <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
-                <li>
-                  <Link href="#" className="hover:text-foreground">
-                    Sobre nosotros
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="hover:text-foreground">
-                    Blog
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="hover:text-foreground">
-                    Contacto
-                  </Link>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-sm font-semibold">Legal</h4>
-              <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
-                <li>
-                  <Link href="#" className="hover:text-foreground">
-                    Privacidad
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="hover:text-foreground">
-                    Términos de uso
-                  </Link>
-                </li>
-              </ul>
-            </div>
+            <span className="text-sm font-bold">Virtual Closet</span>
           </div>
-          <div className="mt-12 border-t border-border pt-8 text-center text-sm text-muted-foreground">
-            © {new Date().getFullYear()} NikaCommerce. Todos los derechos
-            reservados.
+          <div className="text-sm" style={{ color: "#64748B" }}>
+            © 2026 NikaCommerce · Hecho en Nicaragua 🇳🇮
           </div>
         </div>
       </footer>

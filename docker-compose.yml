@@ -1,6 +1,8 @@
 services:
   postgres:
     image: postgres:16-alpine
+    networks:
+      - virtual_closet
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -16,6 +18,8 @@ services:
       retries: 5
 
   frontend:
+    networks:
+      - virtual_closet
     build:
       context: ./frontend
       dockerfile: Dockerfile
@@ -37,6 +41,8 @@ services:
       - fastapi
 
   fastapi:
+    networks:
+      - virtual_closet
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -68,7 +74,7 @@ services:
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
       CATVTON_LOCAL_URL: http://catvton:8000
       FASHN_LOCAL_URL: http://fashn:8000
-      TRYOFF_LOCAL_URL: http://tryoff-model:8000
+      TRYOFF_MODEL_URL: http://tryoff-model:8000
     depends_on:
       postgres:
         condition: service_healthy
@@ -79,6 +85,8 @@ services:
 
   minio:
     image: minio/minio:latest
+    networks:
+      - virtual_closet
     command: server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: minioadmin
@@ -99,6 +107,8 @@ services:
 
   rabbitmq:
     image: rabbitmq:3.12-management
+    networks:
+      - virtual_closet
     ports:
       - "5672:5672"
       - "15672:15672"
@@ -112,10 +122,12 @@ services:
       retries: 5
 
   celery_worker:
+    networks:
+      - virtual_closet
     build:
       context: ./backend
       dockerfile: Dockerfile
-    command: uv run celery -A core.celery_app worker --loglevel=info -Q vton.generation.normal,vton.generation.priority
+    command: uv run celery -A core.celery_app worker --loglevel=info -Q vton.generation.normal,vton.generation.priority,tryoff
     env_file:
       - ./backend/.env
     volumes:
@@ -144,7 +156,7 @@ services:
       # FASHN VTON v1.5 self-hosted: worker calls http://fashn:8000/classify + /predict
       # Requires: docker compose --profile gpu up fashn (when VTON_PROVIDER=fashn_local)
       FASHN_LOCAL_URL: http://fashn:8000
-      TRYOFF_LOCAL_URL: http://tryoff-model:8000
+      TRYOFF_MODEL_URL: http://tryoff-model:8000
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -158,6 +170,8 @@ services:
   # First run downloads ~24 GB of model weights; subsequent starts use the cache volume.
   catvton:
     profiles: ["gpu"]
+    networks:
+      - virtual_closet
     build:
       context: ./docker/catvton
       dockerfile: Dockerfile
@@ -187,6 +201,8 @@ services:
   # First run downloads ~2 GB of weights; subsequent starts use the cache volume.
   fashn:
     profiles: ["gpu"]
+    networks:
+      - virtual_closet
     build:
       context: ./docker/fashn
       dockerfile: Dockerfile
@@ -212,8 +228,11 @@ services:
       retries: 3
       start_period: 180s
 
+  # TryOff: base gated FLUX.2-klein-base-9B + LoRA fal/virtual-tryoff-lora — ver docker/flux/README.md
   tryoff-model:
     profiles: ["gpu"]
+    networks:
+      - virtual_closet
     build:
       context: ./docker/flux
       dockerfile: Dockerfile
@@ -238,6 +257,11 @@ services:
       retries: 3
       start_period: 300s
     restart: unless-stopped
+
+networks:
+  virtual_closet:
+    name: virtual_closet
+    driver: bridge
 
 volumes:
   postgres_data:

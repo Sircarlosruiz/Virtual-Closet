@@ -161,6 +161,7 @@ class TryoffJobService:
             "started_at": job.started_at,
             "completed_at": job.completed_at,
             "result_url": None,
+            "output_media_id": job.output_media_id,
             "error_reason": job.error_reason,
             "retry_count": job.retry_count,
         }
@@ -197,6 +198,7 @@ class TryoffJobService:
                 "started_at": job.started_at,
                 "completed_at": job.completed_at,
                 "result_url": None,
+                "output_media_id": job.output_media_id,
                 "error_reason": job.error_reason,
                 "retry_count": job.retry_count,
             }
@@ -206,3 +208,35 @@ class TryoffJobService:
                 )
             results.append(item)
         return results, total
+
+    async def get_jobs_by_ids(
+        self,
+        job_ids: list[uuid.UUID],
+        mayorista_id: uuid.UUID,
+    ) -> list[dict]:
+        """Return status dicts for the given job IDs (mayorista-scoped)."""
+        jobs = await self._tryoff_job_repo.get_by_ids(job_ids, mayorista_id)
+        by_id = {job.id: job for job in jobs}
+        results: list[dict] = []
+        for job_id in job_ids:
+            job = by_id.get(job_id)
+            if job is None:
+                continue
+            item: dict = {
+                "job_id": job.id,
+                "status": job.status,
+                "garment_type": job.garment_type,
+                "created_at": job.created_at,
+                "started_at": job.started_at,
+                "completed_at": job.completed_at,
+                "result_url": None,
+                "output_media_id": job.output_media_id,
+                "error_reason": job.error_reason,
+                "retry_count": job.retry_count,
+            }
+            if job.status == "complete" and job.output_minio_key:
+                item["result_url"] = await self._minio.get_presigned_url(
+                    bucket="generated", key=job.output_minio_key
+                )
+            results.append(item)
+        return results
