@@ -7,6 +7,10 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: virtual_closet_dev
+    deploy:
+      resources:
+        limits:
+          memory: 2gb
     ports:
       - "5432:5432"
     volumes:
@@ -24,6 +28,10 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       target: dev
+    deploy:
+      resources:
+        limits:
+          memory: 2gb
     command: pnpm dev
     volumes:
       - ./frontend:/app
@@ -46,6 +54,10 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    deploy:
+      resources:
+        limits:
+          memory: 1.5gb
     command: uv run uvicorn main:app --host 0.0.0.0 --port 8000 --reload
     volumes:
       - ./backend:/app
@@ -75,6 +87,7 @@ services:
       CATVTON_LOCAL_URL: http://catvton:8000
       FASHN_LOCAL_URL: http://fashn:8000
       TRYOFF_MODEL_URL: http://tryoff-model:8000
+      TRYOFF_MODEL_TIMEOUT_SECONDS: "1800"
     depends_on:
       postgres:
         condition: service_healthy
@@ -85,6 +98,10 @@ services:
 
   minio:
     image: minio/minio:latest
+    deploy:
+      resources:
+        limits:
+          memory: 1gb
     networks:
       - virtual_closet
     command: server /data --console-address ":9001"
@@ -107,6 +124,10 @@ services:
 
   rabbitmq:
     image: rabbitmq:3.12-management
+    deploy:
+      resources:
+        limits:
+          memory: 1gb
     networks:
       - virtual_closet
     ports:
@@ -156,7 +177,9 @@ services:
       # FASHN VTON v1.5 self-hosted: worker calls http://fashn:8000/classify + /predict
       # Requires: docker compose --profile gpu up fashn (when VTON_PROVIDER=fashn_local)
       FASHN_LOCAL_URL: http://fashn:8000
+      # tryoff-model is profile gpu|tryoff — start: docker compose --profile tryoff up -d tryoff-model
       TRYOFF_MODEL_URL: http://tryoff-model:8000
+      TRYOFF_MODEL_TIMEOUT_SECONDS: "1800"
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -164,37 +187,6 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
-
-  # CatVTON-Flux inference server — requires an NVIDIA GPU.
-  # Start with: docker compose --profile gpu up catvton
-  # First run downloads ~24 GB of model weights; subsequent starts use the cache volume.
-  catvton:
-    profiles: ["gpu"]
-    networks:
-      - virtual_closet
-    build:
-      context: ./docker/catvton
-      dockerfile: Dockerfile
-    # Lee HF_TOKEN, CATVTON_STEPS y CATVTON_GUIDANCE desde backend/.env
-    env_file:
-      - ./backend/.env
-    ports:
-      - "8001:8000"
-    volumes:
-      - catvton_cache:/app/model_cache
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 120s
 
   # FASHN VTON v1.5 inference server — maskless try-on, ~8 GB VRAM (NVIDIA GPU).
   # Start with: docker compose --profile gpu up fashn
@@ -229,8 +221,9 @@ services:
       start_period: 180s
 
   # TryOff: base gated FLUX.2-klein-base-9B + LoRA fal/virtual-tryoff-lora — ver docker/flux/README.md
+  # Start: docker compose --profile tryoff up -d tryoff-model  (or --profile gpu)
   tryoff-model:
-    profiles: ["gpu"]
+    profiles: ["gpu", "tryoff"]
     networks:
       - virtual_closet
     build:
@@ -240,9 +233,19 @@ services:
       - ./backend/.env
     ports:
       - "8003:8000"
+    environment:
+      # Dev: menos VRAM/RAM (exit 137 = OOM killer; ver docker/flux/README.md)
+      TRYOFF_LOW_VRAM: "true"
+      TRYOFF_OFFLOAD: "sequential"
+      TRYOFF_STEPS: "12"
+      TRYOFF_HEIGHT: "512"
+      TRYOFF_WIDTH: "512"
+      PYTORCH_CUDA_ALLOC_CONF: "expandable_segments:True"
+    shm_size: "2gb"
     volumes:
       - tryoff_weights:/app/weights
       - tryoff_cache:/app/model_cache
+      - ./docker/flux/main.py:/app/main.py:ro
     deploy:
       resources:
         reservations:
@@ -256,7 +259,8 @@ services:
       timeout: 10s
       retries: 3
       start_period: 300s
-    restart: unless-stopped
+    # 137 = SIGKILL (OOM del host). Evita bucle infinito de recargas del modelo (~18 GB).
+    restart: on-failure:3
 
 networks:
   virtual_closet:

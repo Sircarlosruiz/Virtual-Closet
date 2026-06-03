@@ -71,7 +71,7 @@ class Settings(BaseSettings):
     # TryOff garment extraction (FLUX.2-klein + virtual-tryoff-lora)
     # Self-hosted inference server (docker compose --profile gpu up tryoff-model)
     TRYOFF_MODEL_URL: str = "http://tryoff-model:8000"
-    TRYOFF_MODEL_TIMEOUT_SECONDS: int = 120
+    TRYOFF_MODEL_TIMEOUT_SECONDS: int = 1800
     TRYOFF_MAX_RETRIES: int = 2
     TRYOFF_RETRY_BASE_DELAY_SECONDS: int = 30
 

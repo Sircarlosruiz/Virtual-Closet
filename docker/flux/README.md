@@ -83,8 +83,49 @@ make flux-restart       # rebuild + health en :8003
 | `TRYOFF_STEPS` | `28` | Pasos de difusión |
 | `TRYOFF_GUIDANCE` | `5.0` | Guidance scale |
 | `TRYOFF_HEIGHT` / `TRYOFF_WIDTH` | `1024` / `768` | Resolución de salida |
+| `TRYOFF_LOW_VRAM` | `false` | `true` → CPU offload + VAE slicing (más lento, menos VRAM/RAM) |
+| `TRYOFF_OFFLOAD` | `sequential` si low VRAM | `sequential` (menos RAM) o `model` (más rápido, más RAM) |
 
 ## Errores frecuentes
+
+### `503` — GPU out of memory (OOM)
+
+El modelo carga bien pero falla en el primer paso de difusión (`0%|…| 0/N`). Causas habituales:
+
+- **FASHN o CatVTON** en la misma GPU: para TryOff, para el otro servicio (`docker compose stop fashn catvton`) o usa otra GPU.
+- **VRAM &lt; 24 GB** con todo el pipeline en CUDA: en `docker-compose.yml` (servicio `tryoff-model`) o en el entorno del contenedor:
+
+  ```env
+  TRYOFF_LOW_VRAM=true
+  TRYOFF_HEIGHT=512
+  TRYOFF_WIDTH=512
+  TRYOFF_STEPS=12
+  ```
+
+  Reinicia: `make flux-restart`.
+
+- Tras un OOM, el worker Celery reintenta; espera a que termine la inferencia en curso o reinicia `tryoff-model` para liberar VRAM.
+
+### El contenedor se reinicia solo (`exited with code 137`)
+
+**137 = SIGKILL** — casi siempre el **OOM killer de Linux** (se acabó la **RAM del host**, no solo la VRAM de la GPU). Con `TRYOFF_LOW_VRAM=true` el modelo sigue usando mucha RAM del sistema al cargar la base (~18 GB) y en inferencia.
+
+Qué hacer:
+
+1. **No ejecutar FASHN/CatVTON a la vez** en la misma máquina (`docker compose stop fashn catvton`).
+2. **WSL2:** en `%UserProfile%\.wslconfig` asigna más memoria, por ejemplo `memory=32GB`, luego `wsl --shutdown`.
+3. Usa offload secuencial (menor pico de RAM):
+
+   ```env
+   TRYOFF_LOW_VRAM=true
+   TRYOFF_OFFLOAD=sequential
+   TRYOFF_HEIGHT=512
+   TRYOFF_WIDTH=512
+   ```
+
+4. Arranca en segundo plano (`-d`) para no perder logs en la terminal; mira `docker compose logs -f tryoff-model` y busca líneas `memory before_inference: VmRSS`.
+5. Si Celery reintenta mientras el contenedor reinicia, **pausa jobs** o espera a que el modelo esté `healthy` antes de otra extracción.
+6. `restart: on-failure:3` en compose limita bucles de reinicio; si falla 3 veces, revisa RAM antes de `docker compose up tryoff-model` otra vez.
 
 ### `GatedRepoError` / 403 en `FLUX.2-klein-base-9B`
 

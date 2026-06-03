@@ -32,13 +32,20 @@ class TryoffModelClient:
             TryoffModelClientError: If the model service returns an error.
         """
         try:
-            async with httpx.AsyncClient(timeout=self._timeout) as client:
-                # Download the source image
+            download_timeout = httpx.Timeout(connect=30.0, read=60.0, write=30.0, pool=30.0)
+            inference_timeout = httpx.Timeout(
+                connect=30.0,
+                read=float(self._timeout),
+                write=120.0,
+                pool=30.0,
+            )
+
+            async with httpx.AsyncClient(timeout=download_timeout) as client:
                 image_response = await client.get(source_image_url)
                 image_response.raise_for_status()
                 image_bytes = image_response.content
 
-                # Call the model service
+            async with httpx.AsyncClient(timeout=inference_timeout) as client:
                 response = await client.post(
                     f"{self._base_url}/tryoff",
                     files={"image": ("source.jpg", image_bytes, "image/jpeg")},
@@ -62,5 +69,12 @@ class TryoffModelClient:
 
         except httpx.TimeoutException as exc:
             raise TryoffModelClientError(f"Request timeout: {exc}") from exc
+        except httpx.ConnectError as exc:
+            raise TryoffModelClientError(
+                "TryOff model service is not reachable at "
+                f"{self._base_url}. Start it with: "
+                "docker compose --profile gpu up -d tryoff-model "
+                "(or: make flux-restart)"
+            ) from exc
         except httpx.HTTPError as exc:
             raise TryoffModelClientError(f"HTTP error: {exc}") from exc

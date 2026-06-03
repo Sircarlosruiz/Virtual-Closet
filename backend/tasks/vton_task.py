@@ -71,12 +71,16 @@ def process_vton_job(self, job_id: str) -> None:
             # Step 3: Get presigned URLs for garment and model
             garment_url = asyncio.run(
                 minio.get_presigned_url(
-                    bucket="originals", key=job.garment_photo.minio_key
+                    bucket="originals",
+                    key=job.garment_photo.minio_key,
+                    for_browser=False,
                 )
             )
             model_url = asyncio.run(
                 minio.get_presigned_url(
-                    bucket="originals", key=job.model_photo.minio_key
+                    bucket="originals",
+                    key=job.model_photo.minio_key,
+                    for_browser=False,
                 )
             )
 

@@ -28,6 +28,7 @@
 """
 
 import asyncio
+import gc
 import io
 import logging
 import os
@@ -35,6 +36,10 @@ import time
 from contextlib import asynccontextmanager
 from typing import Literal
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
+)
 logger = logging.getLogger(__name__)
 
 import torch
@@ -73,6 +78,54 @@ def _base_model_id() -> str:
     return os.environ.get("TRYOFF_BASE_MODEL", _DEFAULT_BASE_MODEL).strip() or _DEFAULT_BASE_MODEL
 
 
+def _low_vram_enabled() -> bool:
+    return os.environ.get("TRYOFF_LOW_VRAM", "").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+        "on",
+    )
+
+
+def _offload_mode() -> str:
+    """sequential = lowest RAM peak; model = faster but more RAM."""
+    default = "sequential" if _low_vram_enabled() else "cuda"
+    return os.environ.get("TRYOFF_OFFLOAD", default).strip().lower()
+
+
+def _log_process_memory(label: str) -> None:
+    try:
+        with open("/proc/self/status", encoding="utf-8") as f:
+            for line in f:
+                if line.startswith(("VmRSS:", "VmSwap:")):
+                    logger.info("memory %s: %s", label, line.strip())
+    except OSError:
+        pass
+
+
+def _release_inference_memory() -> None:
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+    gc.collect()
+
+
+def _apply_pipeline_device(pipe) -> str:
+    """Configure GPU placement; use CPU offload when VRAM is limited."""
+    if hasattr(pipe, "enable_vae_slicing"):
+        pipe.enable_vae_slicing()
+    if hasattr(pipe, "enable_vae_tiling"):
+        pipe.enable_vae_tiling()
+    if _low_vram_enabled():
+        mode = _offload_mode()
+        if mode == "sequential":
+            pipe.enable_sequential_cpu_offload()
+            return "cpu_offload_sequential"
+        pipe.enable_model_cpu_offload()
+        return "cpu_offload"
+    pipe.to("cuda")
+    return "cuda"
+
+
 def _load_pipeline() -> None:
     """Carga base FLUX.2-klein + LoRA fal/virtual-tryoff-lora (mismo flujo que la card de fal)."""
     global _model_ready
@@ -90,10 +143,12 @@ def _load_pipeline() -> None:
         )
 
     print(f"Loading FLUX.2-klein base ({base_model})…")
+    _log_process_memory("before_load")
     pipe = Flux2KleinPipeline.from_pretrained(
         base_model,
         torch_dtype=torch.bfloat16,
         token=hf_token,
+        low_cpu_mem_usage=True,
     )
 
     print(f"Loading TryOff LoRA ({_TRYOFF_LORA_REPO})…")
@@ -105,11 +160,12 @@ def _load_pipeline() -> None:
     pipe.set_adapters(_TRYOFF_LORA_ADAPTER, adapter_weights=1.0)
     pipe.fuse_lora(adapter_names=[_TRYOFF_LORA_ADAPTER], lora_scale=1.0)
 
-    pipe.to("cuda")
+    device_mode = _apply_pipeline_device(pipe)
     _models["pipe"] = pipe
-    _models["device"] = "cuda"
+    _models["device"] = device_mode
     _model_ready = True
-    print("Pipeline loaded and fused. Ready.")
+    _log_process_memory("after_load")
+    print(f"Pipeline loaded and fused. Ready (device_mode={device_mode}).")
 
 
 @asynccontextmanager
@@ -194,6 +250,14 @@ async def tryoff(
     if not _model_ready:
         raise HTTPException(status_code=503, detail="Model is still loading.")
 
+    if _inference_lock.locked():
+        logger.warning("tryoff rejected: model busy with another extraction")
+        raise HTTPException(
+            status_code=503,
+            detail="Model is busy with another extraction. Retry later.",
+            headers={"Retry-After": "120"},
+        )
+
     raw = await image.read()
     source_img = _validate_image(raw)
     prompt = _PROMPT_TEMPLATES[garment_type]
@@ -204,6 +268,16 @@ async def tryoff(
     width = int(os.environ.get("TRYOFF_WIDTH", "768"))
 
     async with _inference_lock:
+        logger.info(
+            "tryoff inference started garment_type=%s input_bytes=%d steps=%d %dx%d offload=%s",
+            garment_type,
+            len(raw),
+            steps,
+            width,
+            height,
+            _models.get("device", "?"),
+        )
+        _log_process_memory("before_inference")
         t0 = time.monotonic()
         try:
             result = await asyncio.get_event_loop().run_in_executor(
@@ -218,14 +292,31 @@ async def tryoff(
                 ),
             )
         except torch.cuda.OutOfMemoryError:
-            logger.error("GPU OOM during inference")
-            raise HTTPException(status_code=503, detail="GPU out of memory. Retry later.")
+            logger.error(
+                "GPU OOM during inference (steps=%d %dx%d). "
+                "Stop other GPU containers (fashn/catvton), set TRYOFF_LOW_VRAM=true, "
+                "or lower TRYOFF_HEIGHT/TRYOFF_WIDTH.",
+                steps,
+                width,
+                height,
+            )
+            _release_inference_memory()
+            raise HTTPException(
+                status_code=503,
+                detail=(
+                    "GPU out of memory. Stop other GPU services, enable TRYOFF_LOW_VRAM=true, "
+                    "or reduce TRYOFF_HEIGHT/TRYOFF_WIDTH, then retry."
+                ),
+            )
         except TimeoutError:
             logger.error("Inference timed out")
             raise HTTPException(status_code=504, detail="Inference timed out.")
         except Exception:
             logger.exception("Unexpected inference error")
             raise HTTPException(status_code=500, detail="Internal inference error.")
+        finally:
+            _release_inference_memory()
+            _log_process_memory("after_inference")
 
         elapsed_ms = int((time.monotonic() - t0) * 1000)
 
@@ -256,5 +347,7 @@ async def health() -> JSONResponse:
             "status": "ok" if _model_ready else "loading",
             "model_loaded": _model_ready,
             "device": _models.get("device", "unknown"),
+            "low_vram": _low_vram_enabled(),
+            "offload": _offload_mode(),
         },
     )

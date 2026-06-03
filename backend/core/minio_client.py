@@ -30,20 +30,29 @@ class MinIOClient:
             )
 
     async def get_presigned_url(
-        self, bucket: str, key: str, expires: int = 900
+        self,
+        bucket: str,
+        key: str,
+        expires: int = 900,
+        *,
+        for_browser: bool = True,
     ) -> str:
-        """Generate a pre-signed URL for reading an object (default 15 min TTL)."""
+        """Generate a pre-signed URL for reading an object (default 15 min TTL).
+
+        Use for_browser=False when the URL is fetched from inside Docker
+        (e.g. Celery workers); localhost public endpoints are unreachable there.
+        """
         async with await self._get_client() as client:
             url = await client.generate_presigned_url(
                 "get_object",
                 Params={"Bucket": bucket, "Key": key},
                 ExpiresIn=expires,
             )
-            # Replace internal endpoint with public endpoint for browser access
-            url = url.replace(
-                settings.MINIO_ENDPOINT.rstrip("/"),
-                settings.MINIO_PUBLIC_ENDPOINT.rstrip("/"),
-            )
+            if for_browser:
+                url = url.replace(
+                    settings.MINIO_ENDPOINT.rstrip("/"),
+                    settings.MINIO_PUBLIC_ENDPOINT.rstrip("/"),
+                )
             return url
 
     async def file_exists(self, bucket: str, key: str) -> bool:
