@@ -66,7 +66,7 @@ export default function TryoffNewPage() {
 
       toast.success(`${jobIds.length} extraction job(s) started`);
 
-      router.push(`/tryoff/status?job_ids=${jobIds.join(",")}`);
+      router.push(`/extraction/status?job_ids=${jobIds.join(",")}`);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Error starting extraction";
       toast.error(message);

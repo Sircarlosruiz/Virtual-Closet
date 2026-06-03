@@ -2,11 +2,13 @@
 
 import { ArrowUpRight, Loader2, CheckCircle2, XCircle, Clock, PlayCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TryoffJob } from "@/lib/api/tryoff";
+import { GarmentPreviewModal } from "./garment-preview-modal";
 
 const STATUS_CONFIG: Record<
   TryoffJob["status"],
@@ -51,11 +53,18 @@ interface JobCardProps {
 
 export function JobCard({ job }: JobCardProps) {
   const router = useRouter();
+  const [previewOpen, setPreviewOpen] = useState(false);
   const config = STATUS_CONFIG[job.status];
 
   const handleUseInVton = () => {
     if (job.output_media_id) {
       router.push(`/dashboard/generate?garment_id=${job.output_media_id}`);
+    }
+  };
+
+  const handleThumbnailClick = () => {
+    if (job.status === "complete" && job.output_url && job.output_media_id) {
+      setPreviewOpen(true);
     }
   };
 
@@ -78,7 +87,19 @@ export function JobCard({ job }: JobCardProps) {
         )}
 
         {job.status === "complete" && job.output_url && (
-          <div className="rounded-lg border overflow-hidden">
+          <div
+            className="rounded-lg border overflow-hidden cursor-pointer hover:ring-2 hover:ring-primary/50 transition-ring"
+            onClick={handleThumbnailClick}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                handleThumbnailClick();
+              }
+            }}
+            aria-label={`Preview extracted ${GARMENT_LABELS[job.garment_type]}`}
+          >
             <img
               src={job.output_url}
               alt={`Extracted ${GARMENT_LABELS[job.garment_type]}`}
@@ -116,6 +137,17 @@ export function JobCard({ job }: JobCardProps) {
           </div>
         )}
       </CardContent>
+
+      {job.status === "complete" && job.output_url && job.output_media_id && (
+        <GarmentPreviewModal
+          imageUrl={job.output_url}
+          garmentType={job.garment_type}
+          mediaId={job.output_media_id}
+          jobId={job.job_id}
+          open={previewOpen}
+          onOpenChange={setPreviewOpen}
+        />
+      )}
     </Card>
   );
 }

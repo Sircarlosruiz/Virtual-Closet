@@ -15,7 +15,7 @@ test.describe("TryOff garment extraction flow", () => {
   });
 
   test("upload page renders with dropzone and garment chips", async ({ page }) => {
-    await page.goto("/tryoff/new");
+    await page.goto("/extraction/new");
 
     await expect(page.getByRole("heading", { name: "Extract Garments from Image" })).toBeVisible();
     await expect(page.getByRole("button", { name: /browse files/i })).toBeVisible();
@@ -29,7 +29,7 @@ test.describe("TryOff garment extraction flow", () => {
   });
 
   test("rejects non-image files with error message", async ({ page }) => {
-    await page.goto("/tryoff/new");
+    await page.goto("/extraction/new");
 
     // Create a fake non-image file
     const buffer = Buffer.from("not an image");
@@ -43,7 +43,7 @@ test.describe("TryOff garment extraction flow", () => {
   });
 
   test("shows preview after selecting valid image", async ({ page }) => {
-    await page.goto("/tryoff/new");
+    await page.goto("/extraction/new");
 
     // Create a small valid PNG file
     const pngBuffer = Buffer.from(
@@ -66,7 +66,7 @@ test.describe("TryOff garment extraction flow", () => {
   });
 
   test("garment chips toggle selection", async ({ page }) => {
-    await page.goto("/tryoff/new");
+    await page.goto("/extraction/new");
 
     const upperChip = page.getByRole("button", { name: "Upper Garment" });
     const lowerChip = page.getByRole("button", { name: "Lower Garment" });
@@ -90,14 +90,14 @@ test.describe("TryOff garment extraction flow", () => {
   });
 
   test("status page renders with job IDs from query params", async ({ page }) => {
-    await page.goto("/tryoff/status?job_ids=test-1,test-2");
+    await page.goto("/extraction/status?job_ids=test-1,test-2");
 
     await expect(page.getByRole("heading", { name: "Extraction Status" })).toBeVisible();
     await expect(page.getByText("2 jobs being processed")).toBeVisible();
   });
 
   test("full golden path: upload → select → submit → status", async ({ page }) => {
-    await page.goto("/tryoff/new");
+    await page.goto("/extraction/new");
 
     // Step 1: Upload image
     const pngBuffer = Buffer.from(

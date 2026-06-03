@@ -25,17 +25,17 @@ status: in-progress
 | Unit Brief (pipeline-ui) | ✅ | units/003-tryoff-pipeline-ui/unit-brief.md |
 | Stories (001-tryoff-model-service) | ✅ | units/001-tryoff-model-service/stories/ (3 stories) |
 | Stories (002-tryoff-job-service) | ✅ | units/002-tryoff-job-service/stories/ (7 stories) |
-| Stories (003-tryoff-pipeline-ui) | ✅ | units/003-tryoff-pipeline-ui/stories/ (5 stories) |
+| Stories (003-tryoff-pipeline-ui) | ✅ | units/003-tryoff-pipeline-ui/stories/ (6 stories) |
 | Bolt Plan | ✅ | memory-bank/bolts/014–020 (7 bolts) |
 
 ## Summary
 
 | Metric | Count |
 |--------|-------|
-| Functional Requirements | 8 |
+| Functional Requirements | 9 |
 | Non-Functional Requirements | 8 (performance, scalability, security, reliability) |
 | Units | 3 |
-| Stories | 15 |
+| Stories | 16 |
 | Bolts Planned | 7 |
 
 ## Decision Log
@@ -54,6 +54,7 @@ status: in-progress
 
 | Date | Change | Reason | Impact |
 |------|--------|--------|--------|
+| 2026-06-03 | Added FR-9 and Story 006: extraction result full-size preview on flat background | User identified gap: status page only showed a thumbnail; no full-size preview before VTON handoff | +1 story in 003-tryoff-pipeline-ui; UI-only, no new backend endpoints |
 
 ## Units Breakdown
 
@@ -61,7 +62,7 @@ status: in-progress
 |------|---------|-------|----------|
 | 001-tryoff-model-service | 3 | 2 (014, 015) | Must |
 | 002-tryoff-job-service | 7 | 3 (016, 017, 018) | Must |
-| 003-tryoff-pipeline-ui | 5 | 2 (019, 020) | Must |
+| 003-tryoff-pipeline-ui | 6 | 2 (019, 020) | Must |
 
 ## Ready for Construction
 

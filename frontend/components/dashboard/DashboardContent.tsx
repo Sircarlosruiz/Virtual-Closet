@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { PrendaGrid } from "@/components/prendas/PrendaGrid";
 import { usePrendas } from "@/hooks/usePrendas";
 import { useQueryClient } from "@tanstack/react-query";
-import { BookOpen, CheckCircle2 } from "lucide-react";
+import { BookOpen, CheckCircle2, Shirt } from "lucide-react";
 
 export function DashboardContent() {
   const queryClient = useQueryClient();
@@ -61,6 +61,28 @@ export function DashboardContent() {
           </span>
         </div>
       </div>
+
+      {/* Extraction shortcut */}
+      <Link href="/extraction/new">
+        <div className="rounded-xl border bg-card p-4 mb-6 hover:shadow-md transition-shadow cursor-pointer group">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <Shirt className="w-5 h-5" />
+            </div>
+            <div className="flex-1">
+              <div className="text-sm font-semibold group-hover:text-primary transition-colors">
+                Extraer prendas
+              </div>
+              <div className="text-xs text-muted-foreground">
+                Extrae prendas de tus imágenes para usarlas en VTON
+              </div>
+            </div>
+            <svg className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
+        </div>
+      </Link>
 
       {/* Garment header */}
       <div className="flex items-center justify-between mb-4">

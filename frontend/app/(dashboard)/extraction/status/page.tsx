@@ -29,7 +29,7 @@ export default function TryoffStatusPage() {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => router.push("/tryoff/new")}
+          onClick={() => router.push("/extraction/new")}
         >
           <ArrowLeft className="w-4 h-4" />
         </Button>

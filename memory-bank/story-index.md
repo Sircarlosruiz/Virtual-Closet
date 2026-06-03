@@ -110,11 +110,13 @@
 - [x] **003-extraction-status-display** ✅ GENERATED — Extraction Job Status Display — Must
 - [x] **004-extracted-garment-gallery** ✅ GENERATED — Extracted Garments in Media Library — Must
 - [x] **005-vton-handoff-action** ✅ GENERATED — One-Click VTON Handoff — Should
+- [x] **006-extraction-result-preview** ✅ PLANNED — Extracted Garment Full-Size Preview on Flat Background — Should
 
 ---
 
 ## Stories by Status
 
 - **Planned/Generated**: 21 (intents 003 and 004)
+- **Draft (new)**: 1 (intent 004 extension)
 - **In Progress**: 0
 - **Completed**: 30 (intents 001 and 002)

@@ -1,9 +1,9 @@
 ---
 intent: 004-tryoff-garment-extraction
 phase: inception
-status: draft
-created: 2026-05-31T00:00:00Z
-updated: 2026-05-31T00:00:00Z
+status: complete
+created: 2026-05-31T00:00:00.000Z
+updated: 2026-05-31T00:00:00.000Z
 ---
 
 # Requirements: TryOff Garment Extraction
@@ -70,6 +70,11 @@ Lifestyle/product photo of model wearing garment
 ### FR-8: Job History
 - **Description**: Mayoristas can view a history of past TryOff extractions, including source image, extracted garment output, garment type, and job status.
 - **Acceptance Criteria**: History list shows last N jobs with thumbnails and status; clicking an item shows detail.
+- **Priority**: Should
+
+### FR-9: Extraction Result Full-Size Preview
+- **Description**: After a TryOff job completes, the mayorista can view the extracted garment at full size on its flat/white background directly from the extraction status page. The preview provides a clear inspection of the garment before deciding to use it in VTON. Download and "Use in VTON" actions are available from this view.
+- **Acceptance Criteria**: Clicking a completed job's thumbnail on the status page opens a full-size preview of the garment on flat background; "Use in VTON" and download buttons are accessible from the preview; preview is reachable from both the extraction status page and the media library detail panel.
 - **Priority**: Should
 
 ---

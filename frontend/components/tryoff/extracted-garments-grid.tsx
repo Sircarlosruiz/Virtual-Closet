@@ -3,32 +3,18 @@
 import { useCallback, useEffect, useState } from "react";
 import { ExtractedGarment, getExtractedGarments } from "@/lib/api/extracted-garments";
 import { ExtractedGarmentCard } from "./extracted-garment-card";
+import { GarmentPreviewModal } from "./garment-preview-modal";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import { ArrowUpRight, Shirt } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { Shirt } from "lucide-react";
 import Link from "next/link";
 
-const GARMENT_LABELS: Record<string, string> = {
-  upper: "Upper Garment",
-  lower: "Lower Garment",
-  dress: "Full Dress",
-};
-
 export function ExtractedGarmentsGrid() {
-  const router = useRouter();
   const [items, setItems] = useState<ExtractedGarment[]>([]);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [selectedGarment, setSelectedGarment] = useState<ExtractedGarment | null>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   const loadGarments = useCallback(async () => {
     setLoading(true);
@@ -49,10 +35,6 @@ export function ExtractedGarmentsGrid() {
     loadGarments();
   }, [loadGarments]);
   /* eslint-enable react-hooks/set-state-in-effect */
-
-  const handleUseInVton = (garmentId: string) => {
-    router.push(`/dashboard/generate?garment_id=${garmentId}`);
-  };
 
   if (loading) {
     return (
@@ -77,7 +59,7 @@ export function ExtractedGarmentsGrid() {
         <p className="text-zinc-500 dark:text-zinc-400 mt-1 mb-4">
           Extrae prendas de tus imágenes para verlas aquí
         </p>
-        <Link href="/dashboard/tryoff/new">
+        <Link href="/dashboard/extraction/new">
           <Button>Extraer tu primera prenda</Button>
         </Link>
       </div>
@@ -91,7 +73,10 @@ export function ExtractedGarmentsGrid() {
           <ExtractedGarmentCard
             key={garment.id}
             garment={garment}
-            onOpenDetail={setSelectedGarment}
+            onOpenDetail={(g) => {
+              setSelectedGarment(g);
+              setPreviewOpen(true);
+            }}
           />
         ))}
       </div>
@@ -104,46 +89,20 @@ export function ExtractedGarmentsGrid() {
         </div>
       )}
 
-      <Sheet open={!!selectedGarment} onOpenChange={(open) => !open && setSelectedGarment(null)}>
-        <SheetContent>
-          {selectedGarment && (
-            <>
-              <SheetHeader>
-                <SheetTitle>Prenda Extraída</SheetTitle>
-                <SheetDescription>
-                  {GARMENT_LABELS[selectedGarment.garment_type] ?? selectedGarment.garment_type}
-                </SheetDescription>
-              </SheetHeader>
-              <div className="mt-6 space-y-4">
-                <div className="rounded-lg border overflow-hidden">
-                  <img
-                    src={selectedGarment.presigned_url}
-                    alt={selectedGarment.filename}
-                    className="w-full aspect-square object-cover"
-                  />
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <Badge variant="secondary">
-                    {GARMENT_LABELS[selectedGarment.garment_type]}
-                  </Badge>
-                  <span className="text-xs text-muted-foreground">
-                    {new Date(selectedGarment.created_at).toLocaleDateString()}
-                  </span>
-                </div>
-
-                <Button
-                  className="w-full gap-2"
-                  onClick={() => handleUseInVton(selectedGarment.id)}
-                >
-                  Use in VTON
-                  <ArrowUpRight className="w-4 h-4" />
-                </Button>
-              </div>
-            </>
-          )}
-        </SheetContent>
-      </Sheet>
+      {selectedGarment && (
+        <GarmentPreviewModal
+          imageUrl={selectedGarment.presigned_url}
+          garmentType={selectedGarment.garment_type}
+          mediaId={selectedGarment.id}
+          jobId={selectedGarment.source_job_id ?? "unknown"}
+          filename={selectedGarment.filename}
+          open={previewOpen}
+          onOpenChange={(open) => {
+            setPreviewOpen(open);
+            if (!open) setSelectedGarment(null);
+          }}
+        />
+      )}
     </>
   );
 }
