@@ -83,3 +83,51 @@ class MediaLibraryService:
         return await self._minio.get_presigned_url(
             bucket="originals", key=minio_key
         )
+
+    async def save_vton_result(
+        self,
+        mayorista_id: uuid.UUID,
+        minio_key: str,
+        filename: str,
+        content_type: str,
+        size_bytes: int,
+        batch_id: uuid.UUID,
+        batch_name: str,
+        garment_id: uuid.UUID,
+        model_id: uuid.UUID,
+        vton_job_id: uuid.UUID,
+    ) -> MediaItem:
+        """Save a VTON result image to the media library with batch metadata.
+
+        Args:
+            mayorista_id: The owner of the media item.
+            minio_key: The MinIO object key (result image).
+            filename: Filename for the media item.
+            content_type: MIME type (e.g., "image/jpeg").
+            size_bytes: Size of the file in bytes.
+            batch_id: The batch this result belongs to.
+            batch_name: Human-readable batch name.
+            garment_id: The garment used in the VTON job.
+            model_id: The model used in the VTON job.
+            vton_job_id: The VTON job that produced this result.
+
+        Returns:
+            The created MediaItem.
+        """
+        media_item = MediaItem(
+            mayorista_id=mayorista_id,
+            minio_key=minio_key,
+            media_type="vton_result",
+            filename=filename,
+            content_type=content_type,
+            size_bytes=size_bytes,
+            vton_job_id=vton_job_id,
+            item_metadata={
+                "type": "vton_result",
+                "batch_id": str(batch_id),
+                "batch_name": batch_name,
+                "garment_id": str(garment_id),
+                "model_id": str(model_id),
+            },
+        )
+        return await self._media_item_repo.create(media_item)

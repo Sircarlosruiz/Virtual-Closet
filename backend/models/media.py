@@ -81,6 +81,11 @@ class MediaItem(Base):
     content_type = Column(String(50), nullable=False)
     size_bytes = Column(Integer, nullable=False)
     item_metadata = Column("metadata", JSONB, nullable=True)  # Flexible metadata: garment_type, source_job_id, etc.
+    vton_job_id = Column(
+        UUID(as_uuid=True),
+        nullable=True,
+        unique=True,
+    )
     created_at = Column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
@@ -91,4 +96,5 @@ class MediaItem(Base):
         Index("idx_media_items_mayorista", "mayorista_id"),
         Index("idx_media_items_mayorista_created", "mayorista_id", "created_at"),
         Index("idx_media_items_type", "media_type"),
+        Index("idx_media_items_vton_job", "vton_job_id"),
     )

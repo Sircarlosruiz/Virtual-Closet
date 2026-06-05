@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
@@ -15,7 +15,7 @@ import { getExtractedGarment, ExtractedGarment } from "@/lib/api/extracted-garme
 
 type ClothType = "upper_body" | "lower_body" | "dress";
 
-export default function GeneratePage() {
+function GenerateScreen() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -173,5 +173,19 @@ export default function GeneratePage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function GeneratePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="max-w-2xl mx-auto px-4 py-6 text-center text-muted-foreground">
+          Cargando...
+        </div>
+      }
+    >
+      <GenerateScreen />
+    </Suspense>
   );
 }

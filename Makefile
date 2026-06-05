@@ -24,9 +24,13 @@ dev: ## Run full stack in Docker (postgres, minio, rabbitmq, celery, API + FE wi
 	@echo "TryOff needs the GPU model: run 'make flux-restart' in another terminal (or --profile tryoff)."
 	$(DOCKER_COMPOSE) up --build
 
-dev-models: ## Run TryOff GPU model (one GPU service at a time to avoid OOM)
+dev-fashn: ## Run FASHN GPU model (one GPU service at a time to avoid OOM)
 	@echo "Nota: no levantes fashn y tryoff-model a la vez en la misma GPU."
-	$(DOCKER_COMPOSE) --profile tryoff up tryoff-model
+	$(DOCKER_COMPOSE) --profile gpu up fashn
+
+dev-tryoff: ## Run TryOff GPU model (one GPU service at a time to avoid OOM)
+	@echo "Nota: no levantes fashn y tryoff-model a la vez en la misma GPU."
+	$(DOCKER_COMPOSE) --profile gpu up tryoff-model
 
 dev-backend: ## Run backend locally with hot reload (requires make docker-up for infra)
 	cd $(BACKEND_DIR) && uv run uvicorn main:app --host 0.0.0.0 --port 8000 --reload

@@ -107,6 +107,24 @@ def process_vton_job(self, job_id: str) -> None:
             job.completed_at = datetime.now(timezone.utc)
             session.commit()
 
+            # Batch callback: update BatchItem if this job belongs to a batch
+            if job.batch_item_id:
+                try:
+                    from services.batch_completion_handler import (
+                        BatchCompletionHandlerSync,
+                    )
+
+                    handler = BatchCompletionHandlerSync()
+                    handler.on_vton_job_complete(job_id, result_key)
+                except Exception as callback_exc:
+                    # Log but don't fail the task — VtonJob is already complete
+                    import logging
+                    logging.getLogger(__name__).error(
+                        "Batch callback failed for job %s: %s",
+                        job_id,
+                        callback_exc,
+                    )
+
         except Exception as exc:
             # Refresh job from DB to get latest state
             session.refresh(job)
@@ -130,9 +148,43 @@ def process_vton_job(self, job_id: str) -> None:
                     )[:500]
                     job.completed_at = datetime.now(timezone.utc)
                     session.commit()
+
+                    # Batch callback: mark BatchItem failed
+                    if job.batch_item_id:
+                        try:
+                            from services.batch_completion_handler import (
+                                BatchCompletionHandlerSync,
+                            )
+
+                            handler = BatchCompletionHandlerSync()
+                            handler.on_vton_job_failed(job_id, job.error_reason)
+                        except Exception as callback_exc:
+                            import logging
+                            logging.getLogger(__name__).error(
+                                "Batch callback failed for job %s: %s",
+                                job_id,
+                                callback_exc,
+                            )
             else:
                 # Non-retriable error → fail immediately
                 job.status = "failed"
                 job.error_reason = str(exc)[:500]
                 job.completed_at = datetime.now(timezone.utc)
                 session.commit()
+
+                # Batch callback: mark BatchItem failed
+                if job.batch_item_id:
+                    try:
+                        from services.batch_completion_handler import (
+                            BatchCompletionHandlerSync,
+                        )
+
+                        handler = BatchCompletionHandlerSync()
+                        handler.on_vton_job_failed(job_id, job.error_reason)
+                    except Exception as callback_exc:
+                        import logging
+                        logging.getLogger(__name__).error(
+                            "Batch callback failed for job %s: %s",
+                            job_id,
+                            callback_exc,
+                        )

@@ -5,6 +5,7 @@ from models.vton_job import VTONJob, ClothType, JobStatus
 from models.catalogo import Catalogo, CatalogoItem, CatalogStatus
 from models.customer import Customer
 from models.tryoff_job import SourceImage, TryoffJob, GarmentType, TryoffJobStatus
+from models.batch_job import BatchJob, BatchItem, BatchJobStatus, BatchItemStatus
 
 __all__ = [
     "Mayorista",
@@ -24,4 +25,8 @@ __all__ = [
     "TryoffJob",
     "GarmentType",
     "TryoffJobStatus",
+    "BatchJob",
+    "BatchItem",
+    "BatchJobStatus",
+    "BatchItemStatus",
 ]

@@ -59,6 +59,11 @@ class VTONJob(Base):
     max_retries = Column(Integer, nullable=False, default=3)
     error_reason = Column(Text, nullable=True)
     result_minio_key = Column(String(512), unique=True, nullable=True)
+    batch_item_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("batch_items.id", ondelete="SET NULL"),
+        nullable=True,
+    )
     created_at = Column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
@@ -68,6 +73,7 @@ class VTONJob(Base):
     mayorista = relationship("Mayorista", back_populates="vton_jobs")
     garment_photo = relationship("GarmentPhoto", foreign_keys=[garment_photo_id])
     model_photo = relationship("ModelPhoto", foreign_keys=[model_photo_id])
+    batch_item = relationship("BatchItem", foreign_keys=[batch_item_id])
 
     __table_args__ = (
         CheckConstraint(
@@ -80,4 +86,5 @@ class VTONJob(Base):
         ),
         Index("idx_vton_jobs_mayorista", "mayorista_id"),
         Index("idx_vton_jobs_mayorista_created", "mayorista_id", "created_at"),
+        Index("idx_vton_jobs_batch_item", "batch_item_id"),
     )

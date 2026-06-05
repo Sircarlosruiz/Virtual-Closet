@@ -1,10 +1,10 @@
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api";
 
-export default function PortalAuthPage() {
+function PortalAuthScreen() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
@@ -62,4 +62,21 @@ export default function PortalAuthPage() {
   }
 
   return null;
+}
+
+export default function PortalAuthPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center">
+            <div className="w-8 h-8 border-2 border-zinc-900 dark:border-zinc-100 border-t-transparent rounded-full animate-spin mx-auto" />
+            <p className="mt-4 text-zinc-600 dark:text-zinc-400">Cargando...</p>
+          </div>
+        </div>
+      }
+    >
+      <PortalAuthScreen />
+    </Suspense>
+  );
 }

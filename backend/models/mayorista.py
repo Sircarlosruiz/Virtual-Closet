@@ -40,3 +40,4 @@ class Mayorista(Base):
     customers = relationship("Customer", back_populates="mayorista", lazy="dynamic")
     tryoff_source_images = relationship("SourceImage", back_populates="mayorista", lazy="dynamic")
     tryoff_jobs = relationship("TryoffJob", back_populates="mayorista", lazy="dynamic")
+    batch_jobs = relationship("BatchJob", back_populates="mayorista", lazy="dynamic")

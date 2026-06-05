@@ -1,9 +1,9 @@
 # Global Story Index
 
 ## Overview
-- **Total stories**: 51
-- **Generated**: 51
-- **Last updated**: 2026-05-31
+- **Total stories**: 62
+- **Generated**: 62
+- **Last updated**: 2026-06-04
 
 ---
 
@@ -114,9 +114,32 @@
 
 ---
 
+---
+
+### 005-batch-vton-generation
+
+#### Unit: 001-batch-job-service
+
+- [x] **001-create-batch-job** ✅ GENERATED — Create BatchJob and Persist Items — Must
+- [x] **002-enqueue-batch-items** ✅ GENERATED — Enqueue All Items as VtonJobs — Must
+- [x] **003-track-item-status** ✅ GENERATED — Track Per-Item Status via Celery Callback — Must
+- [x] **004-partial-failure-isolation** ✅ GENERATED — Partial Failure Isolation — Must
+- [x] **005-retry-failed-item** ✅ GENERATED — Retry Failed Batch Item — Must
+- [x] **006-auto-save-to-media-library** ✅ GENERATED — Auto-Save Completed Item to Media Library — Must
+- [x] **007-batch-history** ✅ GENERATED — Batch History API — Should
+
+#### Unit: 002-batch-vton-generation-ui
+
+- [x] **001-batch-creation-flow** ✅ GENERATED — Batch Creation Flow — Must
+- [x] **002-batch-progress-page** ✅ GENERATED — Batch Progress Page — Must
+- [x] **003-retry-failed-item-ui** ✅ GENERATED — Retry Failed Item UI — Must
+- [x] **004-batch-history-page** ✅ GENERATED — Batch History Page — Should
+
+---
+
 ## Stories by Status
 
-- **Planned/Generated**: 21 (intents 003 and 004)
-- **Draft (new)**: 1 (intent 004 extension)
+- **Planned/Generated**: 32 (intents 003, 004, 005)
+- **Draft (new)**: 0
 - **In Progress**: 0
 - **Completed**: 30 (intents 001 and 002)

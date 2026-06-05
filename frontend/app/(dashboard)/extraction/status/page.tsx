@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { Suspense, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { ArrowLeft, CheckCircle2 } from "lucide-react";
 
@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { JobList } from "@/components/tryoff/job-list";
 import { useTryoffJobs } from "@/hooks/use-tryoff-jobs";
 
-export default function TryoffStatusPage() {
+function TryoffStatusScreen() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const jobIdsParam = searchParams.get("job_ids") ?? "";
@@ -103,5 +103,19 @@ export default function TryoffStatusPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function TryoffStatusPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="max-w-3xl mx-auto px-4 py-6 text-center text-muted-foreground">
+          Loading extraction status...
+        </div>
+      }
+    >
+      <TryoffStatusScreen />
+    </Suspense>
   );
 }

@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-05-31T16:30:00Z
-total_decisions: 4
+last_updated: 2026-06-04T00:00:00Z
+total_decisions: 11
 ---
 
 # Decision Index
@@ -19,6 +19,62 @@ Use this to find relevant prior decisions when working on related features.
 ## Decisions
 
 <!-- Entries are appended below in reverse chronological order (newest first) -->
+
+### ADR-011: Celery Retry with Error Flag for Media Save Failures
+- **Status**: accepted
+- **Date**: 2026-06-04
+- **Bolt**: 025-batch-job-service (001-batch-job-service)
+- **Path**: `bolts/025-batch-job-service/adr-011-media-save-retry-strategy.md`
+- **Summary**: Retry media save up to 3 times with exponential backoff on MinIO failures. If all retries fail, set `media_save_error` flag on the batch item for manual re-save by the mayorista.
+- **Read when**: Implementing media library save operations, designing Celery retry policies for external service calls, handling transient storage failures, building graceful degradation patterns
+
+### ADR-010: Unique Constraint on vton_job_id in Media Items for Idempotency
+- **Status**: accepted
+- **Date**: 2026-06-04
+- **Bolt**: 025-batch-job-service (001-batch-job-service)
+- **Path**: `bolts/025-batch-job-service/adr-010-media-save-idempotency.md`
+- **Summary**: Add unique constraint on `media_items.vton_job_id` to prevent duplicate media entries from duplicate Celery callbacks. Application-level fast-path check (`result_media_id IS NOT NULL`) avoids unnecessary DB inserts for already-saved items.
+- **Read when**: Implementing idempotent media save operations, designing Celery callback idempotency, preventing duplicate records from duplicate task execution, adding unique constraints to existing tables
+
+### ADR-009: Atomic Counter Updates via SQLAlchemy F() Expressions
+- **Status**: accepted
+- **Date**: 2026-06-04
+- **Bolt**: 024-batch-job-service (001-batch-job-service)
+- **Path**: `bolts/024-batch-job-service/adr-009-atomic-counter-updates.md`
+- **Summary**: Use `UPDATE ... SET count = count + 1` with `RETURNING` for batch counter updates. PostgreSQL row-level locking guarantees no lost updates under concurrent Celery workers, with a single round-trip query.
+- **Read when**: Implementing concurrent counter increments, designing Celery completion callbacks, handling parallel updates to shared aggregates, preventing lost update race conditions
+
+### ADR-008: Explicit Callback in VtonJob Task for Batch Completion
+- **Status**: accepted
+- **Date**: 2026-06-04
+- **Bolt**: 024-batch-job-service (001-batch-job-service)
+- **Path**: `bolts/024-batch-job-service/adr-008-explicit-callback-vs-signals.md`
+- **Summary**: Add an explicit conditional callback call at the end of the existing `process_vton_job` task to handle batch item status updates. Only fires when `VtonJob.batch_item_id` is set, keeping single-item VTON flows unaffected.
+- **Read when**: Extending Celery tasks with new side-effects, designing completion callbacks for async jobs, adding batch-aware behavior to existing task flows, choosing between signal handlers and explicit callbacks
+
+### ADR-007: Sequential Celery Task Publishing for Batch Enqueue
+- **Status**: accepted
+- **Date**: 2026-06-04
+- **Bolt**: 023-batch-job-service (001-batch-job-service)
+- **Path**: `bolts/023-batch-job-service/adr-007-sequential-celery-enqueue.md`
+- **Summary**: Use FastAPI BackgroundTasks to publish Celery tasks after the HTTP response is sent, keeping the API within the 500ms budget. DB commit is the critical path; Celery publishing is fire-and-forget with reconciliation for failure cases.
+- **Read when**: Implementing batch job submission, designing async task publishing patterns, optimizing API response times for bulk operations, configuring background task execution
+
+### ADR-006: Backwards-Compatible batch_item_id FK on VtonJob
+- **Status**: accepted
+- **Date**: 2026-06-04
+- **Bolt**: 023-batch-job-service (001-batch-job-service)
+- **Path**: `bolts/023-batch-job-service/adr-006-vtonjob-batch-item-fk.md`
+- **Summary**: Add a nullable `batch_item_id` FK to the existing `vton_jobs` table to link VTON jobs to their parent batch item. Existing single-item VTON flows are unaffected; completion callback checks for NULL before updating batch counters.
+- **Read when**: Modifying the VtonJob model, designing cross-domain schema references, implementing completion callbacks, adding optional foreign keys to existing tables
+
+### ADR-005: Use SQLAlchemy transaction.on_commit for Celery Task Publishing
+- **Status**: accepted
+- **Date**: 2026-06-04
+- **Bolt**: 023-batch-job-service (001-batch-job-service)
+- **Path**: `bolts/023-batch-job-service/adr-005-transactional-celery-publish.md`
+- **Summary**: Defer Celery task publishing until after the database transaction commits to prevent orphaned tasks. If DB commit fails, no tasks are sent. If Celery publish fails after commit, batch exists but items are not enqueued (requires retry).
+- **Read when**: Implementing async job orchestration, coordinating database writes with message broker publishing, designing distributed transaction patterns, preventing orphaned background tasks
 
 ### ADR-004: Separate Celery Queue for TryOff Jobs
 - **Status**: accepted
