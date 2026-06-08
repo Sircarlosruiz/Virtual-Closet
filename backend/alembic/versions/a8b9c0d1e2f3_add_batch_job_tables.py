@@ -1,7 +1,7 @@
 """add_batch_job_tables
 
 Revision ID: a8b9c0d1e2f3
-Revises: f7a8b9c0d1e2
+Revises: a2b3c4d5e6f7
 Create Date: 2026-06-04 00:00:00.000000+00:00
 
 """
@@ -11,7 +11,7 @@ from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision = "a8b9c0d1e2f3"
-down_revision = "f7a8b9c0d1e2"
+down_revision = "a2b3c4d5e6f7"
 branch_labels = None
 depends_on = None
 

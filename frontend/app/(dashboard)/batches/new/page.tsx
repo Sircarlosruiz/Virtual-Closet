@@ -82,7 +82,7 @@ export default function BatchCreatePage() {
       });
 
       toast.success("Lote creado exitosamente");
-      router.push(`/dashboard/batches/${result.id}`);
+      router.push(`/batches/${result.id}`);
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Error al crear el lote";

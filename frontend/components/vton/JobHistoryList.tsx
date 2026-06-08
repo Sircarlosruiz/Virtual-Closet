@@ -63,7 +63,7 @@ function JobRow({ item }: { item: HistoryItem }) {
   return (
     <button
       type="button"
-      onClick={() => router.push(`/dashboard/jobs/${item.job_id}`)}
+      onClick={() => router.push(`/jobs/${item.job_id}`)}
       className={cn(
         "flex items-center gap-3 w-full p-3 rounded-lg border border-border",
         "hover:bg-muted/50 transition-colors text-left",
@@ -190,7 +190,7 @@ export function JobHistoryList() {
             Crea tu primera prueba virtual con IA
           </p>
         </div>
-        <Button onClick={() => router.push("/dashboard/generate")}>
+        <Button onClick={() => router.push("/generate")}>
           Generar tu primera prueba
         </Button>
       </div>

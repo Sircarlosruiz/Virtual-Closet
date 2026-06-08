@@ -46,7 +46,7 @@ export function GarmentPreviewModal({
 
   const handleUseInVton = () => {
     onOpenChange(false);
-    router.push(`/dashboard/generate?garment_id=${mediaId}`);
+    router.push(`/generate?garment_id=${mediaId}`);
   };
 
   const handleDownload = async () => {

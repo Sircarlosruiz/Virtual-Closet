@@ -58,7 +58,7 @@ export function JobCard({ job }: JobCardProps) {
 
   const handleUseInVton = () => {
     if (job.output_media_id) {
-      router.push(`/dashboard/generate?garment_id=${job.output_media_id}`);
+      router.push(`/generate?garment_id=${job.output_media_id}`);
     }
   };
 

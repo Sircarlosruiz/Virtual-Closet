@@ -69,5 +69,41 @@ export function getDashboardPageTitle(pathname: string): string {
     return "Resultado de generación";
   }
 
+  if (pathname === "/extraction/new") {
+    return "Extraer prendas";
+  }
+
+  if (pathname === "/extraction/status") {
+    return "Estado de extracción";
+  }
+
+  if (pathname === "/media/extracted") {
+    return "Prendas extraídas";
+  }
+
+  if (pathname === "/generate") {
+    return "Generar prueba virtual";
+  }
+
+  if (pathname === "/jobs") {
+    return "Historial de generaciones";
+  }
+
+  if (/^\/jobs\/[^/]+$/.test(pathname)) {
+    return "Estado del trabajo";
+  }
+
+  if (pathname === "/batches") {
+    return "Lotes";
+  }
+
+  if (pathname === "/batches/new") {
+    return "Nuevo lote";
+  }
+
+  if (/^\/batches\/[^/]+$/.test(pathname)) {
+    return "Detalle del lote";
+  }
+
   return "Dashboard";
 }

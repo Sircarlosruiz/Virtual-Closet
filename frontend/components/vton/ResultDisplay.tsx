@@ -39,7 +39,7 @@ export function ResultDisplay({
 
         <Button
           variant="outline"
-          onClick={() => router.push("/dashboard/generate")}
+          onClick={() => router.push("/generate")}
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Intentar de nuevo
@@ -67,7 +67,7 @@ export function ResultDisplay({
         <Button
           variant="outline"
           size="sm"
-          onClick={() => router.push("/dashboard/generate")}
+          onClick={() => router.push("/generate")}
         >
           Generar otra
         </Button>

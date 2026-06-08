@@ -87,7 +87,7 @@ export function DashboardContent() {
       {/* Garment header */}
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold">Mis prendas</h2>
-        <Link href="/dashboard/media/extracted">
+        <Link href="/media/extracted">
           <Button variant="outline" size="sm" className="gap-2">
             Prendas extraídas
           </Button>

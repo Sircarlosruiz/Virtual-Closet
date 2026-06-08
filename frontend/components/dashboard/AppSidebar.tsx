@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Shirt, BookOpen, Users, Settings, Plus, LogOut } from "lucide-react";
+import { Shirt, BookOpen, Users, Plus, LogOut, Scissors, Wand2, Layers } from "lucide-react";
 
 import {
   Sidebar,
@@ -27,7 +27,12 @@ const NAV_ITEMS = [
   { href: "/dashboard", icon: Shirt, label: "Mis prendas" },
   { href: "/dashboard/catalogos", icon: BookOpen, label: "Catálogos" },
   { href: "/dashboard/customers", icon: Users, label: "Clientes" },
-  { href: "/dashboard/settings", icon: Settings, label: "Configuración" },
+];
+
+const VTON_NAV_ITEMS = [
+  { href: "/extraction/new", icon: Scissors, label: "Extracción" },
+  { href: "/generate", icon: Wand2, label: "Generaciones" },
+  { href: "/batches", icon: Layers, label: "Lotes" },
 ];
 
 export function AppSidebar({ user }: AppSidebarProps) {
@@ -80,6 +85,26 @@ export function AppSidebar({ user }: AppSidebarProps) {
           <SidebarGroupContent>
             <SidebarMenu>
               {NAV_ITEMS.map((item) => (
+                <SidebarMenuItem key={item.href}>
+                  <SidebarMenuButton
+                    render={<Link href={item.href} />}
+                    isActive={isDashboardNavActive(pathname, item.href)}
+                    tooltip={item.label}
+                  >
+                    <item.icon />
+                    <span>{item.label}</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* VTON nav */}
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {VTON_NAV_ITEMS.map((item) => (
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton
                     render={<Link href={item.href} />}

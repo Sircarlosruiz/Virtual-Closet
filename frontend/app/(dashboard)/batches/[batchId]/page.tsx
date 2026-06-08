@@ -189,7 +189,7 @@ export default function BatchProgressPage() {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => router.push("/dashboard/batches")}
+          onClick={() => router.push("/batches")}
         >
           <ArrowLeft className="w-4 h-4 mr-1" />
           Volver

@@ -59,7 +59,7 @@ export function ExtractedGarmentsGrid() {
         <p className="text-zinc-500 dark:text-zinc-400 mt-1 mb-4">
           Extrae prendas de tus imágenes para verlas aquí
         </p>
-        <Link href="/dashboard/extraction/new">
+        <Link href="/extraction/new">
           <Button>Extraer tu primera prenda</Button>
         </Link>
       </div>

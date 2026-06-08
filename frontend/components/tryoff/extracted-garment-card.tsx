@@ -32,7 +32,7 @@ export function ExtractedGarmentCard({
   const handleUseInVton = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
-    router.push(`/dashboard/generate?garment_id=${garment.id}`);
+    router.push(`/generate?garment_id=${garment.id}`);
   };
 
   const handleClick = () => {

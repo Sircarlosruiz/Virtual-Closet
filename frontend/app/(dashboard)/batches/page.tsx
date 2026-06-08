@@ -69,7 +69,7 @@ export default function BatchHistoryPage() {
             {total} {total === 1 ? "lote" : "lotes"} en total
           </p>
         </div>
-        <Button onClick={() => router.push("/dashboard/batches/new")}>
+        <Button onClick={() => router.push("/batches/new")}>
           <Plus className="w-4 h-4 mr-2" />
           Nuevo Lote
         </Button>
@@ -82,7 +82,7 @@ export default function BatchHistoryPage() {
             <p className="text-muted-foreground mb-4">
               No tienes lotes aún. Crea tu primer lote para comenzar.
             </p>
-            <Button onClick={() => router.push("/dashboard/batches/new")}>
+            <Button onClick={() => router.push("/batches/new")}>
               <Plus className="w-4 h-4 mr-2" />
               Crear tu primer lote
             </Button>
@@ -126,7 +126,7 @@ function BatchRow({ batch }: { batch: BatchListItem }) {
   return (
     <Card
       className="cursor-pointer hover:bg-accent/50 transition-colors"
-      onClick={() => router.push(`/dashboard/batches/${batch.id}`)}
+      onClick={() => router.push(`/batches/${batch.id}`)}
     >
       <CardContent className="pt-4 pb-4">
         <div className="flex items-center justify-between">

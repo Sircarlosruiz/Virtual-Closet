@@ -61,7 +61,7 @@ function GenerateScreen() {
       const jobId = result.job_id ?? result.id;
       if (jobId) {
         toast.success("Generación iniciada");
-        router.push(`/dashboard/jobs/${jobId}`);
+        router.push(`/jobs/${jobId}`);
       } else {
         toast.error("Respuesta inesperada del servidor");
       }

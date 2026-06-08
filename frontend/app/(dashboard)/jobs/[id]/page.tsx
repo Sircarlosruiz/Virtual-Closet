@@ -28,7 +28,7 @@ export default function JobStatusPage() {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => router.push("/dashboard/jobs")}
+          onClick={() => router.push("/jobs")}
         >
           <ArrowLeft className="w-4 h-4 mr-1" />
           Historial
