@@ -15,6 +15,9 @@ from api.routers.catalogo import router as catalogo_router
 from api.routers.customers import router as customers_router
 from api.routers.portal import router as portal_router
 from api.routers.batches import router as batches_router
+from api.routers.tenant import router as tenant_router
+from api.routers.admin import router as admin_router
+from api.routers.buyer_links import router as buyer_links_router, validate_router as buyer_links_validate_router
 import logging
 
 from core.config import email_backend_status, resend_api_key_is_configured, settings, use_console_email_backend
@@ -48,6 +51,10 @@ app.include_router(catalogo_router)
 app.include_router(customers_router)
 app.include_router(portal_router)
 app.include_router(batches_router)
+app.include_router(tenant_router)
+app.include_router(admin_router)
+app.include_router(buyer_links_router)
+app.include_router(buyer_links_validate_router)
 
 
 @app.exception_handler(RateLimitExceeded)

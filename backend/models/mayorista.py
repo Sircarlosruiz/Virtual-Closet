@@ -24,6 +24,7 @@ class Mayorista(Base):
         default=lambda: datetime.now(timezone.utc) + __import__("datetime").timedelta(days=30),
     )
     whatsapp = Column(String(20), nullable=True)
+    tenant_id = Column(UUID(as_uuid=True), nullable=True, index=True)
     created_at = Column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
@@ -41,3 +42,4 @@ class Mayorista(Base):
     tryoff_source_images = relationship("SourceImage", back_populates="mayorista", lazy="dynamic")
     tryoff_jobs = relationship("TryoffJob", back_populates="mayorista", lazy="dynamic")
     batch_jobs = relationship("BatchJob", back_populates="mayorista", lazy="dynamic")
+    tenant = relationship("Tenant", backref="mayoristas")

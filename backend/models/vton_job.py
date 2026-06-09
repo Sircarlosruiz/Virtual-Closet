@@ -43,6 +43,11 @@ class VTONJob(Base):
         ForeignKey("mayorista.id", ondelete="CASCADE"),
         nullable=False,
     )
+    tenant_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("tenants.id", ondelete="CASCADE"),
+        nullable=False,
+    )
     garment_photo_id = Column(
         UUID(as_uuid=True),
         ForeignKey("garment_photos.id", ondelete="RESTRICT"),
@@ -71,6 +76,7 @@ class VTONJob(Base):
     completed_at = Column(DateTime(timezone=True), nullable=True)
 
     mayorista = relationship("Mayorista", back_populates="vton_jobs")
+    tenant = relationship("Tenant", backref="vton_jobs")
     garment_photo = relationship("GarmentPhoto", foreign_keys=[garment_photo_id])
     model_photo = relationship("ModelPhoto", foreign_keys=[model_photo_id])
     batch_item = relationship("BatchItem", foreign_keys=[batch_item_id])
@@ -85,6 +91,7 @@ class VTONJob(Base):
             name="ck_vton_jobs_status",
         ),
         Index("idx_vton_jobs_mayorista", "mayorista_id"),
+        Index("idx_vton_jobs_tenant", "tenant_id"),
         Index("idx_vton_jobs_mayorista_created", "mayorista_id", "created_at"),
         Index("idx_vton_jobs_batch_item", "batch_item_id"),
     )

@@ -20,6 +20,11 @@ class GarmentPhoto(Base):
         ForeignKey("mayorista.id", ondelete="CASCADE"),
         nullable=False,
     )
+    tenant_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("tenants.id", ondelete="CASCADE"),
+        nullable=False,
+    )
     minio_key = Column(String(512), unique=True, nullable=False)
     filename = Column(String(255), nullable=False)
     content_type = Column(String(50), nullable=False)
@@ -29,9 +34,11 @@ class GarmentPhoto(Base):
     )
 
     mayorista = relationship("Mayorista", back_populates="garment_photos")
+    tenant = relationship("Tenant", backref="garment_photos")
 
     __table_args__ = (
         Index("idx_garment_photos_mayorista", "mayorista_id"),
+        Index("idx_garment_photos_tenant", "tenant_id"),
         Index("idx_garment_photos_mayorista_created", "mayorista_id", "uploaded_at"),
     )
 
@@ -47,6 +54,11 @@ class ModelPhoto(Base):
         ForeignKey("mayorista.id", ondelete="SET NULL"),
         nullable=True,
     )
+    tenant_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("tenants.id", ondelete="SET NULL"),
+        nullable=True,
+    )
     minio_key = Column(String(512), unique=True, nullable=False)
     label = Column(String(255), nullable=False)
     is_curated = Column(Boolean, nullable=False, default=False)
@@ -57,9 +69,11 @@ class ModelPhoto(Base):
     )
 
     mayorista = relationship("Mayorista", back_populates="model_photos")
+    tenant = relationship("Tenant", backref="model_photos")
 
     __table_args__ = (
         Index("idx_model_photos_mayorista", "mayorista_id"),
+        Index("idx_model_photos_tenant", "tenant_id"),
         Index("idx_model_photos_curated", "is_curated"),
     )
 
@@ -73,6 +87,11 @@ class MediaItem(Base):
     mayorista_id = Column(
         UUID(as_uuid=True),
         ForeignKey("mayorista.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    tenant_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("tenants.id", ondelete="CASCADE"),
         nullable=False,
     )
     minio_key = Column(String(512), unique=True, nullable=False)
@@ -91,9 +110,11 @@ class MediaItem(Base):
     )
 
     mayorista = relationship("Mayorista", back_populates="media_items")
+    tenant = relationship("Tenant", backref="media_items")
 
     __table_args__ = (
         Index("idx_media_items_mayorista", "mayorista_id"),
+        Index("idx_media_items_tenant", "tenant_id"),
         Index("idx_media_items_mayorista_created", "mayorista_id", "created_at"),
         Index("idx_media_items_type", "media_type"),
         Index("idx_media_items_vton_job", "vton_job_id"),

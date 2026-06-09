@@ -1,9 +1,9 @@
 # Global Story Index
 
 ## Overview
-- **Total stories**: 62
-- **Generated**: 62
-- **Last updated**: 2026-06-04
+- **Total stories**: 86
+- **Generated**: 86
+- **Last updated**: 2026-06-08
 
 ---
 
@@ -137,9 +137,48 @@
 
 ---
 
+---
+
+### 006-user-authentication-accounts
+
+#### Unit: 001-auth-service
+
+- [x] **001-mayorista-registration** ✅ GENERATED — Mayorista Registration — Must
+- [x] **002-email-verification** ✅ GENERATED — Email Verification — Must
+- [x] **003-login-email-password** ✅ GENERATED — Login with Email + Password — Must
+- [x] **004-account-lockout** ✅ GENERATED — Account Lockout on Failed Attempts — Must
+- [x] **005-totp-2fa-setup-and-challenge** ✅ GENERATED — TOTP 2FA Setup and Challenge — Must
+- [x] **006-sms-otp-2fa-fallback** ✅ GENERATED — SMS OTP 2FA Fallback — Must
+- [x] **007-google-oauth-login** ✅ GENERATED — Google OAuth Login via NextAuth — Must
+- [x] **008-password-reset** ✅ GENERATED — Password Reset Flow — Must
+- [x] **009-jwt-session-management** ✅ GENERATED — JWT Session Management and Logout — Must
+
+#### Unit: 002-tenant-account-service
+
+- [x] **001-create-manage-tenant** ✅ GENERATED — Create and Manage Tenant — Must
+- [x] **002-tenant-isolation-middleware** ✅ GENERATED — Tenant Isolation Middleware + Migration — Must
+- [x] **003-cross-tenant-access-returns-404** ✅ GENERATED — Cross-Tenant Access Returns 404 — Must
+- [x] **004-generate-buyer-catalog-link** ✅ GENERATED — Generate Buyer Catalog Access Link — Must
+- [x] **005-validate-buyer-catalog-link** ✅ GENERATED — Validate Buyer Catalog Access Link — Must
+- [x] **006-invite-admin-to-tenant** ✅ GENERATED — Invite Admin to Tenant — Should
+- [x] **007-revoke-admin-access** ✅ GENERATED — Revoke Admin Access — Should
+
+#### Unit: 003-auth-accounts-ui
+
+- [x] **001-registration-email-verification-pages** ✅ GENERATED — Registration & Email Verification Pages — Must
+- [x] **002-login-page-google-oauth** ✅ GENERATED — Login Page with Google OAuth — Must
+- [x] **003-2fa-setup-wizard** ✅ GENERATED — 2FA Setup Wizard — Must
+- [x] **004-2fa-challenge-screen** ✅ GENERATED — 2FA Challenge Screen — Must
+- [x] **005-password-reset-pages** ✅ GENERATED — Password Reset Pages — Must
+- [x] **006-buyer-catalog-access-page** ✅ GENERATED — Buyer Catalog Access Page — Must
+- [x] **007-session-aware-routing-auth-guard** ✅ GENERATED — Session-Aware Routing and Auth Guard — Must
+- [x] **008-account-settings-admin-buyer-links** ✅ GENERATED — Account Settings — Admin Management & Buyer Links — Should
+
+---
+
 ## Stories by Status
 
-- **Planned/Generated**: 32 (intents 003, 004, 005)
+- **Planned/Generated**: 56 (intents 003, 004, 005, 006)
 - **Draft (new)**: 0
 - **In Progress**: 0
 - **Completed**: 30 (intents 001 and 002)

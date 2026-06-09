@@ -35,6 +35,11 @@ class Catalogo(Base):
         ForeignKey("mayorista.id", ondelete="CASCADE"),
         nullable=False,
     )
+    tenant_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("tenants.id", ondelete="CASCADE"),
+        nullable=False,
+    )
     name = Column(String(100), nullable=False)
     status = Column(String(20), nullable=False, default="draft")
     item_count = Column(Integer, nullable=False, default=0)
@@ -54,6 +59,7 @@ class Catalogo(Base):
         cascade="all, delete-orphan",
         order_by="CatalogoItem.position",
     )
+    tenant = relationship("Tenant", backref="catalogos")
 
     __table_args__ = (
         CheckConstraint(
@@ -61,6 +67,7 @@ class Catalogo(Base):
             name="ck_catalogo_status",
         ),
         Index("idx_catalogo_mayorista", "mayorista_id"),
+        Index("idx_catalogo_tenant", "tenant_id"),
         Index("idx_catalogo_mayorista_created", "mayorista_id", "created_at"),
     )
 

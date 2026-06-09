@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-06-04T00:00:00Z
-total_decisions: 11
+last_updated: 2026-06-09T00:00:00Z
+total_decisions: 15
 ---
 
 # Decision Index
@@ -19,6 +19,38 @@ Use this to find relevant prior decisions when working on related features.
 ## Decisions
 
 <!-- Entries are appended below in reverse chronological order (newest first) -->
+
+### ADR-015: Postgres RLS Deferred as Future Defense-in-Depth
+- **Status**: accepted
+- **Date**: 2026-06-09
+- **Bolt**: 028-tenant-account-service (002-tenant-account-service)
+- **Path**: `bolts/028-tenant-account-service/adr-015-rls-deferred.md`
+- **Summary**: Postgres Row Level Security is deferred for the initial multi-tenancy release. Application-level tenant isolation (FastAPI dependency + SQLAlchemy event listener) provides sufficient protection. RLS should be evaluated after the initial release is stable.
+- **Read when**: Designing database-level access control, implementing tenant isolation hardening, evaluating PostgreSQL security features, planning security audits
+
+### ADR-014: Stateless Buyer Link Validation with Audit Trail
+- **Status**: accepted
+- **Date**: 2026-06-09
+- **Bolt**: 028-tenant-account-service (002-tenant-account-service)
+- **Path**: `bolts/028-tenant-account-service/adr-014-stateless-buyer-link-validation.md`
+- **Summary**: Buyer link validation is stateless JWT verification (no DB lookup) to meet the < 150ms latency requirement. The buyer_links table serves as an audit trail only. Links cannot be revoked before expiration.
+- **Read when**: Implementing buyer catalog access, designing token validation flows, optimizing authentication latency, building stateless authorization systems
+
+### ADR-013: Multi-Step Alembic Migration with Default Tenant Backfill
+- **Status**: accepted
+- **Date**: 2026-06-09
+- **Bolt**: 028-tenant-account-service (002-tenant-account-service)
+- **Path**: `bolts/028-tenant-account-service/adr-013-alembic-migration-strategy.md`
+- **Summary**: A 7-step atomic Alembic migration introduces tenant_id to all platform tables. A default tenant is created first, then existing rows are backfilled, then NOT NULL and FK constraints are added. Runs in a single transaction with rollback on failure.
+- **Read when**: Running multi-tenancy migrations, adding NOT NULL columns to tables with existing data, designing database backfill strategies, planning zero-downtime schema changes
+
+### ADR-012: Multi-Layer Tenant Isolation Enforcement
+- **Status**: accepted
+- **Date**: 2026-06-09
+- **Bolt**: 028-tenant-account-service (002-tenant-account-service)
+- **Path**: `bolts/028-tenant-account-service/adr-012-tenant-isolation-strategy.md`
+- **Summary**: Tenant isolation is enforced at two layers: FastAPI dependency injection (primary) and SQLAlchemy before_compile event listener (secondary). Both layers must agree, providing defense-in-depth against cross-tenant data leaks.
+- **Read when**: Implementing multi-tenant query scoping, designing tenant isolation middleware, adding new endpoints that access tenant-scoped data, reviewing security boundaries between tenants
 
 ### ADR-011: Celery Retry with Error Flag for Media Save Failures
 - **Status**: accepted

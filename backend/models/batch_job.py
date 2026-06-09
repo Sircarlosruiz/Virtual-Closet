@@ -49,6 +49,11 @@ class BatchJob(Base):
         ForeignKey("mayorista.id", ondelete="CASCADE"),
         nullable=False,
     )
+    tenant_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("tenants.id", ondelete="CASCADE"),
+        nullable=False,
+    )
     name = Column(String(255), nullable=False)
     status = Column(String(20), nullable=False, default="pending")
     total_items = Column(Integer, nullable=False)
@@ -60,6 +65,7 @@ class BatchJob(Base):
     completed_at = Column(DateTime(timezone=True), nullable=True)
 
     mayorista = relationship("Mayorista", back_populates="batch_jobs")
+    tenant = relationship("Tenant", backref="batch_jobs")
     items = relationship(
         "BatchItem", back_populates="batch", cascade="all, delete-orphan"
     )
@@ -78,6 +84,7 @@ class BatchJob(Base):
             name="ck_batch_jobs_counters",
         ),
         Index("idx_batch_jobs_mayorista", "mayorista_id"),
+        Index("idx_batch_jobs_tenant", "tenant_id"),
         Index(
             "idx_batch_jobs_mayorista_created", "mayorista_id", "created_at", postgresql_ops={"created_at": "DESC"}
         ),
