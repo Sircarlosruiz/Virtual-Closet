@@ -3,7 +3,7 @@
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import and_, func, select, update
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.admin_invitation import AdminInvitation
@@ -34,7 +34,7 @@ class AdminInvitationRepo:
             select(AdminInvitation).where(
                 AdminInvitation.email == email,
                 AdminInvitation.tenant_id == tenant_id,
-                AdminInvitation.accepted == False,
+                AdminInvitation.accepted.is_(False),
                 AdminInvitation.expires_at > datetime.now(timezone.utc),
             )
         )
@@ -57,7 +57,7 @@ class AdminInvitationRepo:
             select(AdminInvitation)
             .where(
                 AdminInvitation.tenant_id == tenant_id,
-                AdminInvitation.accepted == False,
+                AdminInvitation.accepted.is_(False),
             )
             .order_by(AdminInvitation.created_at.desc())
         )
@@ -79,7 +79,7 @@ class AdminInvitationRepo:
             update(AdminInvitation)
             .where(
                 AdminInvitation.tenant_id == tenant_id,
-                AdminInvitation.accepted == False,
+                AdminInvitation.accepted.is_(False),
                 AdminInvitation.expires_at < datetime.now(timezone.utc),
             )
             .values(accepted=True)

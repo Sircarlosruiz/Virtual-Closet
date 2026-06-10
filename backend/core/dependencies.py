@@ -140,5 +140,5 @@ async def get_tenant_context(
         tenant_id=tenant.id,
         tenant=tenant,
         user_id=mayorista.id,
-        role="owner",  # Default to owner; can be extended for admin roles
+        role="admin" if mayorista.role == "admin" else "owner",
     )

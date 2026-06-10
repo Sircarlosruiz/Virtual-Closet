@@ -148,3 +148,120 @@ async def send_magic_link_email(
             )
 
     await _run_send(_send)
+
+
+async def send_admin_invitation_email(
+    email: str,
+    tenant_name: str,
+    invitation_token: str,
+) -> None:
+    """Send admin invitation email with registration link."""
+    invitation_url = (
+        f"{settings.FRONTEND_URL}/auth/accept-invitation?token={invitation_token}"
+    )
+
+    def _send():
+        if not _should_use_resend():
+            _log_dev_email("Admin invitation", email, invitation_url)
+            return
+        try:
+            resend.Emails.send(
+                {
+                    "from": settings.RESEND_FROM_EMAIL,
+                    "to": email,
+                    "subject": f"Has sido invitado como administrador a {tenant_name}",
+                    "html": f"""
+                    <h1>Invitación de administrador</h1>
+                    <p>Has sido invitado como administrador de <strong>{tenant_name}</strong> en Virtual Closet.</p>
+                    <p><a href="{invitation_url}">Haz clic aquí para aceptar la invitación y crear tu cuenta</a></p>
+                    <p>Este enlace expira en 7 días.</p>
+                    """,
+                }
+            )
+            logger.info("Admin invitation email sent to %s", email)
+        except Exception as e:
+            logger.error(
+                "Failed to send admin invitation email to %s: %s — dev link: %s",
+                email,
+                e,
+                invitation_url,
+            )
+
+    await _run_send(_send)
+
+
+async def send_verification_email(
+    email: str,
+    business_name: str,
+    verification_url: str,
+) -> None:
+    """Send email verification link."""
+
+    def _send():
+        if not _should_use_resend():
+            _log_dev_email("Verification", email, verification_url)
+            return
+        try:
+            resend.Emails.send(
+                {
+                    "from": settings.RESEND_FROM_EMAIL,
+                    "to": email,
+                    "subject": "Verifica tu email en Virtual Closet",
+                    "html": f"""
+                    <h1>Verifica tu email</h1>
+                    <p>Hola {business_name},</p>
+                    <p>Gracias por registrarte en Virtual Closet. Para activar tu cuenta, haz clic en el siguiente enlace:</p>
+                    <p><a href="{verification_url}">Verificar mi email</a></p>
+                    <p>Este enlace expira en 24 horas.</p>
+                    <p>Si no creaste esta cuenta, puedes ignorar este email.</p>
+                    """,
+                }
+            )
+            logger.info("Verification email sent to %s", email)
+        except Exception as e:
+            logger.error(
+                "Failed to send verification email to %s: %s — dev link: %s",
+                email,
+                e,
+                verification_url,
+            )
+
+    await _run_send(_send)
+
+
+async def send_unlock_email(
+    email: str,
+    unlock_url: str,
+) -> None:
+    """Send account unlock link after lockout."""
+
+    def _send():
+        if not _should_use_resend():
+            _log_dev_email("Unlock", email, unlock_url)
+            return
+        try:
+            resend.Emails.send(
+                {
+                    "from": settings.RESEND_FROM_EMAIL,
+                    "to": email,
+                    "subject": "Tu cuenta ha sido bloqueada — Instrucciones de desbloqueo",
+                    "html": f"""
+                    <h1>Cuenta bloqueada</h1>
+                    <p>Tu cuenta ha sido bloqueada debido a múltiples intentos fallidos de inicio de sesión.</p>
+                    <p>Para desbloquear tu cuenta, haz clic en el siguiente enlace:</p>
+                    <p><a href="{unlock_url}">Desbloquear mi cuenta</a></p>
+                    <p>Este enlace expira en 24 horas.</p>
+                    <p>Si no intentaste iniciar sesión, tu contraseña podría estar comprometida. Considera cambiarla después de desbloquear.</p>
+                    """,
+                }
+            )
+            logger.info("Unlock email sent to %s", email)
+        except Exception as e:
+            logger.error(
+                "Failed to send unlock email to %s: %s — dev link: %s",
+                email,
+                e,
+                unlock_url,
+            )
+
+    await _run_send(_send)

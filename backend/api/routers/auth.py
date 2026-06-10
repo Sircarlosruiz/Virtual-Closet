@@ -1,4 +1,13 @@
-from fastapi import APIRouter, Depends, Request, Response, status
+"""Authentication endpoints.
+
+Handles mayorista registration, email verification, login (challenge_token),
+account lockout, and unlock.
+"""
+
+import asyncio
+from uuid import UUID
+
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.schemas.auth import (
@@ -7,6 +16,10 @@ from api.schemas.auth import (
     MeResponse,
     RegisterRequest,
     RegisterResponse,
+    ResendVerificationRequest,
+    ResendVerificationResponse,
+    UnlockResponse,
+    VerifyEmailResponse,
 )
 from core.config import settings
 from core.database import get_db
@@ -14,12 +27,35 @@ from core.dependencies import get_current_mayorista
 from core.limiter import limiter
 from core.security import create_access_token
 from models.mayorista import Mayorista
+from repositories.email_verification_token_repo import EmailVerificationTokenRepository
 from repositories.mayorista_repo import MayoristaRepository
-from repositories.prenda_repo import PrendaRepository
-from services.auth_service import AuthService, EmailAlreadyExistsError, InvalidCredentialsError
-from services.email_service import send_welcome_email
+from repositories.tenant_repo import TenantRepo
+from repositories.unlock_token_repo import UnlockTokenRepository
+from services.auth_service import (
+    AccountLockedError,
+    AuthService,
+    EmailAlreadyExistsError,
+    EmailNotVerifiedError,
+    InvalidCredentialsError,
+    InvalidTokenError,
+)
+from services.email_service import send_welcome_email, send_verification_email, send_unlock_email
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
+
+
+def _get_auth_service(db: AsyncSession) -> AuthService:
+    """Factory for AuthService with all required repositories."""
+    return AuthService(
+        mayorista_repo=MayoristaRepository(db),
+        email_token_repo=EmailVerificationTokenRepository(db),
+        unlock_token_repo=UnlockTokenRepository(db),
+        tenant_repo=TenantRepo(db),
+    )
 
 
 @router.post(
@@ -31,47 +67,108 @@ router = APIRouter(prefix="/api/auth", tags=["auth"])
         422: {"description": "Validation error"},
     },
 )
+@limiter.limit("5/15minutes")
 async def register(
-    request: RegisterRequest,
+    request: Request,
+    register_data: RegisterRequest,
     response: Response,
     db: AsyncSession = Depends(get_db),
 ):
-    repo = MayoristaRepository(db)
-    auth_service = AuthService(repo)
+    """Register a new mayorista with email verification."""
+    auth_service = _get_auth_service(db)
 
     try:
-        mayorista = await auth_service.register(
-            email=request.email,
-            password=request.password,
-            nombre_negocio=request.nombre_negocio,
+        mayorista, verification_token = await auth_service.register(
+            email=register_data.email,
+            password=register_data.password,
+            business_name=register_data.business_name,
         )
     except EmailAlreadyExistsError:
-        from fastapi import HTTPException
-
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Este email ya está registrado",
         )
 
-    import asyncio
-
-    asyncio.create_task(send_welcome_email(mayorista.email, mayorista.nombre_negocio))
-
-    token = create_access_token(str(mayorista.id))
-    response.set_cookie(
-        key="access_token",
-        value=token,
-        httponly=True,
-        samesite="lax",
-        secure=settings.COOKIE_SECURE,
-        max_age=604800,  # 7 days
+    # Send verification email (fire-and-forget)
+    verification_url = (
+        f"{settings.FRONTEND_URL}/verify-email?token={verification_token.token}"
     )
+    try:
+        await send_verification_email(mayorista.email, mayorista.nombre_negocio, verification_url)
+    except Exception:
+        logger.exception("Failed to send verification email")
 
     return RegisterResponse(
         id=mayorista.id,
         email=mayorista.email,
-        nombre_negocio=mayorista.nombre_negocio,
+        business_name=mayorista.nombre_negocio,
     )
+
+
+@router.get(
+    "/verify-email",
+    response_model=VerifyEmailResponse,
+    responses={
+        400: {"description": "Invalid, expired, or used token"},
+    },
+)
+async def verify_email(
+    token: str = Query(..., description="Email verification token"),
+    db: AsyncSession = Depends(get_db),
+):
+    """Verify email address using the token from the verification link."""
+    auth_service = _get_auth_service(db)
+
+    try:
+        await auth_service.verify_email(token)
+    except InvalidTokenError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+
+    return VerifyEmailResponse(message="Email verified successfully")
+
+
+@router.post(
+    "/resend-verification",
+    response_model=ResendVerificationResponse,
+    responses={
+        429: {"description": "Rate limit exceeded"},
+    },
+)
+@limiter.limit("3/1hour")
+async def resend_verification(
+    request: Request,
+    resend_data: ResendVerificationRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """Resend verification email. Returns 200 even if email not found (no enumeration)."""
+    auth_service = _get_auth_service(db)
+
+    try:
+        verification_token = await auth_service.resend_verification(resend_data.email)
+    except Exception:
+        logger.exception("Failed to resend verification email")
+        # Return generic success to prevent enumeration
+        return ResendVerificationResponse(message="If the email exists, a verification link has been sent")
+
+    if verification_token is None:
+        # User not found or already verified — return generic success
+        return ResendVerificationResponse(message="If the email exists, a verification link has been sent")
+
+    # Send verification email
+    verification_url = (
+        f"{settings.FRONTEND_URL}/verify-email?token={verification_token.token}"
+    )
+    try:
+        mayorista = await auth_service.mayorista_repo.get_by_email(resend_data.email.lower())
+        if mayorista:
+            await send_verification_email(mayorista.email, mayorista.nombre_negocio, verification_url)
+    except Exception:
+        logger.exception("Failed to send verification email")
+
+    return ResendVerificationResponse(message="If the email exists, a verification link has been sent")
 
 
 @router.post(
@@ -79,6 +176,8 @@ async def register(
     response_model=LoginResponse,
     responses={
         401: {"description": "Email o contraseña incorrectos"},
+        403: {"description": "Email not verified"},
+        423: {"description": "Account locked"},
         429: {"description": "Demasiados intentos"},
     },
 )
@@ -86,46 +185,77 @@ async def register(
 async def login(
     request: Request,
     login_data: LoginRequest,
-    response: Response,
     db: AsyncSession = Depends(get_db),
 ):
-    repo = MayoristaRepository(db)
-    auth_service = AuthService(repo)
+    """Login with email + password. Returns challenge_token (not full JWT)."""
+    auth_service = _get_auth_service(db)
 
     try:
-        mayorista, token = await auth_service.login(
+        result = await auth_service.login(
             email=login_data.email,
             password=login_data.password,
         )
     except InvalidCredentialsError:
-        from fastapi import HTTPException
+        # Record failed attempt (atomic increment)
+        try:
+            failed_attempts, is_locked = await auth_service.record_failed_login(login_data.email)
+            if is_locked:
+                # Create unlock token and send lockout email
+                mayorista = await auth_service.mayorista_repo.get_by_email(login_data.email.lower())
+                if mayorista:
+                    unlock_token = await auth_service.create_unlock_token(mayorista.id)
+                    unlock_url = f"{settings.FRONTEND_URL}/unlock?token={unlock_token.token}"
+                    try:
+                        await send_unlock_email(login_data.email.lower(), unlock_url)
+                    except Exception:
+                        logger.exception("Failed to send lockout email")
+        except Exception:
+            logger.exception("Failed to record failed login attempt")
 
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Email o contraseña incorrectos",
         )
+    except EmailNotVerifiedError:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Debes verificar tu email antes de iniciar sesión.",
+        )
+    except AccountLockedError:
+        raise HTTPException(
+            status_code=status.HTTP_423_LOCKED,
+            detail="Cuenta bloqueada. Revisa tu email para instrucciones de desbloqueo.",
+        )
 
-    response.set_cookie(
-        key="access_token",
-        value=token,
-        httponly=True,
-        samesite="lax",
-        secure=settings.COOKIE_SECURE,
-        max_age=604800,  # 7 days
+    return LoginResponse(
+        challenge_token=result["challenge_token"],
+        requires_2fa_setup=result["requires_2fa_setup"],
     )
 
-    return LoginResponse()
 
+@router.post(
+    "/unlock",
+    response_model=UnlockResponse,
+    responses={
+        400: {"description": "Invalid, expired, or used token"},
+    },
+)
+async def unlock(
+    token: str = Query(..., description="Unlock token"),
+    db: AsyncSession = Depends(get_db),
+):
+    """Unlock a locked account using the token from the lockout email."""
+    auth_service = _get_auth_service(db)
 
-@router.post("/logout")
-async def logout(response: Response):
-    response.delete_cookie(
-        key="access_token",
-        httponly=True,
-        samesite="lax",
-        secure=settings.COOKIE_SECURE,
-    )
-    return {}
+    try:
+        await auth_service.unlock_account(token)
+    except InvalidTokenError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+
+    return UnlockResponse(message="Account unlocked successfully")
 
 
 @router.get("/me", response_model=MeResponse)
@@ -133,6 +263,8 @@ async def me(
     mayorista: Mayorista = Depends(get_current_mayorista),
     db: AsyncSession = Depends(get_db),
 ):
+    from repositories.prenda_repo import PrendaRepository
+
     repo = PrendaRepository(db)
     count = await repo.count_by_mayorista(mayorista.id)
     return MeResponse(

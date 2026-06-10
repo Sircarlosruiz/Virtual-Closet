@@ -3,23 +3,38 @@ id: 030-auth-service
 unit: 001-auth-service
 intent: 006-user-authentication-accounts
 type: ddd-construction-bolt
-status: planned
+status: complete
 stories:
   - 001-mayorista-registration
   - 002-email-verification
   - 003-login-email-password
   - 004-account-lockout
-created: 2026-06-08T00:00:00Z
-started: null
-completed: null
+created: 2026-06-08T00:00:00.000Z
+started: 2026-06-10T00:00:00.000Z
+completed: "2026-06-10T16:16:20Z"
 current_stage: null
-stages_completed: []
-
-requires_bolts: [028-tenant-account-service]
-enables_bolts: [031-auth-service]
+stages_completed:
+  - name: domain-model
+    completed: 2026-06-10T00:00:00.000Z
+    artifact: ddd-01-domain-model.md
+  - name: technical-design
+    completed: 2026-06-10T00:00:00.000Z
+    artifact: ddd-02-technical-design.md
+  - name: adr-analysis
+    completed: 2026-06-10T00:00:00.000Z
+    artifact: adr-018-challenge-token-pattern.md, adr-019-extend-mayorista-model.md, adr-020-backfill-existing-users-verified.md, adr-021-atomic-failed-attempts-increment.md
+  - name: implement
+    completed: 2026-06-10T00:00:00.000Z
+    artifact: source code
+  - name: test
+    completed: 2026-06-10T00:00:00.000Z
+    artifact: ddd-03-test-report.md
+requires_bolts:
+  - 028-tenant-account-service
+enables_bolts:
+  - 031-auth-service
 requires_units: []
 blocks: true
-
 complexity:
   avg_complexity: 2
   avg_uncertainty: 1

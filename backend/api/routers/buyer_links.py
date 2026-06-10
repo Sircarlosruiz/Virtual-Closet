@@ -106,28 +106,40 @@ validate_router = APIRouter(tags=["buyer-links-public"])
 )
 async def validate_buyer_link(
     body: ValidateLinkRequest,
-    buyer_link_service: BuyerLinkService = Depends(
-        lambda db: _get_buyer_link_service(db)
-    ),
     db: AsyncSession = Depends(get_db),
 ):
-    """Validate a buyer link token and return accessible catalog IDs."""
+    """Validate a buyer link token (stateless, two-step).
+
+    Per ADR-017: Always returns HTTP 200.
+    Invalid tokens return { valid: false, reason: "..." }.
+    """
+    buyer_link_service = _get_buyer_link_service(db)
+
     try:
-        service = _get_buyer_link_service(db)
-        result = service.validate_link(body.token)
+        result = await buyer_link_service.validate_link_with_tenant(body.token)
 
         return ValidateLinkResponse(
             valid=True,
             tenant_id=result["tenant_id"],
             catalog_ids=result["catalog_ids"],
         )
-    except BuyerLinkExpiredError as exc:
+    except BuyerLinkExpiredError:
         return ValidateLinkResponse(
             valid=False,
-            error=str(exc),
+            reason="link_expired",
         )
-    except InvalidBuyerLinkError as exc:
+    except InvalidBuyerLinkError:
         return ValidateLinkResponse(
             valid=False,
-            error=str(exc),
+            reason="invalid_token",
+        )
+    except TenantNotFoundError:
+        return ValidateLinkResponse(
+            valid=False,
+            reason="invalid_token",
+        )
+    except TenantInactiveError:
+        return ValidateLinkResponse(
+            valid=False,
+            reason="invalid_token",
         )

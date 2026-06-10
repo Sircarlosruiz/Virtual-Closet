@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import Boolean, Column, DateTime, Index, String, Text
+from sqlalchemy import Boolean, Column, DateTime, Index, Integer, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy.sql import func
@@ -25,8 +25,15 @@ class Mayorista(Base):
     )
     whatsapp = Column(String(20), nullable=True)
     tenant_id = Column(UUID(as_uuid=True), nullable=True, index=True)
+    role = Column(String(20), nullable=False, default="mayorista", server_default="mayorista")
+    email_verified = Column(Boolean, nullable=False, server_default="false")
+    is_locked = Column(Boolean, nullable=False, server_default="false")
+    failed_attempts = Column(Integer, nullable=False, server_default="0")
     created_at = Column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at = Column(
+        DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
     )
 
     __table_args__ = (

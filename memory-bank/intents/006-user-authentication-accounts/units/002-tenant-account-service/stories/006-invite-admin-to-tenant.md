@@ -2,11 +2,11 @@
 id: 006-invite-admin-to-tenant
 unit: 002-tenant-account-service
 intent: 006-user-authentication-accounts
-status: draft
+status: complete
 priority: should
-created: 2026-06-08T00:00:00Z
+created: 2026-06-08T00:00:00.000Z
 assigned_bolt: null
-implemented: false
+implemented: true
 ---
 
 # Story: 006-invite-admin-to-tenant

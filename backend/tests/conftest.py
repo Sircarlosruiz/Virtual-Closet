@@ -12,6 +12,10 @@ from main import app
 from models.mayorista import Base
 import models.media  # noqa: F401 — ensure GarmentPhoto/ModelPhoto tables are created
 import models.customer  # noqa: F401 — ensure Customer table is created
+import models.email_verification_token  # noqa: F401 — ensure EmailVerificationToken table is created
+import models.unlock_token  # noqa: F401 — ensure UnlockToken table is created
+import models.tenant  # noqa: F401 — ensure Tenant table is created
+import models.refresh_token  # noqa: F401 — ensure RefreshToken table is created
 
 TEST_DATABASE_URL = "postgresql+asyncpg://postgres:postgres@localhost:5432/virtual_closet_test"
 
@@ -99,7 +103,7 @@ async def client_with_seeds(client):
 async def register_user(client, email="test@mayorista.com", password="password123", nombre_negocio="Test Business"):
     return await client.post(
         "/api/auth/register",
-        json={"email": email, "password": password, "nombre_negocio": nombre_negocio},
+        json={"email": email, "password": password, "business_name": nombre_negocio},
     )
 
 
@@ -108,3 +112,31 @@ async def login_user(client, email="test@mayorista.com", password="password123")
         "/api/auth/login",
         json={"email": email, "password": password},
     )
+
+
+async def verify_user_email(client, email="test@mayorista.com"):
+    """Register + verify email for a test user. Returns the user object."""
+    from models.mayorista import Mayorista
+    from models.email_verification_token import EmailVerificationToken
+    from sqlalchemy import select
+    from core.database import get_db
+    from sqlalchemy.ext.asyncio import AsyncSession
+
+    await register_user(client, email=email, password=password, nombre_negocio="Test Business")
+
+    db_gen = get_db()
+    db: AsyncSession = await db_gen.__anext__()
+    result = await db.execute(select(Mayorista).where(Mayorista.email == email))
+    user = result.scalar_one_or_none()
+    if user:
+        token_result = await db.execute(
+            select(EmailVerificationToken).where(
+                EmailVerificationToken.user_id == user.id,
+                EmailVerificationToken.used.is_(False),
+            )
+        )
+        token = token_result.scalar_one_or_none()
+        if token:
+            await client.get(f"/api/auth/verify-email?token={token.token}")
+    await db_gen.aclose()
+    return user

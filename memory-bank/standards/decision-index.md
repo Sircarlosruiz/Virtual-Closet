@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-06-09T00:00:00Z
-total_decisions: 15
+last_updated: 2026-06-10T00:00:00Z
+total_decisions: 21
 ---
 
 # Decision Index
@@ -19,6 +19,54 @@ Use this to find relevant prior decisions when working on related features.
 ## Decisions
 
 <!-- Entries are appended below in reverse chronological order (newest first) -->
+
+### ADR-021: Atomic Failed Attempts Increment for Account Lockout
+- **Status**: accepted
+- **Date**: 2026-06-10
+- **Bolt**: 030-auth-service (001-auth-service)
+- **Path**: `bolts/030-auth-service/adr-021-atomic-failed-attempts-increment.md`
+- **Summary**: Use PostgreSQL atomic UPDATE with expression evaluation (`failed_attempts = failed_attempts + 1`) to increment the failed login counter. Row-level locking guarantees no lost updates under concurrent login attempts, with lockout triggered exactly at the 5th attempt in the same statement.
+- **Read when**: Implementing account lockout, designing concurrent counter updates, preventing brute-force attacks, handling parallel authentication attempts
+
+### ADR-020: Backfill Existing Users as Email Verified
+- **Status**: accepted
+- **Date**: 2026-06-10
+- **Bolt**: 030-auth-service (001-auth-service)
+- **Path**: `bolts/030-auth-service/adr-020-backfill-existing-users-verified.md`
+- **Summary**: During the Alembic migration, all existing mayoristas are marked as `email_verified = true` via a data migration UPDATE statement. New users registering after the migration must verify their email before logging in.
+- **Read when**: Running migrations for new features affecting existing users, designing email verification flows, planning backward compatibility for auth features
+
+### ADR-019: Extend Mayorista Model for Auth Features
+- **Status**: accepted
+- **Date**: 2026-06-10
+- **Bolt**: 030-auth-service (001-auth-service)
+- **Path**: `bolts/030-auth-service/adr-019-extend-mayorista-model.md`
+- **Summary**: The existing `Mayorista` model is extended with `email_verified`, `is_locked`, `failed_attempts`, and `updated_at` columns rather than creating a new `User` model. This avoids disrupting existing FK relationships and simplifies migration.
+- **Read when**: Modifying the Mayorista model, designing authentication schema changes, adding new user attributes, planning model migrations
+
+### ADR-018: Challenge Token Pattern for 2-Step Authentication
+- **Status**: accepted
+- **Date**: 2026-06-10
+- **Bolt**: 030-auth-service (001-auth-service)
+- **Path**: `bolts/030-auth-service/adr-018-challenge-token-pattern.md`
+- **Summary**: Login returns a short-lived (5-min) HS256-signed `challenge_token` encoding `user_id` and `step: credentials_passed` instead of a full JWT. The challenge_token must be presented to the 2FA endpoint along with the OTP code to receive a full JWT session.
+- **Read when**: Implementing 2FA flows, designing multi-step authentication, working on login endpoints, building OAuth exchange flows
+
+### ADR-017: Buyer Link Validation Returns 200 on Invalid Tokens
+- **Status**: accepted
+- **Date**: 2026-06-09
+- **Bolt**: 029-tenant-account-service (002-tenant-account-service)
+- **Path**: `bolts/029-tenant-account-service/adr-017-buyer-validation-200-response.md`
+- **Summary**: The buyer link validation endpoint always returns HTTP 200, with invalid tokens returning { valid: false, reason: "..." } in the body. This avoids information leakage and simplifies frontend handling since buyers have no session to refresh.
+- **Read when**: Designing public token validation endpoints, implementing stateless authorization flows, building unauthenticated API endpoints, reviewing error response patterns
+
+### ADR-016: Redis Denylist for Admin Session Invalidation
+- **Status**: accepted
+- **Date**: 2026-06-09
+- **Bolt**: 029-tenant-account-service (002-tenant-account-service)
+- **Path**: `bolts/029-tenant-account-service/adr-016-redis-denylist-session-invalidation.md`
+- **Summary**: Redis is introduced as a new infrastructure dependency for session invalidation on admin revocation. Revoked admin refresh token JTIs are stored in Redis with TTL matching the original token's remaining lifetime. The 15-minute access token window remains an accepted risk.
+- **Read when**: Implementing session management, adding new infrastructure dependencies, designing token revocation flows, configuring Docker Compose or k3s deployments, evaluating Redis vs PostgreSQL for ephemeral data
 
 ### ADR-015: Postgres RLS Deferred as Future Defense-in-Depth
 - **Status**: accepted

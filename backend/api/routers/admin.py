@@ -1,5 +1,7 @@
 """Admin invitation API endpoints."""
 
+import uuid
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -8,18 +10,24 @@ from api.schemas.tenant import (
     AdminInviteRequest,
     AdminInvitationResponse,
     AdminListResponse,
+    AdminResponse,
 )
 from core.database import get_db
 from core.dependencies import get_current_mayorista
 from models.mayorista import Mayorista
 from repositories.admin_invitation_repo import AdminInvitationRepo
+from repositories.mayorista_repo import MayoristaRepository
 from repositories.tenant_repo import TenantRepo
 from services.admin_invitation_service import (
     AdminInvitationService,
+    AdminNotFoundError,
+    AdminRevocationError,
     InvitationAlreadyAcceptedError,
     InvitationExpiredError,
+    MaxInvitationsReachedError,
     PendingInvitationExistsError,
 )
+from services.auth_service import AuthService, EmailAlreadyExistsError
 from services.tenant_service import TenantInactiveError, TenantNotFoundError
 
 router = APIRouter(prefix="/api/tenants/admins", tags=["tenant-admins"])
@@ -30,7 +38,8 @@ def _get_admin_invitation_service(
 ) -> AdminInvitationService:
     invitation_repo = AdminInvitationRepo(db)
     tenant_repo = TenantRepo(db)
-    return AdminInvitationService(invitation_repo, tenant_repo)
+    mayorista_repo = MayoristaRepository(db)
+    return AdminInvitationService(invitation_repo, tenant_repo, mayorista_repo)
 
 
 @router.post(
@@ -49,6 +58,7 @@ async def invite_admin(
             tenant_id=mayorista.tenant_id,
             email=body.email,
             created_by=mayorista.id,
+            tenant_name=mayorista.nombre_negocio,
         )
     except TenantNotFoundError as exc:
         raise HTTPException(
@@ -62,10 +72,10 @@ async def invite_admin(
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail=str(exc)
         ) from exc
-
-    # TODO: Send invitation email
-    # from services.email_service import send_admin_invitation_email
-    # await send_admin_invitation_email(body.email, invitation.token)
+    except MaxInvitationsReachedError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail=str(exc)
+        ) from exc
 
     return invitation
 
@@ -75,9 +85,9 @@ async def list_admins(
     mayorista: Mayorista = Depends(get_current_mayorista),
     admin_service: AdminInvitationService = Depends(_get_admin_invitation_service),
 ):
-    """List all admin invitations for the current tenant."""
+    """List all active admins in the current tenant."""
     try:
-        invitations = await admin_service.list_invitations(
+        admins = await admin_service.list_admins(
             tenant_id=mayorista.tenant_id,
         )
     except TenantNotFoundError as exc:
@@ -85,7 +95,17 @@ async def list_admins(
             status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)
         ) from exc
 
-    return AdminListResponse(invitations=invitations)
+    return AdminListResponse(
+        admins=[
+            AdminResponse(
+                id=admin.id,
+                email=admin.email,
+                role=admin.role,
+                created_at=admin.created_at,
+            )
+            for admin in admins
+        ]
+    )
 
 
 @router.delete("/{admin_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -94,16 +114,25 @@ async def revoke_admin(
     mayorista: Mayorista = Depends(get_current_mayorista),
     admin_service: AdminInvitationService = Depends(_get_admin_invitation_service),
 ):
-    """Revoke an admin invitation or access.
-
-    Note: This is a placeholder. Full implementation requires
-    a user management system with admin roles.
-    """
-    # TODO: Implement full admin revocation with session invalidation
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="Admin revocation not yet implemented",
-    )
+    """Revoke an admin's access and invalidate their sessions."""
+    try:
+        await admin_service.revoke_admin(
+            tenant_id=mayorista.tenant_id,
+            admin_user_id=uuid.UUID(admin_id),
+            revoked_by=mayorista.id,
+        )
+    except TenantNotFoundError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)
+        ) from exc
+    except AdminNotFoundError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)
+        ) from exc
+    except AdminRevocationError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail=str(exc)
+        ) from exc
 
 
 @router.post(
@@ -114,20 +143,50 @@ async def revoke_admin(
 async def accept_invitation(
     body: AcceptInvitationRequest,
     admin_service: AdminInvitationService = Depends(_get_admin_invitation_service),
+    db: AsyncSession = Depends(get_db),
 ):
-    """Accept an admin invitation and register a new user.
-
-    Note: This is a placeholder. Full implementation requires
-    user registration logic.
-    """
+    """Accept an admin invitation and register a new user."""
     try:
-        invitation = await admin_service.accept_invitation(
-            token=body.token,
+        invitation = await admin_service.get_invitation(token=body.token)
+
+        if invitation.email != body.email:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email does not match invitation",
+            )
+
+        mayorista_repo = MayoristaRepository(db)
+        existing = await mayorista_repo.get_by_email(body.email)
+        if existing is not None:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Email already registered on the platform",
+            )
+
+        auth_service = AuthService(mayorista_repo)
+        new_admin = await auth_service.register(
+            email=body.email,
+            password=body.password,
+            nombre_negocio="",
         )
-    except TenantNotFoundError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)
-        ) from exc
+
+        await mayorista_repo.update_role(new_admin.id, "admin")
+
+        from models.tenant import Tenant
+
+        tenant_result = await db.execute(
+            Tenant.__table__.select().where(Tenant.id == invitation.tenant_id)
+        )
+        tenant_row = tenant_result.first()
+        if tenant_row:
+            new_admin.tenant_id = invitation.tenant_id
+            await db.commit()
+            await db.refresh(new_admin)
+
+        await admin_service.accept_invitation(token=body.token)
+
+        return invitation
+
     except InvitationExpiredError as exc:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)
@@ -136,10 +195,11 @@ async def accept_invitation(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)
         ) from exc
-
-    # TODO: Register new user with admin role
-    # - Validate email matches invitation email
-    # - Create user account with password
-    # - Assign admin role within tenant
-
-    return invitation
+    except TenantNotFoundError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)
+        ) from exc
+    except EmailAlreadyExistsError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail=str(exc)
+        ) from exc

@@ -2,9 +2,9 @@
 unit: 002-tenant-account-service
 intent: 006-user-authentication-accounts
 phase: inception
-status: draft
-created: 2026-06-08T00:00:00Z
-updated: 2026-06-08T00:00:00Z
+status: complete
+created: 2026-06-08T00:00:00.000Z
+updated: 2026-06-08T00:00:00.000Z
 ---
 
 # Unit Brief: Tenant Account Service

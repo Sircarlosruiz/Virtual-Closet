@@ -78,6 +78,9 @@ class Settings(BaseSettings):
     # RabbitMQ / Celery
     RABBITMQ_URL: str = "amqp://guest:guest@rabbitmq:5672/"
 
+    # Redis (session denylist for admin revocation)
+    REDIS_URL: str = "redis://redis:6379/0"
+
 
 settings = Settings()
 

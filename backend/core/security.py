@@ -1,6 +1,7 @@
-import bcrypt
+import secrets
 from datetime import datetime, timedelta, timezone
 
+import bcrypt
 from jose import jwt
 
 from core.config import settings
@@ -30,3 +31,44 @@ def decode_access_token(token: str) -> dict | None:
         return payload
     except Exception:
         return None
+
+
+def create_challenge_token(user_id: str) -> str:
+    """Create a short-lived challenge token after successful credential validation.
+
+    The challenge_token proves the user passed email+password validation.
+    It must be presented to the 2FA endpoint to receive a full JWT session.
+    TTL: 5 minutes.
+    """
+    expire = datetime.now(timezone.utc) + timedelta(minutes=5)
+    to_encode = {
+        "sub": user_id,
+        "step": "credentials_passed",
+        "exp": expire,
+    }
+    return jwt.encode(to_encode, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
+
+
+def decode_challenge_token(token: str) -> dict | None:
+    """Decode and validate a challenge token.
+
+    Returns the payload if valid, None otherwise.
+    Validates that the 'step' claim is 'credentials_passed'.
+    """
+    try:
+        payload = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
+        if payload.get("step") != "credentials_passed":
+            return None
+        return payload
+    except Exception:
+        return None
+
+
+def generate_verification_token() -> str:
+    """Generate a 32-byte random hex token for email verification."""
+    return secrets.token_hex(32)
+
+
+def generate_unlock_token() -> str:
+    """Generate a 32-byte random hex token for account unlock."""
+    return secrets.token_hex(32)

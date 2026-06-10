@@ -61,7 +61,16 @@ class AdminInviteRequest(BaseModel):
 
 
 class AdminListResponse(BaseModel):
-    invitations: list[AdminInvitationResponse]
+    admins: list["AdminResponse"]
+
+
+class AdminResponse(BaseModel):
+    id: uuid.UUID
+    email: str
+    role: str
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class AcceptInvitationRequest(BaseModel):
@@ -96,7 +105,7 @@ class ValidateLinkResponse(BaseModel):
     valid: bool
     tenant_id: uuid.UUID | None = None
     catalog_ids: list[uuid.UUID] | None = None
-    error: str | None = None
+    reason: str | None = None
 
 
 class BuyerLinkListResponse(BaseModel):
