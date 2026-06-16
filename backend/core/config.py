@@ -81,6 +81,14 @@ class Settings(BaseSettings):
     # Redis (session denylist for admin revocation)
     REDIS_URL: str = "redis://redis:6379/0"
 
+    # Two-Factor Authentication
+    TWO_FACTOR_ENCRYPTION_KEY: str = ""  # Fernet key (base64-encoded 32 bytes)
+
+    # Twilio (SMS OTP)
+    TWILIO_ACCOUNT_SID: str = ""
+    TWILIO_AUTH_TOKEN: str = ""
+    TWILIO_PHONE_NUMBER: str = ""
+
 
 settings = Settings()
 

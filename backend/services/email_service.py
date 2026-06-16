@@ -265,3 +265,43 @@ async def send_unlock_email(
             )
 
     await _run_send(_send)
+
+
+async def send_password_reset_email(
+    email: str,
+    business_name: str,
+    token: str,
+) -> None:
+    """Send password reset link."""
+    reset_url = f"{settings.FRONTEND_URL}/reset-password?token={token}"
+
+    def _send():
+        if not _should_use_resend():
+            _log_dev_email("Password Reset", email, reset_url)
+            return
+        try:
+            resend.Emails.send(
+                {
+                    "from": settings.RESEND_FROM_EMAIL,
+                    "to": email,
+                    "subject": "Restablece tu contraseña en Virtual Closet",
+                    "html": f"""
+                    <h1>Restablecer contraseña</h1>
+                    <p>Hola {business_name},</p>
+                    <p>Recibimos una solicitud para restablecer tu contraseña. Haz clic en el siguiente enlace para crear una nueva contraseña:</p>
+                    <p><a href="{reset_url}">Restablecer mi contraseña</a></p>
+                    <p>Este enlace expira en 1 hora.</p>
+                    <p>Si no solicitaste este cambio, puedes ignorar este email. Tu contraseña no será cambiada.</p>
+                    """,
+                }
+            )
+            logger.info("Password reset email sent to %s", email)
+        except Exception as e:
+            logger.error(
+                "Failed to send password reset email to %s: %s — dev link: %s",
+                email,
+                e,
+                reset_url,
+            )
+
+    await _run_send(_send)

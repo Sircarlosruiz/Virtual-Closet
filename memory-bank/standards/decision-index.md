@@ -1,6 +1,6 @@
 ---
 last_updated: 2026-06-10T00:00:00Z
-total_decisions: 21
+total_decisions: 29
 ---
 
 # Decision Index
@@ -19,6 +19,70 @@ Use this to find relevant prior decisions when working on related features.
 ## Decisions
 
 <!-- Entries are appended below in reverse chronological order (newest first) -->
+
+### ADR-029: Password Reset Revokes All Active Sessions
+- **Status**: accepted
+- **Date**: 2026-06-10
+- **Bolt**: 032-auth-service (001-auth-service)
+- **Path**: `bolts/032-auth-service/adr-029-password-reset-revokes-sessions.md`
+- **Summary**: On password reset, all refresh tokens are revoked in DB and JTIs added to Redis denylist. Existing access tokens remain valid for up to 15 minutes (accepted risk, NIST SP 800-63B compliant). No access token denylist introduced.
+- **Read when**: Implementing password reset flows, designing session invalidation on credential change, reviewing security policies for account recovery
+
+### ADR-028: Immediate Denylist on Token Rotation
+- **Status**: accepted
+- **Date**: 2026-06-10
+- **Bolt**: 032-auth-service (001-auth-service)
+- **Path**: `bolts/032-auth-service/adr-028-immediate-denylist-on-rotation.md`
+- **Summary**: Old refresh token JTI added to Redis denylist via SETNX before new token is issued. Prevents concurrent refresh race conditions. First refresh succeeds, concurrent duplicates fail with 401.
+- **Read when**: Implementing token refresh endpoints, designing refresh token rotation, handling concurrent authentication requests, preventing token replay attacks
+
+### ADR-027: Fail-Closed on Redis Outage for Token Refresh
+- **Status**: accepted
+- **Date**: 2026-06-10
+- **Bolt**: 032-auth-service (001-auth-service)
+- **Path**: `bolts/032-auth-service/adr-027-fail-closed-redis-outage.md`
+- **Summary**: When Redis denylist is unavailable during refresh, returns 503 instead of allowing potentially revoked tokens. Existing 15-minute access tokens provide grace period.
+- **Read when**: Designing authentication failure modes, planning Redis outage procedures, configuring monitoring and alerting for auth services, evaluating security vs availability trade-offs
+
+### ADR-026: RS256 Asymmetric Signing for Access Tokens
+- **Status**: accepted
+- **Date**: 2026-06-10
+- **Bolt**: 032-auth-service (001-auth-service)
+- **Path**: `bolts/032-auth-service/adr-026-rs256-asymmetric-signing.md`
+- **Summary**: Access tokens signed with RS256 (RSA 2048-bit). Private key from JWT_PRIVATE_KEY env var. Public key served at /.well-known/jwks.json. Enables downstream service verification without sharing secrets.
+- **Read when**: Implementing JWT verification in downstream services, configuring public key endpoints, designing key rotation strategies, integrating third-party services with auth
+
+### ADR-025: Challenge Token Single-Use via Redis Tracking
+- **Status**: accepted
+- **Date**: 2026-06-10
+- **Bolt**: 031-auth-service (001-auth-service)
+- **Path**: `bolts/031-auth-service/adr-025-challenge-token-single-use.md`
+- **Summary**: Challenge tokens are tracked in Redis via `challenge:consumed:{jti}` with 300s TTL using atomic SETNX to enforce single-use consumption. Prevents replay of challenge tokens to obtain multiple JWT sessions.
+- **Read when**: Implementing 2FA challenge flows, OAuth exchange endpoints, designing single-use token patterns, working with challenge token lifecycle
+
+### ADR-024: OAuth Account Linking Requires Password Confirmation
+- **Status**: accepted
+- **Date**: 2026-06-10
+- **Bolt**: 031-auth-service (001-auth-service)
+- **Path**: `bolts/031-auth-service/adr-024-oauth-account-linking-security.md`
+- **Summary**: When Google OAuth email matches an existing email+password account, the user must enter their password to confirm the link. Prevents account takeover via compromised OAuth provider.
+- **Read when**: Implementing OAuth identity linking, designing account merge flows, working on Google login, reviewing authentication security boundaries
+
+### ADR-023: Redis as Primary Store for Ephemeral Auth State
+- **Status**: accepted
+- **Date**: 2026-06-10
+- **Bolt**: 031-auth-service (001-auth-service)
+- **Path**: `bolts/031-auth-service/adr-023-redis-ephemeral-auth-state.md`
+- **Summary**: Redis stores all ephemeral auth state (TOTP replay protection, SMS rate limiting, OTP hashes, challenge token consumption) with automatic TTL expiration. Graceful degradation if Redis is unavailable.
+- **Read when**: Designing ephemeral auth storage, implementing rate limiting or replay protection, configuring Redis for authentication, planning graceful degradation strategies
+
+### ADR-022: Fernet Symmetric Encryption for Sensitive Auth Fields
+- **Status**: accepted
+- **Date**: 2026-06-10
+- **Bolt**: 031-auth-service (001-auth-service)
+- **Path**: `bolts/031-auth-service/adr-022-fernet-symmetric-encryption.md`
+- **Summary**: TOTP secrets and phone numbers are encrypted with Fernet (AES-128-CBC + HMAC-SHA256) using a key from `TWO_FACTOR_ENCRYPTION_KEY` env var. Establishes the project's symmetric encryption pattern.
+- **Read when**: Storing sensitive reversible data, designing encryption for secrets or PII, implementing symmetric encryption patterns, managing encryption keys
 
 ### ADR-021: Atomic Failed Attempts Increment for Account Lockout
 - **Status**: accepted

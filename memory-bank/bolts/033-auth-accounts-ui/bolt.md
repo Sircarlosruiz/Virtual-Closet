@@ -3,23 +3,31 @@ id: 033-auth-accounts-ui
 unit: 003-auth-accounts-ui
 intent: 006-user-authentication-accounts
 type: simple-construction-bolt
-status: planned
+status: complete
 stories:
   - 001-registration-email-verification-pages
   - 002-login-page-google-oauth
   - 005-password-reset-pages
   - 007-session-aware-routing-auth-guard
-created: 2026-06-08T00:00:00Z
-started: null
-completed: null
+created: 2026-06-08T00:00:00.000Z
+started: 2026-06-10T00:00:00.000Z
+completed: "2026-06-10T21:39:23Z"
 current_stage: null
-stages_completed: []
-
-requires_bolts: [030-auth-service, 031-auth-service, 032-auth-service]
-enables_bolts: [034-auth-accounts-ui]
+stages_completed:
+  - name: plan
+    completed: 2026-06-10T00:00:00.000Z
+    artifact: implementation-plan.md
+  - name: implement
+    completed: 2026-06-10T00:00:00.000Z
+    artifact: implementation-walkthrough.md
+requires_bolts:
+  - 030-auth-service
+  - 031-auth-service
+  - 032-auth-service
+enables_bolts:
+  - 034-auth-accounts-ui
 requires_units: []
 blocks: true
-
 complexity:
   avg_complexity: 2
   avg_uncertainty: 1

@@ -4,6 +4,10 @@ from slowapi.errors import RateLimitExceeded
 from starlette.responses import JSONResponse
 
 from api.routers.auth import router as auth_router
+from api.routers.auth_2fa import router as auth_2fa_router
+from api.routers.auth_oauth import router as auth_oauth_router
+from api.routers.auth_reset import router as auth_reset_router
+from api.routers.auth_session import router as auth_session_router
 from api.routers.prendas import router as prendas_router
 from api.routers.ws import router as ws_router
 from api.routers.modelos_ia import router as modelos_ia_router
@@ -40,6 +44,10 @@ app.add_middleware(
 app.add_middleware(TokenRefreshMiddleware)
 
 app.include_router(auth_router)
+app.include_router(auth_2fa_router)
+app.include_router(auth_oauth_router)
+app.include_router(auth_reset_router)
+app.include_router(auth_session_router)
 app.include_router(prendas_router)
 app.include_router(ws_router)
 app.include_router(modelos_ia_router)
@@ -68,6 +76,18 @@ async def rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded):
 @app.get("/health")
 async def health():
     return {"status": "ok"}
+
+
+@app.get("/.well-known/jwks.json", tags=["auth"])
+async def jwks_endpoint():
+    """Public JWKS endpoint for RS256 public key distribution.
+
+    Returns the active public key in JWK format for downstream
+    service token verification (ADR-026).
+    """
+    from services.jwks_manager import get_jwks_response
+
+    return get_jwks_response()
 
 
 @app.on_event("startup")

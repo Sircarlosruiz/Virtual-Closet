@@ -3,22 +3,35 @@ id: 031-auth-service
 unit: 001-auth-service
 intent: 006-user-authentication-accounts
 type: ddd-construction-bolt
-status: planned
+status: complete
 stories:
   - 005-totp-2fa-setup-and-challenge
   - 006-sms-otp-2fa-fallback
   - 007-google-oauth-login
-created: 2026-06-08T00:00:00Z
-started: null
-completed: null
+created: 2026-06-08T00:00:00.000Z
+started: 2026-06-10T00:00:00.000Z
+completed: "2026-06-10T20:08:40Z"
 current_stage: null
-stages_completed: []
-
-requires_bolts: [030-auth-service]
-enables_bolts: [032-auth-service, 033-auth-accounts-ui]
+stages_completed:
+  - name: domain-model
+    completed: 2026-06-10T00:00:00.000Z
+    artifact: ddd-01-domain-model.md
+  - name: technical-design
+    completed: 2026-06-10T00:00:00.000Z
+    artifact: ddd-02-technical-design.md
+  - name: adr-analysis
+    completed: 2026-06-10T00:00:00.000Z
+    artifact: adr-022-fernet-symmetric-encryption.md, adr-023-redis-ephemeral-auth-state.md, adr-024-oauth-account-linking-security.md, adr-025-challenge-token-single-use.md
+  - name: implement
+    completed: 2026-06-10T00:00:00.000Z
+    artifact: source code
+requires_bolts:
+  - 030-auth-service
+enables_bolts:
+  - 032-auth-service
+  - 033-auth-accounts-ui
 requires_units: []
 blocks: true
-
 complexity:
   avg_complexity: 3
   avg_uncertainty: 2

@@ -3,15 +3,24 @@ id: 035-auth-accounts-ui
 unit: 003-auth-accounts-ui
 intent: 006-user-authentication-accounts
 type: simple-construction-bolt
-status: planned
+status: complete
 stories:
   - 006-buyer-catalog-access-page
   - 008-account-settings-admin-buyer-links
 created: 2026-06-08T00:00:00Z
-started: null
-completed: null
+started: 2026-06-12T00:00:00Z
+completed: 2026-06-12T00:00:00Z
 current_stage: null
-stages_completed: []
+stages_completed:
+  - name: plan
+    completed: 2026-06-12T00:00:00Z
+    artifact: implementation-plan.md
+  - name: implement
+    completed: 2026-06-12T00:00:00Z
+    artifact: source code
+  - name: test
+    completed: 2026-06-12T00:00:00Z
+    artifact: e2e/settings.spec.ts
 
 requires_bolts: [034-auth-accounts-ui, 029-tenant-account-service]
 enables_bolts: []

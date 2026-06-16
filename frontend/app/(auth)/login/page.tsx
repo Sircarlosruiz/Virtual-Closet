@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -17,8 +17,10 @@ const loginSchema = z.object({
 
 type LoginForm = z.infer<typeof loginSchema>;
 
-export default function LoginPage() {
+function LoginFormContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirect = searchParams.get("redirect");
   const [isLoading, setIsLoading] = useState(false);
 
   const {
@@ -32,16 +34,41 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginForm) => {
     setIsLoading(true);
     try {
-      await apiFetch("/api/auth/login", {
+      const result = await apiFetch("/api/auth/login", {
         method: "POST",
         body: JSON.stringify(data),
-      });
-      toast.success("Bienvenido de vuelta");
-      router.push("/dashboard");
+      }) as { challenge_token?: string; requires_2fa_setup?: boolean; requires_2fa?: boolean; email?: string };
+
+      // Store challenge_token in sessionStorage for 2FA flows
+      if (result?.challenge_token) {
+        sessionStorage.setItem("vc_challenge_token", result.challenge_token);
+        if (result.email) {
+          sessionStorage.setItem("vc_challenge_email", result.email);
+        }
+      }
+
+      // Backend returns challenge_token + requires_2fa_setup for first-time 2FA
+      // or requires_2fa for returning users who need to complete 2FA challenge
+      if (result?.requires_2fa_setup) {
+        router.push("/auth/2fa/setup");
+      } else if (result?.requires_2fa) {
+        router.push("/auth/2fa/challenge");
+      } else {
+        router.push(redirect || "/dashboard");
+      }
       router.refresh();
     } catch (error) {
       if (error instanceof Error) {
-        toast.error("Email o contraseña incorrectos");
+        const msg = error.message;
+        if (msg.includes("401") || msg.includes("incorrectos")) {
+          toast.error("Email o contraseña incorrectos");
+        } else if (msg.includes("423") || msg.includes("bloqueada")) {
+          toast.error("Cuenta bloqueada. Revisá tu email para instrucciones de desbloqueo.");
+        } else if (msg.includes("403") || msg.includes("verificar")) {
+          toast.error("Debes verificar tu email antes de iniciar sesión.");
+        } else {
+          toast.error("Error de conexión. Intentá de nuevo.");
+        }
       }
     } finally {
       setIsLoading(false);
@@ -87,9 +114,12 @@ export default function LoginPage() {
             <label htmlFor="password" className="text-sm font-semibold text-gray-800">
               Contraseña
             </label>
-            <span className="text-xs font-semibold text-indigo-600 cursor-pointer">
+            <Link
+              href="/auth/forgot-password"
+              className="text-xs font-semibold text-indigo-600 hover:text-indigo-700"
+            >
               ¿Olvidaste?
-            </span>
+            </Link>
           </div>
           <input
             id="password"
@@ -115,6 +145,23 @@ export default function LoginPage() {
         </button>
       </form>
 
+      {/* Divider */}
+      <div className="my-6 flex items-center gap-3">
+        <div className="h-px flex-1 bg-gray-200" />
+        <span className="text-xs text-gray-400">o</span>
+        <div className="h-px flex-1 bg-gray-200" />
+      </div>
+
+      {/* Google OAuth button (placeholder — NextAuth integration in next bolt) */}
+      <button
+        type="button"
+        className="h-12 w-full rounded-full text-base font-semibold border border-gray-300 text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50"
+        disabled
+        title="Disponible próximamente"
+      >
+        Continuar con Google
+      </button>
+
       <p className="mt-6 text-center text-sm text-gray-500">
         ¿No tenés cuenta?{" "}
         <Link href="/registro" className="font-semibold text-indigo-600 hover:text-indigo-700">
@@ -122,5 +169,13 @@ export default function LoginPage() {
         </Link>
       </p>
     </>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="py-12 text-center text-gray-500">Cargando...</div>}>
+      <LoginFormContent />
+    </Suspense>
   );
 }

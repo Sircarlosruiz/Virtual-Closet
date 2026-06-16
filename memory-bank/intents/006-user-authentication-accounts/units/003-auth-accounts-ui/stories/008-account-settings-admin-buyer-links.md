@@ -2,11 +2,11 @@
 id: 008-account-settings-admin-buyer-links
 unit: 003-auth-accounts-ui
 intent: 006-user-authentication-accounts
-status: draft
+status: implemented
 priority: should
 created: 2026-06-08T00:00:00Z
-assigned_bolt: null
-implemented: false
+assigned_bolt: 035-auth-accounts-ui
+implemented: true
 ---
 
 # Story: 008-account-settings-admin-buyer-links

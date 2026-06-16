@@ -3,15 +3,24 @@ id: 034-auth-accounts-ui
 unit: 003-auth-accounts-ui
 intent: 006-user-authentication-accounts
 type: simple-construction-bolt
-status: planned
+status: complete
 stories:
   - 003-2fa-setup-wizard
   - 004-2fa-challenge-screen
 created: 2026-06-08T00:00:00Z
-started: null
-completed: null
+started: 2026-06-12T00:00:00Z
+completed: 2026-06-12T00:00:00Z
 current_stage: null
-stages_completed: []
+stages_completed:
+  - name: plan
+    completed: 2026-06-12T00:00:00Z
+    artifact: implementation-plan.md
+  - name: implement
+    completed: 2026-06-12T00:00:00Z
+    artifact: source code
+  - name: test
+    completed: 2026-06-12T00:00:00Z
+    artifact: e2e/2fa.spec.ts
 
 requires_bolts: [033-auth-accounts-ui, 031-auth-service]
 enables_bolts: [035-auth-accounts-ui]

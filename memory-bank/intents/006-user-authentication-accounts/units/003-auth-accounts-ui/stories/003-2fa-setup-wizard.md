@@ -2,11 +2,11 @@
 id: 003-2fa-setup-wizard
 unit: 003-auth-accounts-ui
 intent: 006-user-authentication-accounts
-status: draft
+status: implemented
 priority: must
 created: 2026-06-08T00:00:00Z
-assigned_bolt: null
-implemented: false
+assigned_bolt: 034-auth-accounts-ui
+implemented: true
 ---
 
 # Story: 003-2fa-setup-wizard

@@ -16,6 +16,9 @@ import models.email_verification_token  # noqa: F401 — ensure EmailVerificatio
 import models.unlock_token  # noqa: F401 — ensure UnlockToken table is created
 import models.tenant  # noqa: F401 — ensure Tenant table is created
 import models.refresh_token  # noqa: F401 — ensure RefreshToken table is created
+import models.two_factor  # noqa: F401 — ensure TwoFactorConfig/BackupCode tables are created
+import models.oauth  # noqa: F401 — ensure OAuthLink/SmsOtpRecord tables are created
+import models.password_reset_token  # noqa: F401 — ensure PasswordResetToken table is created
 
 TEST_DATABASE_URL = "postgresql+asyncpg://postgres:postgres@localhost:5432/virtual_closet_test"
 
