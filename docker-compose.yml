@@ -270,7 +270,6 @@ networks:
 volumes:
   postgres_data:
   minio_data:
-  catvton_cache:
   fashn_weights:
   fashn_cache:
   tryoff_weights:
