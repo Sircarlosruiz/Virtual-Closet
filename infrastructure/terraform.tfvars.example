@@ -1,0 +1,33 @@
+# =============================================================================
+# Terraform Variables — Example
+# Copy to terraform.tfvars (gitignored) and fill in real values.
+# Sensitive values (hcloud_token, ssh keys, passwords) should be stored
+# as Terraform Cloud workspace variables (sensitive=true), not in this file.
+# =============================================================================
+
+# Hetzner Cloud API token — create at https://console.hetzner.cloud → project → API tokens
+# hcloud_token = "..."    # Set as TF_VAR_hcloud_token env var or Terraform Cloud sensitive variable
+
+cluster_name        = "virtualcloset-staging"
+environment         = "staging"
+datacenter_location = "nbg1"    # Nuremberg, EU — GDPR compliant
+
+# Pinned k3s version — see ADR-032 before changing
+k3s_version = "v1.29.4+k3s1"
+
+# CIDR blocks for SSH + kubectl access — use static IPs
+# admin_cidrs = ["YOUR.IP.ADDRESS/32"]
+
+# SSH public key content (not path — the actual key string)
+# ssh_public_key = "ssh-rsa AAAA..."
+
+# SSH private key path for remote-exec provisioners
+ssh_private_key_path = "~/.ssh/id_rsa"
+
+# Hetzner Object Storage — create credentials at https://console.hetzner.cloud → Object Storage
+object_storage_endpoint   = "https://fsn1.your-objectstorage.com"
+# object_storage_access_key = "..."   # Sensitive — use Terraform Cloud variable
+# object_storage_secret_key = "..."   # Sensitive — use Terraform Cloud variable
+
+# PostgreSQL password — used to create the backup k8s Secret
+# postgres_password = "..."           # Sensitive — use Terraform Cloud variable

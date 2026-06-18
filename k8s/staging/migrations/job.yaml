@@ -1,0 +1,39 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: alembic-migrate-IMAGE_TAG
+  namespace: virtual-closet-staging
+  labels:
+    app.kubernetes.io/name: alembic-migrate
+    app.kubernetes.io/component: migration
+    app.kubernetes.io/version: "IMAGE_TAG"
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 300
+  ttlSecondsAfterFinished: 3600
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: alembic-migrate
+        app.kubernetes.io/component: migration
+    spec:
+      restartPolicy: Never
+      serviceAccountName: backend
+      imagePullSecrets:
+        - name: ghcr-pull-secret
+      containers:
+        - name: migrate
+          image: virtual-closet/backend:IMAGE_TAG
+          command: ["alembic", "upgrade", "head"]
+          envFrom:
+            - configMapRef:
+                name: virtual-closet-config
+            - secretRef:
+                name: virtual-closet-secrets
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 200m
+              memory: 512Mi

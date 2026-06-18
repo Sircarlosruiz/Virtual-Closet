@@ -3,7 +3,7 @@ id: 040-ci-cd-pipeline
 unit: 006-ci-cd-pipeline
 intent: 007-multi-environment-deployment
 type: ddd-construction-bolt
-status: planned
+status: complete
 stories:
   - 001-workflow-structure
   - 002-pr-workflow
@@ -18,12 +18,20 @@ stories:
   - 011-rollback-trigger
   - 012-e2e-test
   - 013-workflow-docs
-created: 2026-06-17T15:05:00Z
-started: null
-completed: null
+created: 2026-06-17T15:05:00.000Z
+started: 2026-06-18T17:30:00.000Z
+completed: "2026-06-18T20:56:56Z"
 current_stage: null
-stages_completed: []
-
+stages_completed:
+  - name: domain-model
+    completed: 2026-06-18T17:30:00.000Z
+    artifact: ddd-01-domain-model.md
+  - name: technical-design
+    completed: 2026-06-18T17:45:00.000Z
+    artifact: ddd-02-technical-design.md
+  - name: adr-analysis
+    completed: 2026-06-18T17:50:00.000Z
+    artifact: adr-038-kubeconfig-secret-over-github-oidc.md
 requires_bolts:
   - 037-infrastructure
   - 038-containers
@@ -33,7 +41,6 @@ enables_bolts:
   - 042-observability-recovery
 requires_units: []
 blocks: false
-
 complexity:
   avg_complexity: 3
   avg_uncertainty: 2

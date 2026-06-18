@@ -1,0 +1,32 @@
+# Python artifacts
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.mypy_cache
+.ruff_cache
+
+# uv / venv
+.venv
+.python-version
+
+# Test artifacts
+tests/
+.pytest_cache
+coverage.xml
+.coverage
+
+# Environment and secrets
+.env
+.env.*
+
+# ML seed images (large, only for local dev)
+seed-imgs/
+
+# Git
+.git
+.gitignore
+
+# Docs
+*.md
+README*

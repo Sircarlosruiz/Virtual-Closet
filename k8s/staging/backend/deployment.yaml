@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: virtual-closet-staging
+  labels:
+    app: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      serviceAccountName: backend
+      imagePullSecrets:
+        - name: ghcr-pull-secret
+      containers:
+        - name: backend
+          # CI substitutes IMAGE_TAG with git SHA before kubectl apply
+          image: virtual-closet/backend:IMAGE_TAG
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: virtual-closet-config
+            - secretRef:
+                name: virtual-closet-secrets
+          resources:
+            requests:
+              cpu: 200m
+              memory: 512Mi
+            limits:
+              cpu: 500m
+              memory: 1Gi
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            failureThreshold: 24
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3

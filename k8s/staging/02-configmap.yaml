@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: virtual-closet-config
+  namespace: virtual-closet-staging
+data:
+  JWT_ALGORITHM: "HS256"
+  JWT_EXPIRE_DAYS: "7"
+  FRONTEND_URL: "https://staging.virtualcloset.io"
+  BACKEND_URL: "https://api.staging.virtualcloset.io"
+  MINIO_ENDPOINT: "http://minio:9000"
+  MINIO_PUBLIC_ENDPOINT: "https://api.staging.virtualcloset.io/storage"
+  MINIO_BUCKET_ORIGINALS: "originals"
+  MINIO_BUCKET_GENERATED: "generated"
+  MINIO_BUCKET_THUMBNAILS: "thumbnails"
+  MINIO_BUCKET_MODEL_THUMBNAILS: "model-thumbnails"
+  REDIS_URL: "redis://redis:6379/0"
+  VTON_PROVIDER: "replicate"
+  COOKIE_SECURE: "true"
+  SEED_IMGS_DIR: "/app/seed-imgs"
+  FASHN_GARMENT_PHOTO_TYPE: "flat-lay"
+  FASHN_LEG_POSTPROCESS: "true"
+  FASHN_PRESERVE_LIMBS: "true"

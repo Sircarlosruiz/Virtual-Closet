@@ -3,7 +3,7 @@ id: 042-observability-recovery
 unit: 007-observability-recovery
 intent: 007-multi-environment-deployment
 type: ddd-construction-bolt
-status: planned
+status: complete
 stories:
   - 001-log-aggregation
   - 002-structured-logging-frontend
@@ -14,12 +14,20 @@ stories:
   - 007-test-rollout
   - 008-restore-procedure
   - 009-test-restore
-created: 2026-06-17T15:05:00Z
-started: null
-completed: null
+created: 2026-06-17T15:05:00.000Z
+started: 2026-06-18T21:00:00.000Z
+completed: "2026-06-18T21:48:49Z"
 current_stage: null
-stages_completed: []
-
+stages_completed:
+  - name: domain-model
+    completed: 2026-06-18T21:00:00.000Z
+    artifact: ddd-01-domain-model.md
+  - name: technical-design
+    completed: 2026-06-18T21:15:00.000Z
+    artifact: ddd-02-technical-design.md
+  - name: adr-analysis
+    completed: 2026-06-18T21:15:00.000Z
+    artifact: (pass-through — no ADRs)
 requires_bolts:
   - 037-infrastructure
   - 039-kubernetes-config
@@ -27,7 +35,6 @@ requires_bolts:
 enables_bolts: []
 requires_units: []
 blocks: false
-
 complexity:
   avg_complexity: 2
   avg_uncertainty: 1

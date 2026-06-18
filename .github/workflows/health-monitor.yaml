@@ -1,0 +1,62 @@
+name: Health Monitor
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+permissions:
+  issues: write
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check backend health
+        id: backend
+        run: |
+          STATUS=$(curl -sf --max-time 10 \
+            https://api.staging.virtualcloset.io/health \
+            -o /dev/null -w "%{http_code}" || echo "000")
+          echo "status=${STATUS}" >> $GITHUB_OUTPUT
+          echo "Backend: ${STATUS}"
+
+      - name: Check frontend health
+        id: frontend
+        run: |
+          STATUS=$(curl -sf --max-time 10 \
+            https://staging.virtualcloset.io/api/health \
+            -o /dev/null -w "%{http_code}" || echo "000")
+          echo "status=${STATUS}" >> $GITHUB_OUTPUT
+          echo "Frontend: ${STATUS}"
+
+      - name: Alert on failure
+        if: steps.backend.outputs.status != '200' || steps.frontend.outputs.status != '200'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TITLE="🚨 Staging health check failed"
+          BODY="**Time**: $(date -u '+%Y-%m-%dT%H:%M:%SZ')
+          **Backend**: ${{ steps.backend.outputs.status }}
+          **Frontend**: ${{ steps.frontend.outputs.status }}
+          **Run**: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+          OPEN=$(gh issue list \
+            --repo "${{ github.repository }}" \
+            --state open \
+            --label staging-incident \
+            --json number \
+            -q '.[0].number' 2>/dev/null || echo "")
+
+          if [ -n "${OPEN}" ]; then
+            gh issue comment "${OPEN}" \
+              --repo "${{ github.repository }}" \
+              --body "${BODY}"
+          else
+            gh issue create \
+              --repo "${{ github.repository }}" \
+              --title "${TITLE}" \
+              --body "${BODY}" \
+              --label staging-incident
+          fi
+          exit 1

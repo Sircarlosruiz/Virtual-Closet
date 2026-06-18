@@ -25,10 +25,19 @@ from api.routers.buyer_links import router as buyer_links_router, validate_route
 import logging
 
 from core.config import email_backend_status, resend_api_key_is_configured, settings, use_console_email_backend
+from core.limiter import limiter
+from core.middleware import RequestIDFilter, RequestIDMiddleware, TokenRefreshMiddleware
+
+_log_handler = logging.StreamHandler()
+_log_handler.setFormatter(logging.Formatter(
+    fmt="%(asctime)s %(levelname)s %(name)s [%(request_id)s] %(message)s",
+    datefmt="%Y-%m-%dT%H:%M:%SZ",
+))
+_log_handler.addFilter(RequestIDFilter())
+logging.root.setLevel(logging.INFO)
+logging.root.addHandler(_log_handler)
 
 logger = logging.getLogger(__name__)
-from core.limiter import limiter
-from core.middleware import TokenRefreshMiddleware
 
 app = FastAPI(title="Virtual Closet API", version="0.1.0")
 app.state.limiter = limiter
@@ -42,6 +51,7 @@ app.add_middleware(
 )
 
 app.add_middleware(TokenRefreshMiddleware)
+app.add_middleware(RequestIDMiddleware)
 
 app.include_router(auth_router)
 app.include_router(auth_2fa_router)

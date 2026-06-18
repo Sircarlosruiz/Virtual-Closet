@@ -3,7 +3,7 @@ id: 041-database-migrations
 unit: 005-db-migrations
 intent: 007-multi-environment-deployment
 type: ddd-construction-bolt
-status: planned
+status: complete
 stories:
   - 001-review-alembic
   - 002-migration-job
@@ -15,12 +15,20 @@ stories:
   - 008-zero-downtime
   - 009-migration-guide
   - 010-troubleshooting
-created: 2026-06-17T15:05:00Z
-started: null
-completed: null
+created: 2026-06-17T15:05:00.000Z
+started: 2026-06-18T15:45:00.000Z
+completed: "2026-06-18T17:18:04Z"
 current_stage: null
-stages_completed: []
-
+stages_completed:
+  - name: domain-model
+    completed: 2026-06-18T16:00:00.000Z
+    artifact: ddd-01-domain-model.md
+  - name: technical-design
+    completed: 2026-06-18T16:15:00.000Z
+    artifact: ddd-02-technical-design.md
+  - name: adr-analysis
+    completed: 2026-06-18T16:20:00.000Z
+    artifact: adr-037-migration-job-backoff-zero.md
 requires_bolts:
   - 037-infrastructure
   - 039-kubernetes-config
@@ -28,7 +36,6 @@ enables_bolts:
   - 040-ci-cd-pipeline
 requires_units: []
 blocks: false
-
 complexity:
   avg_complexity: 2
   avg_uncertainty: 1

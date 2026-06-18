@@ -3,7 +3,8 @@ unit: 006-ci-cd-pipeline
 unit_type: infrastructure
 default_bolt_type: ddd-construction-bolt
 intent: 007-multi-environment-deployment
-created: 2026-06-17T14:42:00Z
+created: 2026-06-17T14:42:00.000Z
+status: complete
 ---
 
 # Unit Brief: CI/CD Pipeline Automation (GitHub Actions)

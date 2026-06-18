@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-06-17T16:00:00Z
-total_decisions: 31
+last_updated: 2026-06-18T17:50:00Z
+total_decisions: 38
 ---
 
 # Decision Index
@@ -19,6 +19,62 @@ Use this to find relevant prior decisions when working on related features.
 ## Decisions
 
 <!-- Entries are appended below in reverse chronological order (newest first) -->
+
+### ADR-038: kubeconfig Secret Over GitHub OIDC for Bare-Metal k3s Access
+- **Status**: accepted
+- **Date**: 2026-06-18
+- **Bolt**: 040-ci-cd-pipeline (006-ci-cd-pipeline)
+- **Path**: `bolts/040-ci-cd-pipeline/adr-038-kubeconfig-secret-over-github-oidc.md`
+- **Summary**: GitHub Actions uses a base64-encoded kubeconfig stored as a GitHub environment secret (`KUBE_CONFIG_STAGING`) to access the bare-metal k3s cluster. GitHub OIDC federation requires a cloud IAM webhook that bare-metal k3s does not have. The kubeconfig grants a namespace-scoped ServiceAccount only. Rotate quarterly or on team member departure. Revisit when migrating to cloud-managed k8s.
+- **Read when**: Configuring GitHub Actions access to the k3s cluster, rotating cluster credentials in CI, evaluating GitHub OIDC adoption, planning migration to cloud-managed Kubernetes
+
+### ADR-037: Migration Job backoffLimit: 0 — Fail Fast, No Auto-Retry
+- **Status**: accepted
+- **Date**: 2026-06-18
+- **Bolt**: 041-database-migrations (005-db-migrations)
+- **Path**: `bolts/041-database-migrations/adr-037-migration-job-backoff-zero.md`
+- **Summary**: The Alembic migration Job sets `backoffLimit: 0`. On pod failure, Kubernetes stops immediately — no auto-retry. Operator must inspect DB state before retrying. Auto-retry risks applying DDL a second time (already exists) or retrying after partial schema changes, producing confusing secondary errors.
+- **Read when**: Configuring a k8s Job that modifies shared persistent state, debugging a failed migration Job, deciding retry policy for batch Jobs, evaluating whether to use backoffLimit > 0 for DB jobs
+
+### ADR-036: Redis as Deployment (No PVC) for Staging
+- **Status**: accepted
+- **Date**: 2026-06-18
+- **Bolt**: 039-kubernetes-config (004-kubernetes-deployment-config)
+- **Path**: `bolts/039-kubernetes-config/adr-036-redis-deployment-no-pvc.md`
+- **Summary**: Redis runs as a Deployment with no PersistentVolumeClaim for staging. The token denylist (used for logout revocation) is in-memory only; pod restart causes up to 7-day token revocation gap. Accepted for staging; production should re-evaluate StatefulSet + PVC or managed Redis.
+- **Read when**: Implementing logout/force-logout flows, reviewing token revocation security, planning Redis migration to StatefulSet, auditing session management, designing production Redis deployment
+
+### ADR-035: ingress-nginx with hostNetwork on Worker Node (Over NodePort + Hetzner LB)
+- **Status**: accepted
+- **Date**: 2026-06-18
+- **Bolt**: 039-kubernetes-config (004-kubernetes-deployment-config)
+- **Path**: `bolts/039-kubernetes-config/adr-035-ingress-nginx-hostnetwork.md`
+- **Summary**: ingress-nginx is deployed as a DaemonSet with hostNetwork: true targeting the worker node. The controller binds directly to ports 80/443 on the worker's public IP. Avoids Hetzner LB cost (~€70/year) and CCM dependency. At 2+ workers, switch to Hetzner LB.
+- **Read when**: Adding worker nodes to the cluster, troubleshooting Ingress 404s, configuring TLS with cert-manager, planning horizontal scaling beyond 1 worker, evaluating ingress controller options
+
+### ADR-034: Terraform Cloud as Primary State Backend (Over Hetzner Object Storage)
+- **Status**: accepted
+- **Date**: 2026-06-17
+- **Bolt**: 037-infrastructure (002-infrastructure-provisioning)
+- **Path**: `bolts/037-infrastructure/adr-034-terraform-cloud-state-backend.md`
+- **Summary**: Terraform Cloud is the primary state backend for all environments; Hetzner Object Storage is the documented fallback. Terraform Cloud provides native state locking (critical for concurrent safety) for free. State contains infrastructure metadata but no personal data — GDPR concern is acceptable.
+- **Read when**: Adding new Terraform workspaces, migrating state backends, setting up CI/CD pipelines that run terraform, debugging state lock issues, or evaluating infrastructure tooling changes
+
+### ADR-033: local-path-provisioner for PVs (Non-HA Node-Local Storage)
+- **Status**: accepted
+- **Date**: 2026-06-17
+- **Bolt**: 037-infrastructure (002-infrastructure-provisioning)
+- **Path**: `bolts/037-infrastructure/adr-033-local-path-provisioner-non-ha-storage.md`
+- **Summary**: k3s built-in local-path-provisioner used for all StatefulSet PVs. Non-HA trade-off accepted: single worker failure takes down all stateful services. Compensated by daily pg_dump backups to Object Storage. Longhorn and Hetzner CSI rejected because distributed storage provides no benefit with a single worker node.
+- **Read when**: Adding a new StatefulSet to the cluster, planning disaster recovery, evaluating storage migration, scaling the cluster beyond 1 worker node, or debugging PV binding issues
+
+### ADR-032: Self-Managed k3s Over Hetzner Managed Kubernetes
+- **Status**: accepted
+- **Date**: 2026-06-17
+- **Bolt**: 037-infrastructure (002-infrastructure-provisioning)
+- **Path**: `bolts/037-infrastructure/adr-032-self-managed-k3s.md`
+- **Summary**: Self-managed k3s on Hetzner VMs instead of Hetzner Managed Kubernetes (~€120/mo fee). Saves ~€116/month. k3s control-plane is single-node (CX21); control-plane availability is best-effort. Worker node (CX31) hosts all application workloads. k3s version is pinned and upgraded intentionally.
+- **Read when**: Planning cluster upgrades, debugging control-plane availability, evaluating migration to managed Kubernetes, adding worker nodes, or troubleshooting k3s-specific behavior differences from vanilla Kubernetes
 
 ### ADR-031: Frontend node_modules Named Volume Overlay in Docker Compose
 - **Status**: accepted

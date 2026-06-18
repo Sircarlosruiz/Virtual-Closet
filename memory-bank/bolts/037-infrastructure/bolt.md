@@ -3,7 +3,7 @@ id: 037-infrastructure
 unit: 002-infrastructure-provisioning
 intent: 007-multi-environment-deployment
 type: ddd-construction-bolt
-status: planned
+status: complete
 stories:
   - 001-terraform-structure
   - 002-terraform-variables
@@ -17,18 +17,28 @@ stories:
   - 010-test-restore
   - 011-ops-documentation
   - 012-terraform-state
-created: 2026-06-17T15:05:00Z
-started: null
-completed: null
+created: 2026-06-17T15:05:00.000Z
+started: 2026-06-17T17:00:00.000Z
+completed: "2026-06-18T03:04:37Z"
 current_stage: null
-stages_completed: []
-
+stages_completed:
+  - name: domain-model
+    completed: 2026-06-17T17:15:00.000Z
+    artifact: ddd-01-domain-model.md
+  - name: technical-design
+    completed: 2026-06-17T17:30:00.000Z
+    artifact: ddd-02-technical-design.md
+  - name: adr-analysis
+    completed: 2026-06-17T17:45:00.000Z
+    artifact: adr-032-self-managed-k3s.md, adr-033-local-path-provisioner-non-ha-storage.md, adr-034-terraform-cloud-state-backend.md
+  - name: implement
+    completed: 2026-06-17T18:00:00.000Z
+    artifact: infrastructure/ (27 files)
 requires_bolts: []
 enables_bolts:
   - 040-ci-cd-pipeline
 requires_units: []
 blocks: false
-
 complexity:
   avg_complexity: 3
   avg_uncertainty: 2

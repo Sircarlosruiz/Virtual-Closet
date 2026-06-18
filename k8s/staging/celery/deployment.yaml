@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: celery
+  namespace: virtual-closet-staging
+  labels:
+    app: celery
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: celery
+  template:
+    metadata:
+      labels:
+        app: celery
+    spec:
+      serviceAccountName: celery-worker
+      imagePullSecrets:
+        - name: ghcr-pull-secret
+      containers:
+        - name: celery
+          # Same image as backend; CMD overridden below
+          image: virtual-closet/backend:IMAGE_TAG
+          command:
+            - celery
+            - -A
+            - core.celery_app
+            - worker
+            - --loglevel=info
+            - -Q
+            - "vton.generation.normal,vton.generation.priority,tryoff"
+          envFrom:
+            - configMapRef:
+                name: virtual-closet-config
+            - secretRef:
+                name: virtual-closet-secrets
+          resources:
+            requests:
+              cpu: 500m
+              memory: 512Mi
+            limits:
+              cpu: 1000m
+              memory: 1500Mi
+          startupProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - "celery -A core.celery_app inspect ping -d celery@$HOSTNAME --timeout=10 2>&1 | grep -q pong"
+            failureThreshold: 30
+            periodSeconds: 10
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - "celery -A core.celery_app inspect ping -d celery@$HOSTNAME --timeout=10 2>&1 | grep -q pong"
+            periodSeconds: 60
+            timeoutSeconds: 15
+            failureThreshold: 5

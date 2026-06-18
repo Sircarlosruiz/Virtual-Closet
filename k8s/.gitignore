@@ -1,0 +1,7 @@
+# Populated secrets file — contains real credentials, never commit
+staging/01-secrets.yaml
+production/01-secrets.yaml
+
+# kubeconfig files
+*.kubeconfig
+kubeconfig

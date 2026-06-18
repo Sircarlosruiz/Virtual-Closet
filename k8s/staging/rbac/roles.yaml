@@ -1,0 +1,8 @@
+# Explicit empty role — no permissions granted intentionally.
+# Documents that no k8s API access is needed by any workload SA.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: virtual-closet-role
+  namespace: virtual-closet-staging
+rules: []

@@ -3,7 +3,7 @@ id: 039-kubernetes-config
 unit: 004-kubernetes-deployment-config
 intent: 007-multi-environment-deployment
 type: ddd-construction-bolt
-status: planned
+status: complete
 stories:
   - 001-manifest-structure
   - 002-frontend-deployment
@@ -23,12 +23,23 @@ stories:
   - 016-manifest-validation
   - 017-dry-run-deployment
   - 018-deployment-docs
-created: 2026-06-17T15:05:00Z
-started: null
-completed: null
+created: 2026-06-17T15:05:00.000Z
+started: 2026-06-18T11:00:00.000Z
+completed: "2026-06-18T15:26:46Z"
 current_stage: null
-stages_completed: []
-
+stages_completed:
+  - name: domain-model
+    completed: 2026-06-18T11:30:00.000Z
+    artifact: ddd-01-domain-model.md
+  - name: technical-design
+    completed: 2026-06-18T11:45:00.000Z
+    artifact: ddd-02-technical-design.md
+  - name: adr-analysis
+    completed: 2026-06-18T12:00:00.000Z
+    artifact: adr-035-ingress-nginx-hostnetwork.md, adr-036-redis-deployment-no-pvc.md
+  - name: implement
+    completed: 2026-06-18T13:00:00.000Z
+    artifact: k8s/staging/ (22 files — 19 YAML + .gitignore + DEPLOY.md)
 requires_bolts:
   - 037-infrastructure
   - 038-containers
@@ -36,7 +47,6 @@ enables_bolts:
   - 040-ci-cd-pipeline
 requires_units: []
 blocks: false
-
 complexity:
   avg_complexity: 3
   avg_uncertainty: 2

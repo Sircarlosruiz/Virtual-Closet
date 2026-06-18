@@ -9,3 +9,7 @@ test-results
 eslint.config.mjs
 playwright.config.ts
 .pnpm-store
+.env
+.env.*
+.env.local
+.env.production

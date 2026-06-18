@@ -1,0 +1,87 @@
+name: Rollback Staging
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_sha:
+        description: 'SHA (7 chars) of the image that applied the bad migration'
+        required: true
+      target_sha:
+        description: 'SHA (7 chars) of the previous good image to redeploy'
+        required: true
+
+env:
+  NAMESPACE: virtual-closet-staging
+  OWNER: ${{ github.repository_owner }}
+
+jobs:
+  rollback:
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      url: https://staging.virtualcloset.io
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure kubeconfig
+        run: |
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBE_CONFIG_STAGING }}" | base64 -d > ~/.kube/config
+          chmod 600 ~/.kube/config
+
+      - name: Scale backend to zero
+        run: |
+          kubectl scale deployment/backend --replicas=0 -n ${NAMESPACE}
+          kubectl rollout status deployment/backend -n ${NAMESPACE} --timeout=60s
+
+      - name: Run rollback migration job
+        run: |
+          IMAGE_SHA="${{ inputs.image_sha }}"
+          sed "s/IMAGE_TAG/${IMAGE_SHA}/g" \
+            k8s/staging/migrations/rollback-job.yaml.template \
+            | sed "s|virtual-closet/backend:|ghcr.io/${OWNER}/backend:|g" \
+            | kubectl create -f -
+          kubectl wait --for=condition=complete \
+            job/alembic-rollback-${IMAGE_SHA} \
+            -n ${NAMESPACE} --timeout=120s
+
+      - name: Redeploy previous image
+        run: |
+          TARGET="${{ inputs.target_sha }}"
+          for f in k8s/staging/backend/deployment.yaml k8s/staging/celery/deployment.yaml; do
+            sed "s/IMAGE_TAG/${TARGET}/g" ${f} \
+              | sed "s|virtual-closet/backend:|ghcr.io/${OWNER}/backend:|g" \
+              | kubectl apply -f -
+          done
+          sed "s/IMAGE_TAG/${TARGET}/g" k8s/staging/frontend/deployment.yaml \
+            | sed "s|virtual-closet/frontend:|ghcr.io/${OWNER}/frontend:|g" \
+            | kubectl apply -f -
+
+      - name: Wait for rollout
+        run: |
+          kubectl rollout status deployment/backend \
+            -n ${NAMESPACE} --timeout=120s
+          kubectl rollout status deployment/celery \
+            -n ${NAMESPACE} --timeout=120s
+          kubectl rollout status deployment/frontend \
+            -n ${NAMESPACE} --timeout=120s
+
+      - name: Health check gate
+        run: |
+          for i in $(seq 1 12); do
+            B=$(curl -sf --max-time 10 \
+              https://api.staging.virtualcloset.io/health \
+              -o /dev/null -w "%{http_code}" || echo "000")
+            F=$(curl -sf --max-time 10 \
+              https://staging.virtualcloset.io/api/health \
+              -o /dev/null -w "%{http_code}" || echo "000")
+            echo "Attempt ${i}/12: backend=${B} frontend=${F}"
+            if [ "${B}" = "200" ] && [ "${F}" = "200" ]; then
+              echo "Rollback succeeded"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "Rollback health check failed — manual intervention required"
+          kubectl logs -l app=backend -n ${NAMESPACE} --tail=50 || true
+          exit 1
