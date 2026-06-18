@@ -3,7 +3,7 @@ id: 036-dev-environment
 unit: 001-dev-environment
 intent: 007-multi-environment-deployment
 type: ddd-construction-bolt
-status: planned
+status: complete
 stories:
   - 001-refactor-docker-compose
   - 002-configure-alembic-auto
@@ -12,17 +12,27 @@ stories:
   - 005-env-example
   - 006-test-dev-startup
   - 007-dev-guide
-created: 2026-06-17T15:05:00Z
-started: null
-completed: null
+created: 2026-06-17T15:05:00.000Z
+started: 2026-06-17T15:30:00.000Z
+completed: "2026-06-18T02:33:51Z"
 current_stage: null
-stages_completed: []
-
+stages_completed:
+  - name: domain-model
+    completed: 2026-06-17T15:45:00.000Z
+    artifact: ddd-01-domain-model.md
+  - name: technical-design
+    completed: 2026-06-17T16:00:00.000Z
+    artifact: ddd-02-technical-design.md
+  - name: adr-analysis
+    completed: 2026-06-17T16:15:00.000Z
+    artifact: adr-030-alembic-entrypoint-migration.md, adr-031-node-modules-named-volume-overlay.md
+  - name: implement
+    completed: 2026-06-17T16:30:00.000Z
+    artifact: docker-compose.yml, backend/.env.example, DEVELOPMENT.md
 requires_bolts: []
 enables_bolts: []
 requires_units: []
 blocks: false
-
 complexity:
   avg_complexity: 2
   avg_uncertainty: 1

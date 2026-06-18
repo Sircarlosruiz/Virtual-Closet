@@ -2,11 +2,11 @@
 id: 005-env-example
 unit: 001-dev-environment
 intent: 007-multi-environment-deployment
-status: draft
+status: complete
 priority: must
-created: 2026-06-17T14:45:00Z
+created: 2026-06-17T14:45:00.000Z
 assigned_bolt: null
-implemented: false
+implemented: true
 ---
 
 # Story: 005-Create and Document .env.example Template

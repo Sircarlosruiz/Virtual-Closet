@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-06-10T00:00:00Z
-total_decisions: 29
+last_updated: 2026-06-17T16:00:00Z
+total_decisions: 31
 ---
 
 # Decision Index
@@ -19,6 +19,22 @@ Use this to find relevant prior decisions when working on related features.
 ## Decisions
 
 <!-- Entries are appended below in reverse chronological order (newest first) -->
+
+### ADR-031: Frontend node_modules Named Volume Overlay in Docker Compose
+- **Status**: accepted
+- **Date**: 2026-06-17
+- **Bolt**: 036-dev-environment (001-dev-environment)
+- **Path**: `bolts/036-dev-environment/adr-031-node-modules-named-volume-overlay.md`
+- **Summary**: Mount a Docker named volume at `/app/node_modules` alongside the source bind mount at `/app` to ensure container-compiled packages (correct Linux architecture) shadow any host-side node_modules. Prevents silent architecture-mismatch failures on macOS/Windows.
+- **Read when**: Adding a new frontend service to docker-compose, troubleshooting missing npm packages inside a container, configuring hot-reload for any Node.js service, or debugging native binary errors (sharp, esbuild) in a containerized frontend
+
+### ADR-030: Alembic Migrations Run in Backend Entrypoint (Dev) / Kubernetes Job (Prod)
+- **Status**: accepted
+- **Date**: 2026-06-17
+- **Bolt**: 036-dev-environment (001-dev-environment)
+- **Path**: `bolts/036-dev-environment/adr-030-alembic-entrypoint-migration.md`
+- **Summary**: In docker-compose dev, `alembic upgrade head` runs inside the backend container entrypoint before uvicorn starts (idempotent, fails loudly). In production k8s (bolts 039/041), migrations run as a dedicated Kubernetes Job — the entrypoint pattern is explicitly rejected for production due to multi-replica race conditions.
+- **Read when**: Configuring backend container startup, designing k8s deployment for the backend, adding new Alembic migrations, debugging backend startup failures, or configuring celery_worker (must NOT include migration step)
 
 ### ADR-029: Password Reset Revokes All Active Sessions
 - **Status**: accepted

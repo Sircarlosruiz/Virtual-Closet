@@ -21,80 +21,17 @@ services:
       timeout: 5s
       retries: 5
 
-  frontend:
+  redis:
+    image: redis:7-alpine
     networks:
       - virtual_closet
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      target: dev
-    deploy:
-      resources:
-        limits:
-          memory: 2gb
-    command: pnpm dev
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-      - /app/.next
     ports:
-      - "3000:3000"
-    environment:
-      NEXT_PUBLIC_API_URL: http://localhost:8000
-      NEXT_PUBLIC_BACKEND_URL: http://localhost:8000
-      BACKEND_URL: http://fastapi:8000
-      WATCHPACK_POLLING: "true"
-      CHOKIDAR_USEPOLLING: "true"
-    depends_on:
-      - fastapi
-
-  fastapi:
-    networks:
-      - virtual_closet
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    deploy:
-      resources:
-        limits:
-          memory: 1.5gb
-    command: uv run uvicorn main:app --host 0.0.0.0 --port 8000 --reload
-    volumes:
-      - ./backend:/app
-      - ./docs/imgs:/app/seed-imgs:ro
-      - /app/.venv
-    ports:
-      - "8000:8000"
-    env_file:
-      - ./backend/.env
-    environment:
-      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/virtual_closet_dev
-      JWT_SECRET_KEY: dev-secret-key-change-in-production
-      JWT_ALGORITHM: HS256
-      JWT_EXPIRE_DAYS: "7"
-      FRONTEND_URL: http://localhost:3000
-      BACKEND_URL: http://localhost:8000
-      MINIO_ENDPOINT: http://minio:9000
-      MINIO_PUBLIC_ENDPOINT: http://localhost:9000
-      MINIO_ACCESS_KEY: minioadmin
-      MINIO_SECRET_KEY: minioadmin
-      MINIO_BUCKET_ORIGINALS: originals
-      MINIO_BUCKET_GENERATED: generated
-      MINIO_BUCKET_THUMBNAILS: thumbnails
-      MINIO_BUCKET_MODEL_THUMBNAILS: model-thumbnails
-      SEED_IMGS_DIR: /app/seed-imgs
-      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
-      CATVTON_LOCAL_URL: http://catvton:8000
-      FASHN_LOCAL_URL: http://fashn:8000
-      TRYOFF_MODEL_URL: http://tryoff-model:8000
-      TRYOFF_MODEL_TIMEOUT_SECONDS: "1800"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      minio:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
   minio:
     image: minio/minio:latest
@@ -142,6 +79,65 @@ services:
       timeout: 5s
       retries: 5
 
+  fastapi:
+    networks:
+      - virtual_closet
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    deploy:
+      resources:
+        limits:
+          memory: 1.5gb
+    # Run migrations before starting the server (ADR-030: entrypoint pattern for dev)
+    command: >
+      sh -c "uv run alembic upgrade head &&
+             uv run uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
+    volumes:
+      - ./backend:/app
+      - ./docs/imgs:/app/seed-imgs:ro
+      - /app/.venv
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./backend/.env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/virtual_closet_dev
+      REDIS_URL: redis://redis:6379/0
+      JWT_SECRET_KEY: dev-secret-key-change-in-production
+      JWT_ALGORITHM: HS256
+      JWT_EXPIRE_DAYS: "7"
+      FRONTEND_URL: http://localhost:3000
+      BACKEND_URL: http://localhost:8000
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_PUBLIC_ENDPOINT: http://localhost:9000
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+      MINIO_BUCKET_ORIGINALS: originals
+      MINIO_BUCKET_GENERATED: generated
+      MINIO_BUCKET_THUMBNAILS: thumbnails
+      MINIO_BUCKET_MODEL_THUMBNAILS: model-thumbnails
+      SEED_IMGS_DIR: /app/seed-imgs
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+      FASHN_LOCAL_URL: http://fashn:8000
+      TRYOFF_MODEL_URL: http://tryoff-model:8000
+      TRYOFF_MODEL_TIMEOUT_SECONDS: "1800"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
   celery_worker:
     networks:
       - virtual_closet
@@ -156,6 +152,7 @@ services:
       - /app/.venv
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/virtual_closet_dev
+      REDIS_URL: redis://redis:6379/0
       JWT_SECRET_KEY: dev-secret-key-change-in-production
       JWT_ALGORITHM: HS256
       JWT_EXPIRE_DAYS: "7"
@@ -169,18 +166,14 @@ services:
       MINIO_BUCKET_GENERATED: generated
       MINIO_BUCKET_THUMBNAILS: thumbnails
       MINIO_BUCKET_MODEL_THUMBNAILS: model-thumbnails
-      # VTON_PROVIDER, CATVTON_*, REPLICATE_API_KEY come from env_file (backend/.env)
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
-      # CatVTON-Flux self-hosted: worker calls http://catvton:8000/classify + /predict
-      # Requires: docker compose --profile gpu up catvton (when VTON_PROVIDER=catvton_local)
-      CATVTON_LOCAL_URL: http://catvton:8000
-      # FASHN VTON v1.5 self-hosted: worker calls http://fashn:8000/classify + /predict
-      # Requires: docker compose --profile gpu up fashn (when VTON_PROVIDER=fashn_local)
       FASHN_LOCAL_URL: http://fashn:8000
-      # tryoff-model is profile gpu|tryoff — start: docker compose --profile tryoff up -d tryoff-model
       TRYOFF_MODEL_URL: http://tryoff-model:8000
       TRYOFF_MODEL_TIMEOUT_SECONDS: "1800"
+    # Wait for fastapi:healthy so migrations have run before workers process tasks (ADR-030)
     depends_on:
+      fastapi:
+        condition: service_healthy
       rabbitmq:
         condition: service_healthy
       postgres:
@@ -188,8 +181,36 @@ services:
       minio:
         condition: service_healthy
 
-  # FASHN VTON v1.5 inference server — maskless try-on, ~8 GB VRAM (NVIDIA GPU).
+  frontend:
+    networks:
+      - virtual_closet
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: dev
+    deploy:
+      resources:
+        limits:
+          memory: 2gb
+    command: pnpm dev
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules  # named volume overlay — preserves container packages (ADR-031)
+      - /app/.next
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+      NEXT_PUBLIC_BACKEND_URL: http://localhost:8000
+      BACKEND_URL: http://fastapi:8000
+      WATCHPACK_POLLING: "true"
+      CHOKIDAR_USEPOLLING: "true"
+    depends_on:
+      - fastapi
+
+  # ─── GPU Profiles ──────────────────────────────────────────────────────────
   # Start with: docker compose --profile gpu up fashn
+  # FASHN VTON v1.5 inference server — maskless try-on, ~8 GB VRAM (NVIDIA GPU).
   # First run downloads ~2 GB of weights; subsequent starts use the cache volume.
   fashn:
     profiles: ["gpu"]
@@ -198,7 +219,6 @@ services:
     build:
       context: ./docker/fashn
       dockerfile: Dockerfile
-    # Reads FASHN_STEPS, FASHN_GUIDANCE, FASHN_GARMENT_PHOTO_TYPE from backend/.env
     env_file:
       - ./backend/.env
     ports:
@@ -220,7 +240,7 @@ services:
       retries: 3
       start_period: 180s
 
-  # TryOff: base gated FLUX.2-klein-base-9B + LoRA fal/virtual-tryoff-lora — ver docker/flux/README.md
+  # TryOff: base gated FLUX.2-klein-base-9B + LoRA fal/virtual-tryoff-lora — see docker/flux/README.md
   # Start: docker compose --profile tryoff up -d tryoff-model  (or --profile gpu)
   tryoff-model:
     profiles: ["gpu", "tryoff"]
@@ -234,7 +254,6 @@ services:
     ports:
       - "8003:8000"
     environment:
-      # Dev: menos VRAM/RAM (exit 137 = OOM killer; ver docker/flux/README.md)
       TRYOFF_LOW_VRAM: "true"
       TRYOFF_OFFLOAD: "sequential"
       TRYOFF_STEPS: "12"
@@ -259,7 +278,7 @@ services:
       timeout: 10s
       retries: 3
       start_period: 300s
-    # 137 = SIGKILL (OOM del host). Evita bucle infinito de recargas del modelo (~18 GB).
+    # 137 = SIGKILL (OOM). Avoids infinite reload loop (~18 GB model).
     restart: on-failure:3
 
 networks:
@@ -270,6 +289,7 @@ networks:
 volumes:
   postgres_data:
   minio_data:
+  frontend_node_modules:
   fashn_weights:
   fashn_cache:
   tryoff_weights:
