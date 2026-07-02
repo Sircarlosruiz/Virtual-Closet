@@ -1,4 +1,4 @@
-# Terraform state — always remote (see ADR-034)
+# Terraform state — always remote (S3 backend)
 *.tfstate
 *.tfstate.backup
 *.tfstate.lock.info
@@ -10,9 +10,6 @@ terraform.tfvars
 # Terraform working directory
 .terraform/
 .terraform.lock.hcl
-
-# kubeconfig written locally during terraform apply
-.kubeconfig
 
 # Crash log files
 crash.log

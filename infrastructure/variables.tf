@@ -1,47 +1,17 @@
-variable "hcloud_token" {
+variable "aws_region" {
   type        = string
-  sensitive   = true
-  description = "Hetzner Cloud API token. Set via HCLOUD_TOKEN env var or Terraform Cloud variable (sensitive)."
+  default     = "us-west-2"
+  description = "AWS region for all resources."
+  validation {
+    condition     = contains(["us-east-1", "us-west-2", "eu-central-1", "eu-west-1"], var.aws_region)
+    error_message = "Must be a supported region: us-east-1, us-west-2, eu-central-1, or eu-west-1."
+  }
 }
 
 variable "cluster_name" {
   type        = string
   default     = "virtualcloset-staging"
-  description = "Name prefix for all Hetzner resources."
-}
-
-variable "datacenter_location" {
-  type        = string
-  default     = "nbg1"
-  description = "Hetzner datacenter location. EU only for GDPR compliance."
-  validation {
-    condition     = contains(["nbg1", "fsn1", "hel1"], var.datacenter_location)
-    error_message = "Must be an EU datacenter: nbg1 (Nuremberg), fsn1 (Falkenstein), or hel1 (Helsinki)."
-  }
-}
-
-variable "k3s_version" {
-  type        = string
-  default     = "v1.29.4+k3s1"
-  description = "Pinned k3s version. Change intentionally and test in staging first. See ADR-032."
-}
-
-variable "admin_cidrs" {
-  type        = list(string)
-  description = "CIDR blocks allowed SSH (22) and kubectl (6443) access. Use static IPs only."
-  # Example: ["203.0.113.10/32", "198.51.100.20/32"]
-}
-
-variable "ssh_public_key" {
-  type        = string
-  description = "SSH public key content for node access (e.g. contents of ~/.ssh/id_rsa.pub)."
-}
-
-variable "ssh_private_key_path" {
-  type        = string
-  sensitive   = true
-  default     = "~/.ssh/id_rsa"
-  description = "Path to SSH private key on the machine running Terraform. Used for remote-exec provisioners."
+  description = "Name prefix for all AWS resources."
 }
 
 variable "environment" {
@@ -54,26 +24,55 @@ variable "environment" {
   }
 }
 
-variable "object_storage_access_key" {
+variable "eks_kubernetes_version" {
   type        = string
-  sensitive   = true
-  description = "Hetzner Object Storage access key for backup bucket and Terraform state fallback."
+  default     = "1.30"
+  description = "EKS control plane Kubernetes version."
 }
 
-variable "object_storage_secret_key" {
+variable "node_instance_type" {
   type        = string
-  sensitive   = true
-  description = "Hetzner Object Storage secret key."
+  default     = "t3.large"
+  description = "EC2 instance type for EKS managed node group."
 }
 
-variable "object_storage_endpoint" {
+variable "node_desired_size" {
+  type        = number
+  default     = 2
+  description = "Desired number of nodes in the managed node group."
+}
+
+variable "node_min_size" {
+  type        = number
+  default     = 1
+  description = "Minimum number of nodes in the managed node group."
+}
+
+variable "node_max_size" {
+  type        = number
+  default     = 3
+  description = "Maximum number of nodes in the managed node group."
+}
+
+variable "admin_cidrs" {
+  type        = list(string)
+  description = "CIDR blocks allowed SSH (22) and kubectl (443 to EKS API) access. Use static IPs only."
+}
+
+variable "ssh_public_key_path" {
   type        = string
-  default     = "https://fsn1.your-objectstorage.com"
-  description = "Hetzner Object Storage S3-compatible endpoint URL."
+  default     = "~/.ssh/id_rsa.pub"
+  description = "Path to SSH public key for node access."
 }
 
 variable "postgres_password" {
   type        = string
   sensitive   = true
   description = "PostgreSQL superuser password. Used to create the backup k8s Secret."
+}
+
+variable "backup_retention_days" {
+  type        = number
+  default     = 30
+  description = "Number of days to retain backup files in S3."
 }

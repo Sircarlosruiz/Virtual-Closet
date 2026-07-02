@@ -1,29 +1,25 @@
 module "staging" {
   source = "../../"
 
-  environment         = "staging"
-  cluster_name        = "virtualcloset-staging"
-  datacenter_location = "nbg1"
-  k3s_version         = "v1.29.4+k3s1"
+  environment            = "staging"
+  cluster_name           = "virtualcloset-staging"
+  aws_region             = "us-west-2"
+  eks_kubernetes_version = "1.30"
+  node_instance_type     = "t3.large"
+  node_desired_size      = 2
+  node_min_size          = 1
+  node_max_size          = 3
 
-  # Sensitive — set as Terraform Cloud workspace variables (sensitive=true)
-  hcloud_token              = var.hcloud_token
-  ssh_public_key            = var.ssh_public_key
-  ssh_private_key_path      = var.ssh_private_key_path
-  admin_cidrs               = var.admin_cidrs
-  object_storage_access_key = var.object_storage_access_key
-  object_storage_secret_key = var.object_storage_secret_key
-  postgres_password         = var.postgres_password
+  admin_cidrs           = var.admin_cidrs
+  ssh_public_key_path   = var.ssh_public_key_path
+  postgres_password     = var.postgres_password
 }
 
-variable "hcloud_token"              { sensitive = true }
-variable "ssh_public_key"            {}
-variable "ssh_private_key_path"      { sensitive = true; default = "~/.ssh/id_rsa" }
-variable "admin_cidrs"               { type = list(string) }
-variable "object_storage_access_key" { sensitive = true }
-variable "object_storage_secret_key" { sensitive = true }
-variable "postgres_password"         { sensitive = true }
+variable "admin_cidrs"         { type = list(string) }
+variable "ssh_public_key_path" { default = "~/.ssh/id_rsa.pub" }
+variable "postgres_password"   { sensitive = true }
 
-output "control_plane_public_ip" { value = module.staging.control_plane_public_ip }
-output "worker_public_ip"        { value = module.staging.worker_public_ip }
-output "backup_bucket_name"      { value = module.staging.backup_bucket_name }
+output "cluster_endpoint"     { value = module.staging.cluster_endpoint }
+output "cluster_name"         { value = module.staging.cluster_name }
+output "backup_bucket_name"   { value = module.staging.backup_bucket_name }
+output "kubeconfig_command"   { value = module.staging.kubeconfig_command }

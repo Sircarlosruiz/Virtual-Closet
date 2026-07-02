@@ -1,35 +1,59 @@
 variable "cluster_name" {
   type        = string
-  description = "Name prefix for cluster resources."
+  description = "EKS cluster name."
 }
 
-variable "datacenter_location" {
+variable "aws_region" {
   type        = string
-  description = "Hetzner datacenter location (nbg1, fsn1, hel1)."
+  description = "AWS region."
 }
 
-variable "k3s_version" {
+variable "eks_kubernetes_version" {
   type        = string
-  description = "Pinned k3s version string (e.g. v1.29.4+k3s1). See ADR-032."
+  description = "EKS Kubernetes version (e.g. 1.30)."
 }
 
-variable "network_id" {
+variable "vpc_id" {
   type        = string
-  description = "Hetzner private network ID from vpc module."
+  description = "VPC ID from the vpc module."
 }
 
-variable "firewall_id" {
-  type        = string
-  description = "Hetzner firewall ID from vpc module."
+variable "private_subnet_ids" {
+  type        = list(string)
+  description = "Private subnet IDs for node group placement."
 }
 
-variable "ssh_key_id" {
+variable "node_instance_type" {
   type        = string
-  description = "Hetzner SSH key ID for node access."
+  description = "EC2 instance type for managed node group."
 }
 
-variable "ssh_private_key_path" {
+variable "node_desired_size" {
+  type        = number
+  description = "Desired number of nodes."
+}
+
+variable "node_min_size" {
+  type        = number
+  description = "Minimum number of nodes."
+}
+
+variable "node_max_size" {
+  type        = number
+  description = "Maximum number of nodes."
+}
+
+variable "ssh_public_key_path" {
   type        = string
-  sensitive   = true
-  description = "Local path to SSH private key for remote-exec provisioners."
+  description = "Path to SSH public key for node access."
+}
+
+variable "admin_cidrs" {
+  type        = list(string)
+  description = "CIDR blocks allowed to reach the EKS API server endpoint."
+}
+
+variable "node_security_group_id" {
+  type        = string
+  description = "Security group ID for EKS worker nodes."
 }

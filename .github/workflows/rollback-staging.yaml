@@ -4,10 +4,10 @@ on:
   workflow_dispatch:
     inputs:
       image_sha:
-        description: 'SHA (7 chars) of the image that applied the bad migration'
+        description: 'SHA of the image that applied the bad migration (7 chars)'
         required: true
       target_sha:
-        description: 'SHA (7 chars) of the previous good image to redeploy'
+        description: 'Previous good image SHA to redeploy (7 chars)'
         required: true
 
 env:
@@ -23,16 +23,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
       - name: Configure kubeconfig
-        run: |
-          mkdir -p ~/.kube
-          echo "${{ secrets.KUBE_CONFIG_STAGING }}" | base64 -d > ~/.kube/config
-          chmod 600 ~/.kube/config
+        run: aws eks update-kubeconfig --name virtualcloset-staging --region ${{ secrets.AWS_REGION }}
 
       - name: Scale backend to zero
         run: |
-          kubectl scale deployment/backend --replicas=0 -n ${NAMESPACE}
-          kubectl rollout status deployment/backend -n ${NAMESPACE} --timeout=60s
+          kubectl scale deployment/backend \
+            --replicas=0 -n ${NAMESPACE}
 
       - name: Run rollback migration job
         run: |
@@ -83,5 +87,4 @@ jobs:
             sleep 10
           done
           echo "Rollback health check failed — manual intervention required"
-          kubectl logs -l app=backend -n ${NAMESPACE} --tail=50 || true
           exit 1

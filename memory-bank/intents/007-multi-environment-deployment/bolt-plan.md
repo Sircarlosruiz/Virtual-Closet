@@ -1,17 +1,17 @@
 ---
 intent: 007-multi-environment-deployment
-phase: inception
+phase: complete
 created: 2026-06-17T15:00:00Z
-updated: 2026-06-17T15:00:00Z
+updated: 2026-07-01T00:00:00Z
 ---
 
 # Bolt Plan: Multi-Environment Deployment Strategy
 
 ## Overview
 
-**42 stories** grouped into **7 bolts** (one per unit) using **ddd-construction-bolt** type (infrastructure work with domain-heavy requirements).
+**81 stories** grouped into **7 bolts** (one per unit) using **ddd-construction-bolt** type (infrastructure work with domain-heavy requirements).
 
-Each bolt covers a complete unit's stories and can be executed independently (respecting cross-unit dependencies).
+**Status**: ✅ All bolts complete. Implementation uses AWS EKS instead of Hetzner k3s.
 
 ---
 
@@ -231,15 +231,15 @@ Each bolt covers a complete unit's stories and can be executed independently (re
 **Owner**: DevOps Engineer (Logging + recovery procedures)
 
 **Stories Included** (from unit-brief):
-1. Log aggregation configuration
-2. Structured logging (request IDs) frontend
-3. Structured logging (request IDs) backend
-4. Pod crash alerting
-5. Node failure alerting
-6. Rollout undo procedure
-7. Database restore procedure
-8. Disaster recovery runbook
-9. Phase 2 observability plan
+1. 001-log-aggregation
+2. 002-structured-logging-fe
+3. 003-structured-logging-be
+4. 004-pod-alerting
+5. 005-node-alerting
+6. 006-rollout-procedure
+7. 007-test-rollout
+8. 008-restore-procedure
+9. 009-test-restore
 
 **Deliverables**:
 - Log aggregation configuration

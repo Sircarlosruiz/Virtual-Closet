@@ -6,7 +6,7 @@
 
 El objetivo es eliminar los altos costos de sesiones fotográficas y permitir a los mayoristas compartir catálogos digitales interactivos con sus revendedores a través de enlaces simples (ej. WhatsApp), aumentando la confianza visual y, consecuentemente, el volumen de pedidos.
 
-**Stack tecnológico principal:** Next.js 14, FastAPI (Python), PostgreSQL 16, RabbitMQ, Celery, MinIO, Docker y k3s.
+**Stack tecnológico principal:** Next.js 14, FastAPI (Python), PostgreSQL 16, RabbitMQ, Celery, MinIO, Docker y EKS (AWS).
 
 ## Guías de implementación por stack
 
@@ -129,7 +129,7 @@ Especialistas técnicos responsables de la implementación a través del stack.
 ### DevOps Engineer
 
 * **Ruta:** `.agents/subagents/engineering/devops_engineer.yaml`
-* **Enfoque:** Docker, MinIO, k3s y pipelines de despliegue.
+* **Enfoque:** Docker, MinIO, EKS/AWS y pipelines de despliegue.
 * **Skills:** `docker-expert`, `multi-stage-dockerfile`, `minio`, `kubernetes-specialist`
 
 ---
@@ -162,6 +162,6 @@ Responsables de estándares de código, pruebas y experiencia de usuario.
 | UI Next.js, componentes | Frontend Engineer |
 | API FastAPI, DB, colas | Backend Engineer |
 | IDM-VTON, modelos HF, LangChain | ML Engineer |
-| Docker, k3s, MinIO | DevOps Engineer |
+| Docker, EKS/AWS, MinIO | DevOps Engineer |
 | Tests E2E / ATDD, code review | QA Engineer |
 | Flujos UX, wireframes | UX Researcher |

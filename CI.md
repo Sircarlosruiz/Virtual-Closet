@@ -1,6 +1,6 @@
 # CI/CD Pipeline
 
-Virtual Closet uses GitHub Actions for automated build, test, and deployment to staging.
+Virtual Closet uses GitHub Actions for automated build, test, and deployment to staging on AWS EKS.
 
 ## Workflows
 
@@ -24,69 +24,57 @@ Set the environment URL to `https://staging.virtualcloset.io`.
 
 | Secret | Scope | Value |
 |--------|-------|-------|
-| `KUBE_CONFIG_STAGING` | `staging` environment | Base64-encoded k3s kubeconfig (see below) |
+| `AWS_ACCESS_KEY_ID` | `staging` environment | IAM access key for CI deployer |
+| `AWS_SECRET_ACCESS_KEY` | `staging` environment | IAM secret key for CI deployer |
+| `AWS_REGION` | `staging` environment | `us-west-2` |
 
-All other deployment secrets (DB passwords, JWT keys, etc.) live in `k8s/staging/01-secrets.yaml` applied directly to the cluster — not in GitHub. The CI workflows use `kubectl apply` with the already-deployed k8s Secrets.
+All other deployment secrets (DB passwords, JWT keys, etc.) live in `k8s/staging/01-secrets.yaml` applied directly to the cluster — not in GitHub.
 
-#### Generating `KUBE_CONFIG_STAGING`
-
-On the k3s server, create a namespace-scoped ServiceAccount for CI:
+#### Creating the CI IAM User
 
 ```bash
-# On the k3s server
-kubectl create serviceaccount ci-deployer -n virtual-closet-staging
+# Create IAM user for CI
+aws iam create-user --user-name virtualcloset-ci
 
-kubectl create role ci-deployer-role \
-  --verb=get,list,create,update,patch,delete,watch \
-  --resource=deployments,jobs,pods,pods/log,replicasets \
-  -n virtual-closet-staging
+# Attach EKS + ECR policy
+aws iam attach-user-policy \
+  --user-name virtualcloset-ci \
+  --policy-arn arn:aws:iam::aws:policy/AmazonEKS_CLUSTER_POLICY
 
-kubectl create rolebinding ci-deployer-binding \
-  --role=ci-deployer-role \
-  --serviceaccount=virtual-closet-staging:ci-deployer \
-  -n virtual-closet-staging
-
-# Create a long-lived token (k8s 1.24+)
-kubectl create token ci-deployer \
-  --duration=8760h \
-  -n virtual-closet-staging > /tmp/ci-token.txt
-
-# Build a kubeconfig for this token
-SERVER=$(kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}')
-CA=$(kubectl config view --minify --raw -o jsonpath='{.clusters[0].cluster.certificate-authority-data}')
-TOKEN=$(cat /tmp/ci-token.txt)
-
-kubectl config set-cluster staging-cluster \
-  --server=${SERVER} \
-  --certificate-authority-data=${CA} \
-  --kubeconfig=/tmp/ci-kubeconfig.yaml
-
-kubectl config set-credentials ci-deployer \
-  --token=${TOKEN} \
-  --kubeconfig=/tmp/ci-kubeconfig.yaml
-
-kubectl config set-context staging \
-  --cluster=staging-cluster \
-  --user=ci-deployer \
-  --kubeconfig=/tmp/ci-kubeconfig.yaml
-
-kubectl config use-context staging --kubeconfig=/tmp/ci-kubeconfig.yaml
-
-# Base64-encode it (no line wraps)
-base64 -w 0 /tmp/ci-kubeconfig.yaml
+# Create access keys
+aws iam create-access-key --user-name virtualcloset-ci
+# Save the AccessKeyId and SecretAccessKey as GitHub secrets
 ```
 
-Copy the output and add it as the `KUBE_CONFIG_STAGING` environment secret in GitHub.
+Alternatively, use a more restrictive inline policy:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "eks:DescribeCluster",
+        "ecr:GetAuthorizationToken",
+        "ecr:BatchGetImage",
+        "ecr:PutImage"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+```
 
 ---
 
 ### 3. Create the `ghcr-pull-secret` on the cluster
 
-k3s nodes need credentials to pull from ghcr.io (private packages):
+EKS nodes need credentials to pull from ghcr.io (private packages):
 
 ```bash
 # Create a GitHub PAT with read:packages scope at github.com/settings/tokens
-# Then on the k3s server:
+# Then from your local machine (with kubeconfig configured):
 kubectl create secret docker-registry ghcr-pull-secret \
   --docker-server=ghcr.io \
   --docker-username=<your-github-username> \
@@ -165,18 +153,19 @@ See [MIGRATIONS.md](MIGRATIONS.md) for the full manual procedure.
 
 ---
 
-## Rotating `KUBE_CONFIG_STAGING`
+## Rotating AWS credentials
 
 Rotate quarterly or immediately on team member departure:
 
 ```bash
-# On the k3s server — create new token
-kubectl create token ci-deployer \
-  --duration=8760h \
-  -n virtual-closet-staging > /tmp/new-ci-token.txt
+# Delete old access key
+aws iam delete-access-key \
+  --user-name virtualcloset-ci \
+  --access-key-id <OLD_KEY_ID>
 
-# Rebuild kubeconfig with new token (repeat step 2 above)
-# Update the GitHub secret KUBE_CONFIG_STAGING with new base64 value
+# Create new access key
+aws iam create-access-key --user-name virtualcloset-ci
+# Update GitHub secrets AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
 ```
 
 ---
@@ -189,10 +178,11 @@ The `packages: write` permission is set on the `push-images` job. Check that the
 
 ### `deploy` fails — "Unable to connect to the server"
 
-`KUBE_CONFIG_STAGING` is malformed or expired. Re-generate following step 2 above. Verify with:
+AWS credentials are expired or the EKS cluster endpoint has changed. Verify with:
 
 ```bash
-echo "${KUBE_CONFIG_STAGING}" | base64 -d | kubectl --kubeconfig=/dev/stdin get ns
+aws eks describe-cluster --name virtualcloset-staging --region us-west-2 \
+  --query 'cluster.endpoint'
 ```
 
 ### `deploy` fails — migration job timeout
@@ -203,8 +193,6 @@ The Alembic migration job exceeded 300s. Check PostgreSQL availability:
 kubectl exec postgres-0 -n virtual-closet-staging -- pg_isready -U postgres
 kubectl logs -l app.kubernetes.io/name=alembic-migrate -n virtual-closet-staging
 ```
-
-See [MIGRATIONS.md § Troubleshooting](MIGRATIONS.md#troubleshooting).
 
 ### Backend `rollout status` times out
 

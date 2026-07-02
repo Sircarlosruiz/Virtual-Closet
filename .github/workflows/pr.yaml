@@ -41,7 +41,7 @@ jobs:
         working-directory: ./backend
         env:
           DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/virtual_closet_test
-          JWT_SECRET_KEY: ci-only-not-a-real-secret-key-32chars!
+          JWT_SECRET_KEY: ci-only-not-a-real-secret-key-32chars
           JWT_ALGORITHM: HS256
           TWO_FACTOR_ENCRYPTION_KEY: Y2ktb25seS10d28tZmFjdG9yLWtleS0zMmNoYXJz
           FRONTEND_URL: http://localhost:3000
@@ -60,10 +60,7 @@ jobs:
       - uses: docker/setup-buildx-action@v3
 
       - name: Docker build (validate)
-        uses: docker/build-push-action@v6
-        with:
-          context: ./backend
-          push: false
+        run: docker build ./backend
 
   frontend-ci:
     runs-on: ubuntu-latest
@@ -98,7 +95,4 @@ jobs:
       - uses: docker/setup-buildx-action@v3
 
       - name: Docker build (validate)
-        uses: docker/build-push-action@v6
-        with:
-          context: ./frontend
-          push: false
+        run: docker build ./frontend

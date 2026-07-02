@@ -16,8 +16,6 @@ spec:
       labels:
         app: minio
     spec:
-      nodeSelector:
-        virtualcloset.io/role: worker
       containers:
         - name: minio
           # Pin to a specific release in production; docker-compose uses latest
@@ -74,7 +72,7 @@ spec:
         name: data
       spec:
         accessModes: [ReadWriteOnce]
-        storageClassName: local-path
+        storageClassName: gp2
         resources:
           requests:
             storage: 20Gi

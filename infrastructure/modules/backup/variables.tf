@@ -8,21 +8,9 @@ variable "cluster_name" {
   description = "Cluster name prefix for resource naming."
 }
 
-variable "object_storage_access_key" {
+variable "aws_region" {
   type        = string
-  sensitive   = true
-  description = "Hetzner Object Storage access key for backup bucket."
-}
-
-variable "object_storage_secret_key" {
-  type        = string
-  sensitive   = true
-  description = "Hetzner Object Storage secret key."
-}
-
-variable "object_storage_endpoint" {
-  type        = string
-  description = "S3-compatible endpoint URL (e.g. https://fsn1.your-objectstorage.com)."
+  description = "AWS region for S3 bucket."
 }
 
 variable "postgres_password" {
@@ -31,14 +19,18 @@ variable "postgres_password" {
   description = "PostgreSQL password for backup job credentials."
 }
 
-variable "backup_schedule" {
-  type        = string
-  default     = "0 2 * * *"
-  description = "Cron schedule for PostgreSQL backup job. Default: 02:00 UTC daily."
-}
-
 variable "backup_retention_days" {
   type        = number
   default     = 30
-  description = "Number of days to retain backup files in Object Storage."
+  description = "Number of days to retain backup files in S3."
+}
+
+variable "oidc_provider_arn" {
+  type        = string
+  description = "ARN of the EKS OIDC identity provider for IRSA."
+}
+
+variable "oidc_provider_url" {
+  type        = string
+  description = "URL of the EKS OIDC identity provider (without https://)."
 }

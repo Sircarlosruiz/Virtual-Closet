@@ -31,7 +31,7 @@ Custom JWT stored in HttpOnly cookies. No third-party auth service.
 | Environment | Stack |
 |-------------|-------|
 | Development | Docker Compose — all services (postgres, minio, rabbitmq, celery_worker, frontend, backend) |
-| Production | k3s on Hetzner — containerized services |
+| Production | EKS on AWS (us-west-2) — containerized services |
 
 Additional services: RabbitMQ + Celery (async VTON task queue), MinIO (S3-compatible object storage for garment and model images), Stripe (Checkout + Customer Portal).
 

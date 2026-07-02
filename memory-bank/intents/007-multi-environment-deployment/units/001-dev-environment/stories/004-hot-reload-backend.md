@@ -5,7 +5,8 @@ intent: 007-multi-environment-deployment
 status: complete
 priority: must
 created: 2026-06-17T14:45:00.000Z
-assigned_bolt: null
+completed: 2026-07-01T00:00:00Z
+assigned_bolt: 001-dev-environment-setup
 implemented: true
 ---
 

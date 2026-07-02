@@ -20,7 +20,7 @@
 | IA (prod) | ReplicateProvider (IDM-VTON) |
 | Auth | JWT en cookie HttpOnly |
 | Billing | Stripe Checkout + Customer Portal |
-| Despliegue | Docker Compose (dev), k3s en Hetzner (prod) |
+| Despliegue | Docker Compose (dev), EKS en AWS us-west-2 (prod) |
 | Accesibilidad | WCAG AA |
 
 ## Estructura del monorepo

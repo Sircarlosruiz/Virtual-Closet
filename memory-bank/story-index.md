@@ -1,9 +1,9 @@
 # Global Story Index
 
 ## Overview
-- **Total stories**: 86
-- **Generated**: 86
-- **Last updated**: 2026-06-08
+- **Total stories**: 167
+- **Generated**: 167
+- **Last updated**: 2026-07-01
 
 ---
 
@@ -176,9 +176,117 @@
 
 ---
 
+---
+
+### 007-multi-environment-deployment
+
+#### Unit: 001-dev-environment
+
+- [x] **001-refactor-docker-compose** ✅ COMPLETE — Refactor docker-compose.yml — Must
+- [x] **002-configure-alembic-auto** ✅ COMPLETE — Configure Alembic auto-migration on startup — Must
+- [x] **003-hot-reload-frontend** ✅ COMPLETE — Enable hot-reload for frontend development — Must
+- [x] **004-hot-reload-backend** ✅ COMPLETE — Enable hot-reload for backend development — Must
+- [x] **005-env-example** ✅ COMPLETE — Create and document .env.example template — Must
+- [x] **006-test-dev-startup** ✅ COMPLETE — Test full development environment startup — Must
+- [x] **007-dev-guide** ✅ COMPLETE — Document local development quick-start guide — Should
+
+#### Unit: 002-infrastructure-provisioning
+
+- [x] **001-terraform-structure** ✅ COMPLETE — Design Terraform project structure for hcloud — Must
+- [x] **002-terraform-variables** ✅ COMPLETE — Create Terraform variables and outputs — Must
+- [x] **003-hcloud-vpc** ✅ COMPLETE — Provision Hetzner VPC and networking — Must
+- [x] **004-k3s-control-plane** ✅ COMPLETE — Provision CX21 control plane node with k3s — Must
+- [x] **005-k3s-worker** ✅ COMPLETE — Provision CX31 worker node with k3s — Must
+- [x] **006-node-configuration** ✅ COMPLETE — Configure node labels and taints — Must
+- [x] **007-persistent-volumes** ✅ COMPLETE — Implement persistent volume provisioning — Must
+- [x] **008-backup-cronjob** ✅ COMPLETE — Create PostgreSQL backup cronjob — Must
+- [x] **009-test-backup** ✅ COMPLETE — Test backup creation and storage — Must
+- [x] **010-test-restore** ✅ COMPLETE — Test restore procedure from backup — Must
+- [x] **011-ops-documentation** ✅ COMPLETE — Document cluster management procedures — Should
+- [x] **012-terraform-state** ✅ COMPLETE — Implement Terraform remote state backend — Should
+
+#### Unit: 003-container-optimization
+
+- [x] **001-analyze-dockerfile** ✅ COMPLETE — Analyze current Dockerfile or create new — Must
+- [x] **002-frontend-docker** ✅ COMPLETE — Design frontend Dockerfile with multi-stage build — Must
+- [x] **003-backend-docker** ✅ COMPLETE — Design backend Dockerfile with multi-stage build — Must
+- [x] **004-frontend-health** ✅ COMPLETE — Implement /health endpoint in frontend — Must
+- [x] **005-backend-health** ✅ COMPLETE — Implement /health endpoint in backend — Must
+- [x] **006-health-check-instruction** ✅ COMPLETE — Add HEALTHCHECK instruction to Dockerfiles — Must
+- [x] **007-nonroot-user** ✅ COMPLETE — Create non-root user configuration — Must
+- [x] **008-optimize-layers** ✅ COMPLETE — Optimize image layers and dependencies — Must
+- [x] **009-build-documentation** ✅ COMPLETE — Document build process and optimization techniques — Must
+- [x] **010-test-images** ✅ COMPLETE — Test image builds and validate sizes — Must
+- [x] **011-security-scan** ✅ COMPLETE — Run security scan on images (Trivy) — Must
+- [x] **012-push-to-registry** ✅ COMPLETE — Push images to registry and validate pull — Should
+
+#### Unit: 004-kubernetes-config
+
+- [x] **001-manifest-structure** ✅ COMPLETE — Design k8s manifest folder structure — Must
+- [x] **002-frontend-deployment** ✅ COMPLETE — Create frontend Deployment manifest — Must
+- [x] **003-backend-deployment** ✅ COMPLETE — Create backend Deployment manifest — Must
+- [x] **004-postgresql-statefulset** ✅ COMPLETE — Create PostgreSQL StatefulSet manifest — Must
+- [x] **005-minio-statefulset** ✅ COMPLETE — Create MinIO StatefulSet manifest — Must
+- [x] **006-rabbitmq-statefulset** ✅ COMPLETE — Create RabbitMQ StatefulSet manifest — Must
+- [x] **007-celery-deployment** ✅ COMPLETE — Create Celery worker Deployment manifest — Must
+- [x] **008-service-definitions** ✅ COMPLETE — Create Service manifests for all services — Must
+- [x] **009-ingress-configuration** ✅ COMPLETE — Configure Ingress controller and routing — Must
+- [x] **010-secrets-template** ✅ COMPLETE — Create k8s Secrets template — Must
+- [x] **011-configmaps** ✅ COMPLETE — Create ConfigMaps for environment variables — Must
+- [x] **012-liveness-probes** ✅ COMPLETE — Implement liveness probes (all services) — Must
+- [x] **013-readiness-probes** ✅ COMPLETE — Implement readiness probes (all services) — Must
+- [x] **014-resource-limits** ✅ COMPLETE — Define resource requests and limits — Must
+- [x] **015-rbac-policies** ✅ COMPLETE — Implement RBAC policies and service accounts — Must
+- [x] **016-manifest-validation** ✅ COMPLETE — Validate manifests (kubectl validate) — Must
+- [x] **017-dry-run-deployment** ✅ COMPLETE — Test dry-run deployment — Should
+- [x] **018-deployment-docs** ✅ COMPLETE — Document manifest deployment procedure — Should
+
+#### Unit: 005-db-migrations
+
+- [x] **001-review-alembic** ✅ COMPLETE — Review current Alembic setup in backend — Must
+- [x] **002-migration-job** ✅ COMPLETE — Design k8s Job template for Alembic migrations — Must
+- [x] **003-migration-validation** ✅ COMPLETE — Implement pre-deployment migration validation — Must
+- [x] **004-migration-dryrun** ✅ COMPLETE — Create migration dry-run mechanism — Must
+- [x] **005-rollback-procedure** ✅ COMPLETE — Create migration rollback procedure — Must
+- [x] **006-test-success** ✅ COMPLETE — Test migration success (happy path) — Must
+- [x] **007-test-failure** ✅ COMPLETE — Test migration failure and recovery — Must
+- [x] **008-zero-downtime** ✅ COMPLETE — Validate zero-downtime migration approach — Must
+- [x] **009-migration-guide** ✅ COMPLETE — Document migration best practices — Should
+- [x] **010-troubleshooting** ✅ COMPLETE — Create migration troubleshooting guide — Should
+
+#### Unit: 006-ci-cd-pipeline
+
+- [x] **001-workflow-structure** ✅ COMPLETE — Design GitHub Actions workflow structure — Must
+- [x] **002-pr-workflow** ✅ COMPLETE — Create PR workflow (build + test trigger) — Must
+- [x] **003-docker-build** ✅ COMPLETE — Configure Docker image build — Must
+- [x] **004-unit-tests** ✅ COMPLETE — Implement unit test execution — Must
+- [x] **005-push-registry** ✅ COMPLETE — Push images to private registry — Must
+- [x] **006-staging-workflow** ✅ COMPLETE — Create staging deployment workflow — Must
+- [x] **007-health-check-validation** ✅ COMPLETE — Implement health check validation — Must
+- [x] **008-github-oidc** ✅ COMPLETE — Configure GitHub OIDC for k8s access — Must
+- [x] **009-notifications** ✅ COMPLETE — Add deployment notifications (Slack/email) — Should
+- [x] **010-branch-protection** ✅ COMPLETE — Create branch protection rules — Should
+- [x] **011-rollback-trigger** ✅ COMPLETE — Implement rollback trigger mechanism — Should
+- [x] **012-e2e-test** ✅ COMPLETE — Test end-to-end CI/CD pipeline — Must
+- [x] **013-workflow-docs** ✅ COMPLETE — Document CI/CD workflows and troubleshooting — Should
+
+#### Unit: 007-observability-recovery
+
+- [x] **001-log-aggregation** ✅ COMPLETE — Configure kubectl log aggregation and export — Must
+- [x] **002-structured-logging-fe** ✅ COMPLETE — Implement structured logging (request IDs) in frontend — Must
+- [x] **003-structured-logging-be** ✅ COMPLETE — Implement structured logging (request IDs) in backend — Must
+- [x] **004-pod-alerting** ✅ COMPLETE — Configure pod crash alerting — Must
+- [x] **005-node-alerting** ✅ COMPLETE — Configure node failure alerting — Must
+- [x] **006-rollout-procedure** ✅ COMPLETE — Document kubectl rollout undo procedure — Must
+- [x] **007-test-rollout** ✅ COMPLETE — Test rollout undo scenario — Must
+- [x] **008-restore-procedure** ✅ COMPLETE — Document database restore procedure from backup — Must
+- [x] **009-test-restore** ✅ COMPLETE — Test database restore procedure — Must
+
+---
+
 ## Stories by Status
 
-- **Planned/Generated**: 56 (intents 003, 004, 005, 006)
+- **Completed**: 167 (all intents 001-007)
+- **Planned/Generated**: 0
 - **Draft (new)**: 0
 - **In Progress**: 0
-- **Completed**: 30 (intents 001 and 002)

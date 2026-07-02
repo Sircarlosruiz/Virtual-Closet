@@ -1,26 +1,25 @@
-output "control_plane_public_ip" {
-  description = "Public IPv4 of the k3s control-plane node."
-  value       = module.cluster.control_plane_public_ip
+output "cluster_endpoint" {
+  description = "EKS cluster API server endpoint."
+  value       = module.cluster.cluster_endpoint
 }
 
-output "worker_public_ip" {
-  description = "Public IPv4 of the k3s worker node."
-  value       = module.cluster.worker_public_ip
+output "cluster_name" {
+  description = "EKS cluster name."
+  value       = module.cluster.cluster_name
 }
 
-output "kubeconfig" {
-  description = "kubeconfig file content for kubectl access. Store in CI/CD as KUBECONFIG_STAGING secret."
-  value       = module.cluster.kubeconfig
-  sensitive   = true
-}
-
-output "k3s_token" {
-  description = "k3s node join token. Required when adding additional worker nodes."
-  value       = module.cluster.k3s_token
+output "cluster_ca_certificate" {
+  description = "EKS cluster CA certificate (base64-encoded)."
+  value       = module.cluster.cluster_ca_certificate
   sensitive   = true
 }
 
 output "backup_bucket_name" {
-  description = "Hetzner Object Storage bucket name for PostgreSQL backups."
+  description = "S3 bucket name for PostgreSQL backups."
   value       = module.backup.bucket_name
+}
+
+output "kubeconfig_command" {
+  description = "Command to generate kubeconfig for kubectl access."
+  value       = "aws eks update-kubeconfig --region ${var.aws_region} --name ${module.cluster.cluster_name}"
 }

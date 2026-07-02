@@ -1,53 +1,56 @@
 # Kubernetes Deployment Guide: Staging
 
-Full runbook for deploying Virtual Closet to the Hetzner k3s staging cluster provisioned in `infrastructure/`.
+Full runbook for deploying Virtual Closet to the AWS EKS staging cluster provisioned in `infrastructure/`.
 
 ## DNS Prerequisites
 
-Before deploying, create two A records pointing to the worker node's public IP:
+Before deploying, create two CNAME records pointing to the ingress Load Balancer:
 
 ```
-staging.virtualcloset.io     → <WORKER_PUBLIC_IP>
-api.staging.virtualcloset.io → <WORKER_PUBLIC_IP>
+staging.virtualcloset.io     → <INGRESS_LB_DNS>
+api.staging.virtualcloset.io → <INGRESS_LB_DNS>
 ```
 
-Get the worker IP from Terraform output:
+Get the ingress LB address after installing ingress-nginx:
 ```bash
-cd infrastructure/environments/staging
-terraform output worker_public_ip
+kubectl -n ingress-nginx get svc ingress-nginx-controller -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'
 ```
 
 ## One-Time Cluster Setup
 
-Run these once per cluster. They install cluster-wide components that are not managed by the `k8s/staging/` manifests.
+Run these once per cluster. They install cluster-wide components.
 
-### 1. Install ingress-nginx (bare-metal, ADR-035)
+### 1. Configure kubeconfig
 
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.10.1/deploy/static/provider/baremetal/deploy.yaml
+aws eks update-kubeconfig --region us-west-2 --name virtualcloset-staging
+kubectl get nodes
+```
 
-# Patch to use hostNetwork on worker node (binds ports 80/443 directly)
-kubectl patch daemonset ingress-nginx-controller \
-  -n ingress-nginx \
-  --type=json \
-  -p='[
-    {"op":"add","path":"/spec/template/spec/hostNetwork","value":true},
-    {"op":"add","path":"/spec/template/spec/nodeSelector","value":{"virtualcloset.io/role":"worker"}}
-  ]'
+### 2. Install ingress-nginx (LoadBalancer mode)
+
+```bash
+helm upgrade --install ingress-nginx ingress-nginx \
+  --repo https://kubernetes.github.io/ingress-nginx \
+  --namespace ingress-nginx --create-namespace \
+  --set controller.service.annotations."service\.beta\.kubernetes\.io/aws-load-balancer-type"="nlb"
 
 # Verify controller is running
 kubectl -n ingress-nginx get pods -w
 ```
 
-### 2. Install cert-manager (TLS via Let's Encrypt)
+### 3. Install cert-manager (TLS via Let's Encrypt)
 
 ```bash
-kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.14.4/cert-manager.yaml
+helm upgrade --install cert-manager jetstack/cert-manager \
+  --namespace cert-manager --create-namespace \
+  --repo https://charts.jetstack.io \
+  --set installCRDs=true
 
 # Wait for webhook to be ready
 kubectl -n cert-manager rollout status deployment/cert-manager-webhook
 
-# Create ClusterIssuer for Let's Encrypt staging (use production issuer for production)
+# Create ClusterIssuer for Let's Encrypt staging
 kubectl apply -f - <<'EOF'
 apiVersion: cert-manager.io/v1
 kind: ClusterIssuer
@@ -77,21 +80,10 @@ kubectl apply -f k8s/staging/00-namespace.yaml
 ### Step 2 — Create secrets
 
 ```bash
-# Copy template and populate with real values
 cp k8s/staging/01-secrets.yaml.template k8s/staging/01-secrets.yaml
-
 # Edit the file — replace all REPLACE_* placeholders
-# Then apply and immediately delete (never leave populated secrets on disk)
 kubectl apply -f k8s/staging/01-secrets.yaml
 rm k8s/staging/01-secrets.yaml
-```
-
-**In CI/CD**: use `envsubst` with secrets from the CI secrets vault (bolt 040 wires this up):
-```bash
-export REPLACE_PG_PASSWORD="$PG_PASSWORD"
-export REPLACE_JWT_SECRET_KEY="$JWT_SECRET_KEY"
-# ... etc
-envsubst < k8s/staging/01-secrets.yaml.template | kubectl apply -f -
 ```
 
 ### Step 3 — Apply ConfigMap
@@ -114,25 +106,22 @@ kubectl apply -f k8s/staging/redis/
 kubectl apply -f k8s/staging/rabbitmq/
 kubectl apply -f k8s/staging/minio/
 
-# Wait for all StatefulSets to be ready before deploying app services
 kubectl -n virtual-closet-staging rollout status statefulset/postgres
 kubectl -n virtual-closet-staging rollout status statefulset/rabbitmq
 kubectl -n virtual-closet-staging rollout status statefulset/minio
 ```
 
-### Step 6 — Run database migrations (bolt 041)
+### Step 6 — Run database migrations
 
-Before deploying the backend, run Alembic migrations as a k8s Job:
 ```bash
-# See k8s/staging/migrations/ — created in bolt 041
-kubectl apply -f k8s/staging/migrations/job.yaml
-kubectl -n virtual-closet-staging wait --for=condition=complete job/alembic-migrate --timeout=120s
+GIT_SHA=$(git rev-parse --short HEAD)
+sed "s/IMAGE_TAG/${GIT_SHA}/g" k8s/staging/migrations/job.yaml | kubectl apply -f -
+kubectl -n virtual-closet-staging wait --for=condition=complete job/alembic-migrate-${GIT_SHA} --timeout=300s
 ```
 
 ### Step 7 — Deploy application services
 
 ```bash
-# Substitute IMAGE_TAG with the git SHA before applying
 GIT_SHA=$(git rev-parse --short HEAD)
 
 sed "s/IMAGE_TAG/${GIT_SHA}/g" k8s/staging/backend/deployment.yaml | kubectl apply -f -
@@ -142,7 +131,6 @@ sed "s/IMAGE_TAG/${GIT_SHA}/g" k8s/staging/frontend/deployment.yaml | kubectl ap
 kubectl apply -f k8s/staging/backend/service.yaml
 kubectl apply -f k8s/staging/frontend/service.yaml
 
-# Wait for rollout
 kubectl -n virtual-closet-staging rollout status deployment/backend
 kubectl -n virtual-closet-staging rollout status deployment/frontend
 ```
@@ -156,33 +144,13 @@ kubectl apply -f k8s/staging/ingress/
 ## Verifying Deployment
 
 ```bash
-# All pods running
 kubectl -n virtual-closet-staging get pods
 
-# Expected output (all Running):
-# NAME                        READY   STATUS    RESTARTS
-# postgres-0                  1/1     Running   0
-# redis-xxxx                  1/1     Running   0
-# rabbitmq-0                  1/1     Running   0
-# minio-0                     1/1     Running   0
-# backend-xxxx (x2)           1/1     Running   0
-# celery-xxxx                 1/1     Running   0
-# frontend-xxxx (x2)          1/1     Running   0
-
-# Check health endpoints
 curl https://api.staging.virtualcloset.io/health
-# Expected: {"status":"ok"}
-
 curl https://staging.virtualcloset.io/api/health
-# Expected: {"status":"ok"}
-
-# Verify TLS certificate issued
-kubectl -n virtual-closet-staging get certificate virtual-closet-tls
 ```
 
 ## Post-Deploy: Create MinIO Buckets
-
-MinIO starts empty. Create buckets before the backend can store files:
 
 ```bash
 kubectl -n virtual-closet-staging exec -it statefulset/minio -- \
@@ -201,22 +169,15 @@ kubectl -n virtual-closet-staging exec -it statefulset/minio -- sh -c "
 ## Rollback
 
 ```bash
-# Roll back a deployment to the previous revision
 kubectl -n virtual-closet-staging rollout undo deployment/backend
 kubectl -n virtual-closet-staging rollout undo deployment/frontend
-
-# Or roll back to a specific revision
-kubectl -n virtual-closet-staging rollout history deployment/backend
-kubectl -n virtual-closet-staging rollout undo deployment/backend --to-revision=2
 ```
 
 ## Resource Usage
 
-See [infrastructure/OPERATIONS.md](../infrastructure/OPERATIONS.md) for node resource sizing and scaling guidance.
+Current requests totals across 2x t3.large nodes (2 vCPU, 8 GB RAM each):
 
-Current requests totals on worker CX31 (2 vCPU, 8 GB RAM):
-
-| Metric | Used (requests) | Node capacity | Headroom |
-|--------|-----------------|---------------|----------|
-| CPU | ~1200m | 2000m | ~40% |
-| Memory | ~1984Mi | 8192Mi | ~76% |
+| Metric | Used (requests) | Cluster capacity | Headroom |
+|--------|-----------------|------------------|----------|
+| CPU | ~1200m | 4000m | ~70% |
+| Memory | ~1984Mi | 16384Mi | ~88% |

@@ -5,7 +5,12 @@ on:
     branches: [main]
 
 env:
+  REGISTRY: ghcr.io
   NAMESPACE: virtual-closet-staging
+
+permissions:
+  contents: read
+  packages: write
 
 jobs:
   backend-ci:
@@ -44,7 +49,7 @@ jobs:
         working-directory: ./backend
         env:
           DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/virtual_closet_test
-          JWT_SECRET_KEY: ci-only-not-a-real-secret-key-32chars!
+          JWT_SECRET_KEY: ci-only-not-a-real-secret-key-32chars
           JWT_ALGORITHM: HS256
           TWO_FACTOR_ENCRYPTION_KEY: Y2ktb25seS10d28tZmFjdG9yLWtleS0zMmNoYXJz
           FRONTEND_URL: http://localhost:3000
@@ -59,6 +64,11 @@ jobs:
           REPLICATE_API_KEY: r8_ci_placeholder
           RESEND_API_KEY: re_ci_placeholder
           VTON_PROVIDER: replicate
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Docker build (validate)
+        run: docker build ./backend
 
   frontend-ci:
     runs-on: ubuntu-latest
@@ -90,12 +100,14 @@ jobs:
           NEXT_PUBLIC_API_URL: http://localhost:8000
           NEXT_PUBLIC_BACKEND_URL: http://localhost:8000
 
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Docker build (validate)
+        run: docker build ./frontend
+
   push-images:
     needs: [backend-ci, frontend-ci]
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
     outputs:
       sha7: ${{ steps.sha.outputs.sha7 }}
     steps:
@@ -146,11 +158,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
       - name: Configure kubeconfig
-        run: |
-          mkdir -p ~/.kube
-          echo "${{ secrets.KUBE_CONFIG_STAGING }}" | base64 -d > ~/.kube/config
-          chmod 600 ~/.kube/config
+        run: aws eks update-kubeconfig --name virtualcloset-staging --region ${{ secrets.AWS_REGION }}
 
       - name: Run migration job
         run: |
@@ -163,7 +179,7 @@ jobs:
             job/alembic-migrate-${SHA7} \
             -n ${NAMESPACE} --timeout=300s
 
-      - name: Deploy backend and celery
+      - name: Deploy backend + celery
         run: |
           for f in k8s/staging/backend/deployment.yaml k8s/staging/celery/deployment.yaml; do
             sed "s/IMAGE_TAG/${SHA7}/g" ${f} \
@@ -202,6 +218,7 @@ jobs:
             fi
             sleep 10
           done
-          echo "Health check failed after 120s — dumping recent backend logs"
-          kubectl logs -l app=backend -n ${NAMESPACE} --tail=50 || true
+          echo "Health check failed after 120s"
+          kubectl logs -l app.kubernetes.io/name=backend \
+            -n ${NAMESPACE} --tail=50 || true
           exit 1
