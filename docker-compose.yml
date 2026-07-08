@@ -195,7 +195,7 @@ services:
     command: pnpm dev
     volumes:
       - ./frontend:/app
-      - frontend_node_modules:/app/node_modules  # named volume overlay — preserves container packages (ADR-031)
+      - frontend_node_modules:/app/node_modules # named volume overlay — preserves container packages (ADR-031)
       - /app/.next
     ports:
       - "3000:3000"
@@ -212,6 +212,7 @@ services:
   # Start with: docker compose --profile gpu up fashn
   # FASHN VTON v1.5 inference server — maskless try-on, ~8 GB VRAM (NVIDIA GPU).
   # First run downloads ~2 GB of weights; subsequent starts use the cache volume.
+
   fashn:
     profiles: ["gpu"]
     networks:
@@ -242,6 +243,7 @@ services:
 
   # TryOff: base gated FLUX.2-klein-base-9B + LoRA fal/virtual-tryoff-lora — see docker/flux/README.md
   # Start: docker compose --profile tryoff up -d tryoff-model  (or --profile gpu)
+
   tryoff-model:
     profiles: ["gpu", "tryoff"]
     networks:
