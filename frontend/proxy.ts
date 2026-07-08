@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 /**
- * Next.js middleware for session-aware route protection.
+ * Next.js proxy: request-id tagging + session-aware route protection.
  *
  * Session states:
  * - unauthenticated: no access_token cookie → redirect to /login
@@ -12,15 +12,19 @@ import type { NextRequest } from "next/server";
  * Protected routes: /dashboard/*, /generate/*, /batches/*, /extraction/*, /media/*, /jobs/*
  */
 export function proxy(request: NextRequest) {
+  const requestId = request.headers.get("x-request-id") ?? crypto.randomUUID();
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-request-id", requestId);
+
   const token = request.cookies.get("access_token")?.value;
   const { pathname } = request.nextUrl;
 
-  // Public routes — no redirect needed
-  const isPublicRoute =
-    pathname.startsWith("/auth") ||
-    pathname.startsWith("/.well-known") ||
-    pathname === "/" ||
-    pathname.startsWith("/catalog/access");
+  // If authenticated and trying to access auth pages → redirect to dashboard
+  if (token && pathname.startsWith("/auth")) {
+    const response = NextResponse.redirect(new URL("/dashboard", request.url));
+    response.headers.set("x-request-id", requestId);
+    return response;
+  }
 
   // Protected routes that require authentication
   const isProtectedRoute =
@@ -31,32 +35,22 @@ export function proxy(request: NextRequest) {
     pathname.startsWith("/media") ||
     pathname.startsWith("/jobs");
 
-  // If authenticated and trying to access auth pages → redirect to dashboard
-  if (token && pathname.startsWith("/auth")) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
-  }
-
   // If unauthenticated and trying to access protected route → redirect to login
   if (!token && isProtectedRoute) {
     const loginUrl = new URL("/login", request.url);
-    // Preserve the original path for post-login redirect
     loginUrl.searchParams.set("redirect", pathname);
-    return NextResponse.redirect(loginUrl);
+    const response = NextResponse.redirect(loginUrl);
+    response.headers.set("x-request-id", requestId);
+    return response;
   }
 
-  return NextResponse.next();
+  const response = NextResponse.next({
+    request: { headers: requestHeaders },
+  });
+  response.headers.set("x-request-id", requestId);
+  return response;
 }
 
 export const config = {
-  matcher: [
-    "/login",
-    "/registro",
-    "/auth/:path*",
-    "/dashboard/:path*",
-    "/generate/:path*",
-    "/batches/:path*",
-    "/extraction/:path*",
-    "/media/:path*",
-    "/jobs/:path*",
-  ],
+  matcher: ["/((?!_next/static|_next/image|favicon\\.ico).*)"],
 };

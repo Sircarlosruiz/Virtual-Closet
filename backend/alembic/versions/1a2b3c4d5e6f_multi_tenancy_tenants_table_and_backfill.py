@@ -31,7 +31,7 @@ down_revision: Union[str, Sequence[str], None] = '0c2cff14de00'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
-DEFAULT_TENANT_ID = "00000000-0000-0000-0000-000000000001"
+DEFAULT_TENANT_ID = UUID("00000000-0000-0000-0000-000000000001")
 
 # Tables that need tenant_id backfill
 PLATFORM_TABLES = [

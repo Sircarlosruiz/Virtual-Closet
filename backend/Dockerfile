@@ -15,10 +15,11 @@ WORKDIR /app
 RUN addgroup --system --gid 1001 fastapi && \
     adduser --system --uid 1001 --gid 1001 --no-create-home fastapi
 
-COPY --from=deps /app/.venv /app/.venv
+COPY --from=deps --chown=fastapi:fastapi /app/.venv /app/.venv
 COPY --chown=fastapi:fastapi . .
 
 ENV PATH="/app/.venv/bin:$PATH"
+ENV UV_CACHE_DIR="/tmp/uv-cache"
 
 USER fastapi
 
