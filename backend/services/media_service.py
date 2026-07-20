@@ -118,8 +118,14 @@ class MediaUploadService:
         filename: str,
         content_type: str | None,
         label: str | None = None,
+        model_id: uuid.UUID | None = None,
+        pose: str | None = None,
     ) -> tuple[ModelPhoto, str]:
         """Upload a model photo to MinIO and persist metadata.
+
+        Args:
+            model_id: Optional Model aggregate to link as a pose photo.
+            pose: Pose type ('front'|'side'|'back'); required when model_id set.
 
         Returns:
             Tuple of (ModelPhoto entity, presigned URL).
@@ -146,6 +152,8 @@ class MediaUploadService:
         model_photo = ModelPhoto(
             id=file_uuid,
             mayorista_id=mayorista_id,
+            model_id=model_id,
+            pose=pose,
             minio_key=minio_key,
             label=label or filename,
             is_curated=False,

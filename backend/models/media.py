@@ -1,7 +1,6 @@
 import uuid
-from datetime import datetime, timezone
 
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Index, Integer, String, Text
+from sqlalchemy import Boolean, CheckConstraint, Column, DateTime, ForeignKey, Index, Integer, String, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -44,7 +43,12 @@ class GarmentPhoto(Base):
 
 
 class ModelPhoto(Base):
-    """A model photo — either uploaded by a mayorista or from the curated library."""
+    """A model photo — either uploaded by a mayorista or from the curated library.
+
+    When linked to a Model aggregate (model_id set), the photo is a pose photo
+    and pose must be set. Curated/legacy rows keep model_id = NULL and
+    pose = NULL (ADR-012).
+    """
 
     __tablename__ = "model_photos"
 
@@ -59,6 +63,12 @@ class ModelPhoto(Base):
         ForeignKey("tenants.id", ondelete="SET NULL"),
         nullable=True,
     )
+    model_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("models.id", ondelete="CASCADE"),
+        nullable=True,
+    )
+    pose = Column(String(10), nullable=True)  # 'front' | 'side' | 'back'
     minio_key = Column(String(512), unique=True, nullable=False)
     label = Column(String(255), nullable=False)
     is_curated = Column(Boolean, nullable=False, default=False)
@@ -70,11 +80,22 @@ class ModelPhoto(Base):
 
     mayorista = relationship("Mayorista", back_populates="model_photos")
     tenant = relationship("Tenant", backref="model_photos")
+    model = relationship("Model", back_populates="pose_photos")
 
     __table_args__ = (
         Index("idx_model_photos_mayorista", "mayorista_id"),
         Index("idx_model_photos_tenant", "tenant_id"),
         Index("idx_model_photos_curated", "is_curated"),
+        Index("idx_model_photos_model", "model_id"),
+        UniqueConstraint("model_id", "pose", name="uq_model_photos_model_pose"),
+        CheckConstraint(
+            "pose IN ('front', 'side', 'back')",
+            name="chk_model_photos_pose_values",
+        ),
+        CheckConstraint(
+            "(model_id IS NULL) = (pose IS NULL)",
+            name="chk_model_photos_model_pose_coupling",
+        ),
     )
 
 

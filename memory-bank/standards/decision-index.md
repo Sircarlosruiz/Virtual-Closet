@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-06-18T17:50:00Z
-total_decisions: 38
+last_updated: 2026-07-18T06:47:24Z
+total_decisions: 45
 ---
 
 # Decision Index
@@ -19,6 +19,62 @@ Use this to find relevant prior decisions when working on related features.
 ## Decisions
 
 <!-- Entries are appended below in reverse chronological order (newest first) -->
+
+### ADR-045: Pass Tenant Context Through Internal Batch Submission
+- **Status**: accepted
+- **Date**: 2026-07-18
+- **Bolt**: 030-pose-set-service (002-pose-set-service)
+- **Path**: `bolts/030-pose-set-service/adr-045-tenant-aware-batch-contract.md`
+- **Summary**: Pass authenticated `tenant_id` explicitly through public and internal batch submission so non-null BatchJob tenancy is preserved without duplicating batch logic.
+- **Read when**: Calling batch creation from another service, modifying BatchJob submission signatures, or implementing tenant-scoped workflows
+
+### ADR-044: Store ModelPhoto IDs in Pose-Set Batch Items
+- **Status**: accepted
+- **Date**: 2026-07-18
+- **Bolt**: 030-pose-set-service (002-pose-set-service)
+- **Path**: `bolts/030-pose-set-service/adr-044-batch-item-model-photo-reference.md`
+- **Summary**: PoseSet submissions store selected `ModelPhoto.id` values in the existing `BatchItem.model_id` field, preserving the VTON input contract and enabling direct pose mapping without schema duplication.
+- **Read when**: Mapping pose-set selections into BatchItems, resolving result items to ModelPhoto.pose, or considering BatchItem schema changes
+
+### ADR-043: PoseSet and Batch Creation Share One Transaction
+- **Status**: accepted
+- **Date**: 2026-07-18
+- **Bolt**: 030-pose-set-service (002-pose-set-service)
+- **Path**: `bolts/030-pose-set-service/adr-043-poseset-batch-atomicity.md`
+- **Summary**: PoseSet validation, delegated BatchJob/BatchItem creation, and PoseSet insertion share one AsyncSession transaction and commit, preventing orphaned grouping or batch records.
+- **Read when**: Coordinating PoseSet and BatchJob writes, changing internal batch service transaction boundaries, or testing partial submission failures
+
+### ADR-042: Batched Autocommit Pattern for Alembic Data Migrations
+- **Status**: accepted
+- **Date**: 2026-07-18
+- **Bolt**: 029-model-pose-service (001-model-pose-service)
+- **Path**: `bolts/029-model-pose-service/adr-042-batched-autocommit-data-migrations.md`
+- **Summary**: Large Alembic data migrations use `autocommit_block()` with per-batch commits, an idempotent selection predicate, and guarded atomic updates to limit locks and support safe resumption.
+- **Read when**: Writing Alembic data migrations over large tables, deploying migrations against a live API, or designing resume-after-failure behavior
+
+### ADR-041: No-Op Downgrade for Backfill-Type Data Migrations
+- **Status**: accepted
+- **Date**: 2026-07-18
+- **Bolt**: 029-model-pose-service (001-model-pose-service)
+- **Path**: `bolts/029-model-pose-service/adr-041-noop-downgrade-data-migrations.md`
+- **Summary**: Backfills that create identity rows are intentionally irreversible because generated wrappers are indistinguishable from user-created rows; schema rollback remains with the owning schema migration.
+- **Read when**: Writing downgrade functions for data migrations, planning rollback strategy, or reviewing migration data-loss risk
+
+### ADR-040: Return 404 (Not 403) for Unowned Resource Access
+- **Status**: accepted
+- **Date**: 2026-07-18
+- **Bolt**: 028-model-pose-service (001-model-pose-service)
+- **Path**: `bolts/028-model-pose-service/adr-013-404-for-unowned-resources.md`
+- **Summary**: Ownership-scoped endpoints return `404 Not Found` when a resource does not exist or belongs to another mayorista, preventing resource-existence leaks.
+- **Read when**: Designing ownership-scoped API endpoints or choosing between 403 and 404 responses
+
+### ADR-039: Extend `model_photos` Table for Pose Photos
+- **Status**: accepted
+- **Date**: 2026-07-18
+- **Bolt**: 028-model-pose-service (001-model-pose-service)
+- **Path**: `bolts/028-model-pose-service/adr-012-extend-model-photos-table.md`
+- **Summary**: Extend the existing `model_photos` table with nullable `model_id` and `pose` columns instead of creating a parallel pose-photo table.
+- **Read when**: Modifying the ModelPhoto model or querying curated versus pose photos
 
 ### ADR-038: AWS IAM Credentials for EKS Access from GitHub Actions
 - **Status**: accepted

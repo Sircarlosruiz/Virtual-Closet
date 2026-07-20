@@ -13,7 +13,6 @@ from api.schemas.batches import (
     BatchListResponse,
 )
 from core.dependencies import get_current_mayorista, get_db
-from models.batch_job import BatchJob
 from repositories.batch_repo import BatchJobRepo
 from repositories.media_repo import GarmentPhotoRepo, ModelPhotoRepo
 from repositories.vton_job_repo import VTONJobRepo
@@ -74,8 +73,10 @@ async def create_batch(
             mayorista_id=mayorista.id,
             request=request,
             db=db,
+            tenant_id=mayorista.tenant_id,
         )
         await db.commit()
+        service.publish_pending()
     except EmptyBatchError as exc:
         raise HTTPException(
             status_code=400,

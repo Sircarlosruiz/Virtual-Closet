@@ -1,9 +1,9 @@
 # Global Story Index
 
 ## Overview
-- **Total stories**: 167
-- **Generated**: 167
-- **Last updated**: 2026-07-01
+- **Total stories**: 176
+- **Generated**: 176
+- **Last updated**: 2026-07-17
 
 ---
 
@@ -284,9 +284,29 @@
 
 ---
 
+### 006-multi-pose-vton-generation
+
+#### Unit: 001-model-pose-service
+
+- [x] **001-create-model** ✅ GENERATED — Create Model Identity — Must
+- [x] **002-upload-pose-photo** ✅ GENERATED — Upload Pose Photo with Fixed Enum Validation — Must
+- [x] **003-list-model-poses** ✅ GENERATED — List Poses for a Model — Must
+- [x] **004-backfill-legacy-models** ✅ GENERATED — Backfill Legacy ModelPhoto Rows into Models — Must
+
+#### Unit: 002-pose-set-service
+
+- [x] **001-submit-pose-set** ✅ GENERATED — Submit Pose-Aware Generation and Register PoseSet — Must
+- [x] **002-view-pose-set-results** ✅ GENERATED — View Grouped Pose Set Results — Must
+
+#### Unit: 003-multi-pose-vton-generation-ui
+
+- [x] **001-model-pose-management-ui** ✅ GENERATED — Model & Pose Management UI — Must
+- [x] **002-pose-selection-submission-ui** ✅ GENERATED — Pose Deselection & Submission UI — Must
+- [x] **003-pose-set-result-view** ✅ GENERATED — Pose Set Grouped Result View — Must
+
 ## Stories by Status
 
 - **Completed**: 167 (all intents 001-007)
-- **Planned/Generated**: 0
+- **Planned/Generated**: 9 (multi-pose VTON generation)
 - **Draft (new)**: 0
 - **In Progress**: 0

@@ -1,6 +1,7 @@
 import uuid
 
-from sqlalchemy import func, select
+from sqlalchemy import case, func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.media import GarmentPhoto, MediaItem, ModelPhoto
@@ -62,7 +63,13 @@ class ModelPhotoRepo:
 
     async def create(self, model_photo: ModelPhoto) -> ModelPhoto:
         self._db.add(model_photo)
-        await self._db.commit()
+        try:
+            await self._db.commit()
+        except IntegrityError:
+            # e.g. uq_model_photos_model_pose violation — roll back so the
+            # session stays usable and let the service translate the error.
+            await self._db.rollback()
+            raise
         await self._db.refresh(model_photo)
         return model_photo
 
@@ -114,6 +121,31 @@ class ModelPhotoRepo:
         result = await self._db.execute(list_stmt)
         items = list(result.scalars().all())
         return items, total
+
+    async def pose_exists(self, model_id: uuid.UUID, pose: str) -> bool:
+        """Fast-path duplicate check for the (model_id, pose) unique constraint."""
+        result = await self._db.execute(
+            select(func.count(ModelPhoto.id)).where(
+                ModelPhoto.model_id == model_id,
+                ModelPhoto.pose == pose,
+            )
+        )
+        return (result.scalar() or 0) > 0
+
+    async def list_by_model(self, model_id: uuid.UUID) -> list[ModelPhoto]:
+        """List pose photos for a model, ordered front, side, back."""
+        pose_order = case(
+            (ModelPhoto.pose == "front", 0),
+            (ModelPhoto.pose == "side", 1),
+            (ModelPhoto.pose == "back", 2),
+            else_=3,
+        )
+        result = await self._db.execute(
+            select(ModelPhoto)
+            .where(ModelPhoto.model_id == model_id)
+            .order_by(pose_order)
+        )
+        return list(result.scalars().all())
 
 
 class MediaItemRepo:

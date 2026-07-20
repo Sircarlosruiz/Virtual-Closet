@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import Boolean, Column, DateTime, Index, Integer, String, Text
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Index, Integer, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy.sql import func
@@ -24,7 +24,9 @@ class Mayorista(Base):
         default=lambda: datetime.now(timezone.utc) + __import__("datetime").timedelta(days=30),
     )
     whatsapp = Column(String(20), nullable=True)
-    tenant_id = Column(UUID(as_uuid=True), nullable=True, index=True)
+    tenant_id = Column(
+        UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="SET NULL"), nullable=True, index=True
+    )
     role = Column(String(20), nullable=False, default="mayorista", server_default="mayorista")
     email_verified = Column(Boolean, nullable=False, server_default="false")
     is_locked = Column(Boolean, nullable=False, server_default="false")
@@ -43,6 +45,8 @@ class Mayorista(Base):
     prendas = relationship("Prenda", back_populates="mayorista", lazy="dynamic")
     garment_photos = relationship("GarmentPhoto", back_populates="mayorista", lazy="dynamic")
     model_photos = relationship("ModelPhoto", back_populates="mayorista", lazy="dynamic")
+    models = relationship("Model", back_populates="mayorista", lazy="dynamic")
+    pose_sets = relationship("PoseSet", backref="mayorista", lazy="dynamic")
     media_items = relationship("MediaItem", back_populates="mayorista", lazy="dynamic")
     vton_jobs = relationship("VTONJob", back_populates="mayorista", lazy="dynamic")
     customers = relationship("Customer", back_populates="mayorista", lazy="dynamic")

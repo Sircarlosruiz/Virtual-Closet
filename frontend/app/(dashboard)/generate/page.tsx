@@ -8,10 +8,12 @@ import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { GarmentUploader } from "@/components/vton/GarmentUploader";
-import { ModelSelector } from "@/components/vton/ModelSelector";
+import { ModelPosePicker, type ModelSelection } from "@/components/model-pose/ModelPosePicker";
+import { PoseSelection } from "@/components/model-pose/PoseSelection";
 import { ClothTypeSelector } from "@/components/vton/ClothTypeSelector";
 import { apiFetch } from "@/lib/api";
 import { getExtractedGarment, ExtractedGarment } from "@/lib/api/extracted-garments";
+import { createPoseSet } from "@/lib/api/pose-sets";
 
 type ClothType = "upper_body" | "lower_body" | "dress";
 
@@ -21,7 +23,8 @@ function GenerateScreen() {
 
   const garmentIdParam = searchParams.get("garment_id");
   const [garmentId, setGarmentId] = useState<string | null>(garmentIdParam);
-  const [modelId, setModelId] = useState<string | null>(null);
+  const [selection, setSelection] = useState<ModelSelection | null>(null);
+  const [selectedPoseIds, setSelectedPoseIds] = useState<string[]>([]);
   const [clothType, setClothType] = useState<ClothType | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [preloadedGarment, setPreloadedGarment] = useState<ExtractedGarment | null>(null);
@@ -42,28 +45,23 @@ function GenerateScreen() {
     }
   }, [garmentIdParam]);
 
-  const canSubmit = Boolean(garmentId && modelId && clothType) && !isSubmitting;
+  const isMultiPose = Boolean(selection?.named && selection.poses.length > 1);
+  const canSubmit = Boolean(garmentId && selection && clothType && (!isMultiPose || selectedPoseIds.length > 0)) && !isSubmitting;
 
   const handleSubmit = useCallback(async () => {
     if (!canSubmit) return;
 
     setIsSubmitting(true);
     try {
-      const result = await apiFetch("/api/vton/generate", {
-        method: "POST",
-        body: JSON.stringify({
-          garment_id: garmentId,
-          model_id: modelId,
-          cloth_type: clothType,
-        }),
-      });
-
-      const jobId = result.job_id ?? result.id;
-      if (jobId) {
-        toast.success("Generación iniciada");
-        router.push(`/jobs/${jobId}`);
-      } else {
-        toast.error("Respuesta inesperada del servidor");
+       if (isMultiPose && selection) {
+         const result = await createPoseSet({ garment_id: garmentId!, model_id: selection.modelId, cloth_type: clothType!, pose_ids: selectedPoseIds });
+         toast.success("Set de poses iniciado");
+         router.push(`/pose-sets/${result.pose_set_id}`);
+       } else {
+         const result = await apiFetch("/api/vton/generate", { method: "POST", body: JSON.stringify({ garment_id: garmentId, model_id: selection?.modelPhotoId, cloth_type: clothType }) });
+         const jobId = result.job_id ?? result.id;
+         if (jobId) { toast.success("Generación iniciada"); router.push(`/jobs/${jobId}`); }
+         else toast.error("Respuesta inesperada del servidor");
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : "Error al iniciar la generación";
@@ -71,7 +69,7 @@ function GenerateScreen() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [canSubmit, garmentId, modelId, clothType, router]);
+  }, [canSubmit, garmentId, selection, clothType, isMultiPose, selectedPoseIds, router]);
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
@@ -132,14 +130,21 @@ function GenerateScreen() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <ModelSelector onSelected={setModelId} selectedId={modelId} />
+          <ModelPosePicker selectedId={selection?.modelId} onSelected={(next) => { setSelection(next); setSelectedPoseIds(next.poses.map((pose) => pose.id)); }} />
         </CardContent>
       </Card>
+
+      {isMultiPose && selection && (
+        <Card>
+          <CardHeader><CardTitle className="text-lg">3. Elige tus ángulos</CardTitle><CardDescription>Todos están seleccionados. Puedes quitar los que no necesites.</CardDescription></CardHeader>
+          <CardContent className="space-y-3"><PoseSelection poses={selection.poses} selectedIds={selectedPoseIds} onChange={setSelectedPoseIds} /><p className="text-xs text-muted-foreground">{selectedPoseIds.length} de {selection.poses.length} poses seleccionadas</p></CardContent>
+        </Card>
+      )}
 
       {/* Step 3: Cloth Type + Submit */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">3. Tipo de Prenda</CardTitle>
+             <CardTitle className="text-lg">{isMultiPose ? "4" : "3"}. Tipo de Prenda</CardTitle>
           <CardDescription>
             Indica qué tipo de prenda estás probando
           </CardDescription>
@@ -159,15 +164,16 @@ function GenerateScreen() {
                 Iniciando generación...
               </>
             ) : (
-              "Generar prueba virtual"
+               isMultiPose ? `Generar ${selectedPoseIds.length} poses` : "Generar prueba virtual"
             )}
           </Button>
 
           {!canSubmit && !isSubmitting && (
             <p className="text-xs text-muted-foreground text-center">
               {!garmentId && "Sube una prenda"}
-              {garmentId && !modelId && "Selecciona un modelo"}
-              {garmentId && modelId && !clothType && "Selecciona el tipo de prenda"}
+               {garmentId && !selection && "Selecciona un modelo"}
+               {garmentId && selection && isMultiPose && selectedPoseIds.length === 0 && "Selecciona al menos una pose"}
+               {garmentId && selection && (!isMultiPose || selectedPoseIds.length > 0) && !clothType && "Selecciona el tipo de prenda"}
             </p>
           )}
         </CardContent>

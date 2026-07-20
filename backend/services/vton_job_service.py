@@ -1,5 +1,4 @@
 import uuid
-from datetime import datetime, timezone
 
 from core.celery_app import app as celery_app
 from core.config import settings
@@ -25,7 +24,7 @@ class VTONJobService:
         vton_job_repo: VTONJobRepo,
         garment_repo: GarmentPhotoRepo,
         model_repo: ModelPhotoRepo,
-        minio_client: MinIOClient,
+        minio_client: MinIOClient | None,
     ) -> None:
         self._vton_job_repo = vton_job_repo
         self._garment_repo = garment_repo
@@ -38,6 +37,10 @@ class VTONJobService:
         garment_photo_id: uuid.UUID,
         model_photo_id: uuid.UUID,
         cloth_type: str,
+        tenant_id: uuid.UUID | None = None,
+        batch_item_id: uuid.UUID | None = None,
+        commit: bool = True,
+        publish: bool = True,
     ) -> tuple[VTONJob, str]:
         """Submit a new VTON generation job.
 
@@ -78,22 +81,32 @@ class VTONJobService:
             status="queued",
             retry_count=0,
             max_retries=max_retries,
+            tenant_id=tenant_id,
+            batch_item_id=batch_item_id,
         )
-        job = await self._vton_job_repo.create(job)
+        job = await self._vton_job_repo.create(job, commit=commit)
 
         # Publish Celery task
-        celery_app.send_task(
-            "tasks.vton_task.process_vton_job",
-            args=[str(job.id)],
-            queue="vton.generation.normal",
-        )
+        if publish:
+            self.publish_job(job.id)
 
         # Generate presigned URL for garment (for response)
-        presigned_url = await self._minio.get_presigned_url(
-            bucket="originals", key=garment.minio_key
-        )
+        presigned_url = ""
+        if self._minio is not None:
+            presigned_url = await self._minio.get_presigned_url(
+                bucket="originals", key=garment.minio_key
+            )
 
         return job, presigned_url
+
+    @staticmethod
+    def publish_job(job_id: uuid.UUID) -> None:
+        """Publish a persisted VTON job after its transaction commits."""
+        celery_app.send_task(
+            "tasks.vton_task.process_vton_job",
+            args=[str(job_id)],
+            queue="vton.generation.normal",
+        )
 
     async def get_job_status(
         self,

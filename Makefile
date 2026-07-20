@@ -11,6 +11,8 @@
 BACKEND_DIR := backend
 FRONTEND_DIR := frontend
 DOCKER_COMPOSE := docker compose
+BACKEND_EXEC := $(DOCKER_COMPOSE) exec -T fastapi
+FRONTEND_EXEC := $(DOCKER_COMPOSE) exec -T frontend
 
 # Default target
 help: ## Show this help
@@ -22,7 +24,11 @@ help: ## Show this help
 
 dev: ## Run full stack in Docker (postgres, minio, rabbitmq, celery, API + FE with hot reload)
 	@echo "TryOff needs the GPU model: run 'make flux-restart' in another terminal (or --profile tryoff)."
-	$(DOCKER_COMPOSE) up --build
+	$(DOCKER_COMPOSE) up -d
+
+logs:
+	@echo "Checking logs in docker containers"
+	docker compose logs -f
 
 dev-fashn: ## Run FASHN GPU model (one GPU service at a time to avoid OOM)
 	@echo "Nota: no levantes fashn y tryoff-model a la vez en la misma GPU."
@@ -32,11 +38,11 @@ dev-tryoff: ## Run TryOff GPU model (one GPU service at a time to avoid OOM)
 	@echo "Nota: no levantes fashn y tryoff-model a la vez en la misma GPU."
 	$(DOCKER_COMPOSE) --profile gpu up tryoff-model
 
-dev-backend: ## Run backend locally with hot reload (requires make docker-up for infra)
-	cd $(BACKEND_DIR) && uv run uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+dev-backend: ## Run backend in Docker with hot reload
+	$(DOCKER_COMPOSE) up fastapi
 
-dev-frontend: ## Run frontend locally (requires backend reachable at localhost:8000)
-	cd $(FRONTEND_DIR) && pnpm dev
+dev-frontend: ## Run frontend in Docker with hot reload
+	$(DOCKER_COMPOSE) up frontend
 
 # ========================
 # Database
@@ -49,7 +55,7 @@ db-down: ## Stop PostgreSQL
 	$(DOCKER_COMPOSE) down
 
 db-migrate: ## Run Alembic migrations
-	cd $(BACKEND_DIR) && uv run alembic upgrade head
+	$(BACKEND_EXEC) uv run alembic upgrade head
 
 db-seed: ## Seed ejemplo desde docs/imgs (usage: make db-seed EMAIL=tu@email.com)
 	@test -n "$(EMAIL)" || (echo "Uso: make db-seed EMAIL=tu@email.com (mayorista ya registrado en la app)" && exit 1)
@@ -62,11 +68,11 @@ db-seed: ## Seed ejemplo desde docs/imgs (usage: make db-seed EMAIL=tu@email.com
 	$(DOCKER_COMPOSE) exec -T fastapi uv run python scripts/seed_prenda_ejemplo.py "$(EMAIL)"
 
 db-reset: ## Drop and recreate all tables (WARNING: loses data)
-	cd $(BACKEND_DIR) && uv run alembic downgrade base
-	cd $(BACKEND_DIR) && uv run alembic upgrade head
+	$(BACKEND_EXEC) uv run alembic downgrade base
+	$(BACKEND_EXEC) uv run alembic upgrade head
 
 db-migrate-create: ## Create a new migration (usage: make db-migrate-create msg="add_user_field")
-	cd $(BACKEND_DIR) && uv run alembic revision --autogenerate -m "$(msg)"
+	$(BACKEND_EXEC) uv run alembic revision --autogenerate -m "$(msg)"
 
 # ========================
 # Testing
@@ -75,10 +81,10 @@ db-migrate-create: ## Create a new migration (usage: make db-migrate-create msg=
 test: test-backend test-frontend ## Run all tests
 
 test-backend: ## Run backend pytest tests
-	cd $(BACKEND_DIR) && uv run pytest tests/ -v
+	$(BACKEND_EXEC) uv run pytest tests/ -v
 
 test-frontend: ## Run frontend tests
-	cd $(FRONTEND_DIR) && pnpm test
+	$(FRONTEND_EXEC) pnpm test
 
 # ========================
 # Linting
@@ -87,10 +93,10 @@ test-frontend: ## Run frontend tests
 lint: lint-backend lint-frontend ## Lint all code
 
 lint-backend: ## Lint backend Python code
-	cd $(BACKEND_DIR) && uv run python -m py_compile main.py
+	$(BACKEND_EXEC) uv run python -m py_compile main.py
 
 lint-frontend: ## Lint frontend TypeScript/React code
-	cd $(FRONTEND_DIR) && pnpm lint
+	$(FRONTEND_EXEC) pnpm lint
 
 # ========================
 # Building
@@ -99,10 +105,10 @@ lint-frontend: ## Lint frontend TypeScript/React code
 build: build-backend build-frontend ## Build all projects
 
 build-backend: ## Verify backend dependencies resolve
-	cd $(BACKEND_DIR) && uv sync
+	$(BACKEND_EXEC) uv sync
 
 build-frontend: ## Build Next.js production bundle
-	cd $(FRONTEND_DIR) && pnpm build
+	$(FRONTEND_EXEC) pnpm build
 
 # ========================
 # Installation
@@ -111,14 +117,13 @@ build-frontend: ## Build Next.js production bundle
 install: install-backend install-frontend ## Install all dependencies
 
 install-backend: ## Install backend Python dependencies
-	cd $(BACKEND_DIR) && uv sync
+	$(BACKEND_EXEC) uv sync
 
 fix-backend-venv: ## Remove Docker-corrupted .venv and recreate (no sudo)
-	docker run --rm -v $$(pwd)/$(BACKEND_DIR):/app alpine sh -c 'rm -rf /app/.venv'
-	cd $(BACKEND_DIR) && uv sync
+	$(BACKEND_EXEC) sh -c 'rm -rf /app/.venv && uv sync'
 
 install-frontend: ## Install frontend npm dependencies
-	cd $(FRONTEND_DIR) && pnpm install
+	$(FRONTEND_EXEC) pnpm install
 
 
 # ========================

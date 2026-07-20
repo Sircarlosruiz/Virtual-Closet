@@ -43,12 +43,14 @@ class BatchSubmissionService:
         self._garment_repo = garment_repo
         self._model_repo = model_repo
         self._vton_service = vton_job_service
+        self._pending_job_ids: list[uuid.UUID] = []
 
     async def create_and_submit(
         self,
         mayorista_id: uuid.UUID,
         request: BatchCreateRequest,
         db: AsyncSession,
+        tenant_id: uuid.UUID | None = None,
     ) -> BatchJob:
         """Create a BatchJob with items and enqueue VTON jobs atomically.
 
@@ -79,6 +81,7 @@ class BatchSubmissionService:
         # Create BatchJob
         batch = BatchJob(
             mayorista_id=mayorista_id,
+            tenant_id=tenant_id,
             name=batch_name,
             status=BatchJobStatus.pending.value,
             total_items=items_count,
@@ -108,9 +111,14 @@ class BatchSubmissionService:
                     garment_photo_id=batch_item.garment_id,
                     model_photo_id=batch_item.model_id,
                     cloth_type=batch_item.cloth_type,
+                    tenant_id=tenant_id,
+                    batch_item_id=batch_item.id,
+                    commit=False,
+                    publish=False,
                 )
                 batch_item.vton_job_id = vton_job.id
                 batch_item.status = "processing"
+                self._pending_job_ids.append(vton_job.id)
             except Exception as exc:
                 logger.error(
                     "Failed to enqueue VtonJob for batch item %s: %s",
@@ -126,6 +134,13 @@ class BatchSubmissionService:
 
         await db.flush()
         return batch
+
+    def publish_pending(self) -> None:
+        """Publish jobs after the caller commits the enclosing transaction."""
+        pending = self._pending_job_ids
+        self._pending_job_ids = []
+        for job_id in pending:
+            self._vton_service.publish_job(job_id)
 
     async def _verify_ownership(
         self,

@@ -12,10 +12,12 @@ class VTONJobRepo:
     def __init__(self, db: AsyncSession) -> None:
         self._db = db
 
-    async def create(self, job: VTONJob) -> VTONJob:
+    async def create(self, job: VTONJob, *, commit: bool = True) -> VTONJob:
         self._db.add(job)
-        await self._db.commit()
-        await self._db.refresh(job)
+        await self._db.flush()
+        if commit:
+            await self._db.commit()
+            await self._db.refresh(job)
         return job
 
     async def get_by_id(self, job_id: uuid.UUID) -> VTONJob | None:
