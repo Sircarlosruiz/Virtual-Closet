@@ -37,7 +37,12 @@ function LoginFormContent() {
       const result = await apiFetch("/api/auth/login", {
         method: "POST",
         body: JSON.stringify(data),
-      }) as { challenge_token?: string; requires_2fa_setup?: boolean; requires_2fa?: boolean; email?: string };
+      }) as {
+        challenge_token?: string;
+        requires_2fa_setup?: boolean;
+        requires_2fa?: boolean;
+        email?: string;
+      };
 
       // Store challenge_token in sessionStorage for 2FA flows
       if (result?.challenge_token) {

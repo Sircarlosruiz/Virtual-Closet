@@ -22,6 +22,7 @@ from models.unlock_token import UnlockToken
 from repositories.email_verification_token_repo import EmailVerificationTokenRepository
 from repositories.mayorista_repo import MayoristaRepository
 from repositories.tenant_repo import TenantRepo
+from repositories.two_factor_config_repo import TwoFactorConfigRepository
 from repositories.unlock_token_repo import UnlockTokenRepository
 
 
@@ -71,11 +72,13 @@ class AuthService:
         email_token_repo: EmailVerificationTokenRepository | None = None,
         unlock_token_repo: UnlockTokenRepository | None = None,
         tenant_repo: TenantRepo | None = None,
+        two_factor_repo: TwoFactorConfigRepository | None = None,
     ):
         self.mayorista_repo = mayorista_repo
         self.email_token_repo = email_token_repo
         self.unlock_token_repo = unlock_token_repo
         self.tenant_repo = tenant_repo
+        self.two_factor_repo = two_factor_repo
 
     # ── Registration ───────────────────────────────────────────────────
 
@@ -223,13 +226,17 @@ class AuthService:
         # Issue challenge_token (not full JWT)
         challenge_token = create_challenge_token(str(mayorista.id))
 
-        # For this bolt: 2FA is not yet implemented, so we indicate setup is required
-        # In bolt 031, this will check if 2FA is configured
-        requires_2fa_setup = True
+        requires_2fa = False
+        if self.two_factor_repo:
+            config = await self.two_factor_repo.get_by_mayorista_id(mayorista.id)
+            requires_2fa = config is not None and config.is_configured
+
+        requires_2fa_setup = not requires_2fa
 
         return {
             "challenge_token": challenge_token,
             "requires_2fa_setup": requires_2fa_setup,
+            "requires_2fa": requires_2fa,
             "user": mayorista,
         }
 

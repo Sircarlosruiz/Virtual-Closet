@@ -35,6 +35,7 @@ class LoginRequest(BaseModel):
 class LoginResponse(BaseModel):
     challenge_token: str
     requires_2fa_setup: bool
+    requires_2fa: bool = False
 
 
 class VerifyEmailResponse(BaseModel):

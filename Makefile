@@ -32,11 +32,11 @@ logs:
 
 dev-fashn: ## Run FASHN GPU model (one GPU service at a time to avoid OOM)
 	@echo "Nota: no levantes fashn y tryoff-model a la vez en la misma GPU."
-	$(DOCKER_COMPOSE) --profile gpu up fashn
+	$(DOCKER_COMPOSE) --profile gpu up fashn -d
 
 dev-tryoff: ## Run TryOff GPU model (one GPU service at a time to avoid OOM)
 	@echo "Nota: no levantes fashn y tryoff-model a la vez en la misma GPU."
-	$(DOCKER_COMPOSE) --profile gpu up tryoff-model
+	$(DOCKER_COMPOSE) --profile gpu up tryoff-model -d
 
 dev-backend: ## Run backend in Docker with hot reload
 	$(DOCKER_COMPOSE) up fastapi

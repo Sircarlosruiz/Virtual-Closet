@@ -1,7 +1,7 @@
 import { Toaster } from "@/components/ui/sonner";
 import { Shirt, CheckCircle2 } from "lucide-react";
 
-export default function AuthLayout({
+export function AuthLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -73,3 +73,5 @@ export default function AuthLayout({
     </div>
   );
 }
+
+export default AuthLayout;

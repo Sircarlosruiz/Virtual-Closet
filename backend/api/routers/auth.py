@@ -30,6 +30,7 @@ from models.mayorista import Mayorista
 from repositories.email_verification_token_repo import EmailVerificationTokenRepository
 from repositories.mayorista_repo import MayoristaRepository
 from repositories.tenant_repo import TenantRepo
+from repositories.two_factor_config_repo import TwoFactorConfigRepository
 from repositories.unlock_token_repo import UnlockTokenRepository
 from services.auth_service import (
     AccountLockedError,
@@ -55,6 +56,7 @@ def _get_auth_service(db: AsyncSession) -> AuthService:
         email_token_repo=EmailVerificationTokenRepository(db),
         unlock_token_repo=UnlockTokenRepository(db),
         tenant_repo=TenantRepo(db),
+        two_factor_repo=TwoFactorConfigRepository(db),
     )
 
 
@@ -230,6 +232,7 @@ async def login(
     return LoginResponse(
         challenge_token=result["challenge_token"],
         requires_2fa_setup=result["requires_2fa_setup"],
+        requires_2fa=result["requires_2fa"],
     )
 
 
