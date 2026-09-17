@@ -11,6 +11,7 @@ from models.batch_job import BatchJob, BatchItem, BatchJobStatus, BatchItemStatu
 from models.tenant import Tenant
 from models.admin_invitation import AdminInvitation
 from models.buyer_link import BuyerLink
+from models.generation_job import GenerationJob
 
 __all__ = [
     "Mayorista",
@@ -39,4 +40,5 @@ __all__ = [
     "Tenant",
     "AdminInvitation",
     "BuyerLink",
+    "GenerationJob",
 ]

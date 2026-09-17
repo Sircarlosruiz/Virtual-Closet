@@ -44,6 +44,7 @@ class Settings(BaseSettings):
     VTON_RETRY_BASE_DELAY_SECONDS: int = 30
     VTON_RETRY_MAX_DELAY_SECONDS: int = 600
     REPLICATE_API_KEY: str = ""
+    OPENAI_API_KEY: str = ""
     LMSTUDIO_BASE_URL: str = "http://localhost:1234"
     LMSTUDIO_MODEL: str = ""
     LMSTUDIO_API_KEY: str = "lm-studio"

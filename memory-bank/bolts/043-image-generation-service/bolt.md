@@ -3,15 +3,17 @@ id: 043-image-generation-service
 unit: 001-image-generation-service
 intent: 008-openai-image-generation
 type: ddd-construction-bolt
-status: planned
+status: in_progress
 stories:
   - 001-staff-provider-selection
   - 002-staff-generation-jobs
 created: 2026-09-17T01:23:26Z
-started: null
+started: 2026-09-17T02:00:00Z
 completed: null
-current_stage: null
-stages_completed: []
+current_stage: test
+stages_completed:
+  - model
+  - design
 requires_bolts: []
 enables_bolts:
   - 044-generation-reliability
@@ -47,10 +49,10 @@ Allow supported image modes to be validated and queued while keeping OpenAI cred
 
 ## Stages
 
-- [ ] **1. model**: Pending → ddd-01-domain-model.md
-- [ ] **2. design**: Pending → ddd-02-technical-design.md
-- [ ] **3. implement**: Pending → backend generation service
-- [ ] **4. test**: Pending → ddd-03-test-report.md
+- [x] **1. model**: Complete → ddd-01-domain-model.md
+- [x] **2. design**: Complete → ddd-02-technical-design.md
+- [ ] **3. implement**: In progress → backend generation service
+- [ ] **4. test**: Blocked by missing backend dependencies → ddd-03-test-report.md
 
 ## Dependencies
 
