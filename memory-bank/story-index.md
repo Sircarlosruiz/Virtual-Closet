@@ -1,9 +1,9 @@
 # Global Story Index
 
 ## Overview
-- **Total stories**: 176
-- **Generated**: 176
-- **Last updated**: 2026-07-17
+- **Total stories**: 190
+- **Generated**: 190
+- **Last updated**: 2026-09-17
 
 ---
 
@@ -304,9 +304,39 @@
 - [x] **002-pose-selection-submission-ui** ✅ GENERATED — Pose Deselection & Submission UI — Must
 - [x] **003-pose-set-result-view** ✅ GENERATED — Pose Set Grouped Result View — Must
 
+---
+
+### 008-openai-image-generation
+
+#### Unit: 001-image-generation-service
+
+- [x] **001-staff-provider-selection** ✅ GENERATED — Staff Provider Selection — Must
+- [x] **002-staff-generation-jobs** ✅ GENERATED — Staff Generation Jobs — Must
+- [x] **003-provider-invocation-history** ✅ GENERATED — Provider Invocation History — Must
+- [x] **004-retry-idempotency-limits** ✅ GENERATED — Retry, Idempotency and Limits — Must
+- [x] **005-usage-recording** ✅ GENERATED — Usage Recording — Must
+
+#### Unit: 002-template-composition-service
+
+- [x] **001-template-lifecycle** ✅ GENERATED — Template Lifecycle — Must
+- [x] **002-composition-snapshot** ✅ GENERATED — Composition Snapshot — Must
+- [x] **003-deterministic-sku-composition** ✅ GENERATED — Deterministic SKU Composition — Must
+
+#### Unit: 003-product-image-integration
+
+- [x] **001-product-generation-bridge** ✅ GENERATED — Product Generation Bridge — Must
+- [x] **002-publication-selection** ✅ GENERATED — Publication Selection — Must
+- [x] **003-sync-delivery** ✅ GENERATED — Product Image Sync Delivery — Must
+
+#### Unit: 004-openai-generation-ui
+
+- [x] **001-generation-form** ✅ GENERATED — Generation Form — Must
+- [x] **002-generation-review** ✅ GENERATED — Generation Review — Must
+- [x] **003-product-integration-ui** ✅ GENERATED — Product Integration UI — Must
+
 ## Stories by Status
 
 - **Completed**: 167 (all intents 001-007)
-- **Planned/Generated**: 9 (multi-pose VTON generation)
-- **Draft (new)**: 0
+- **Planned/Generated**: 23 (multi-pose VTON and OpenAI image generation)
+- **Draft (new)**: 14
 - **In Progress**: 0
