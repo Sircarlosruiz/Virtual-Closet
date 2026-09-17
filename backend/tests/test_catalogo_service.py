@@ -69,7 +69,9 @@ class TestCatalogoService:
 
         mock_catalogo_repo.create = AsyncMock(return_value=created_catalogo)
 
-        result = await service.create_catalog(mayorista_id, name)
+        tenant_id = uuid.uuid4()
+        result = await service.create_catalog(mayorista_id, name, tenant_id)
+        assert mock_catalogo_repo.create.call_args.args[0].tenant_id == tenant_id
 
         assert result.mayorista_id == mayorista_id
         assert result.name == name
@@ -94,7 +96,7 @@ class TestCatalogoService:
 
         mock_catalogo_repo.create = AsyncMock(return_value=created_catalogo)
 
-        result = await service.create_catalog(mayorista_id, name.strip())
+        result = await service.create_catalog(mayorista_id, name.strip(), uuid.uuid4())
 
         assert result.name == "Winter Collection"
 

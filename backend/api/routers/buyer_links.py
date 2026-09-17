@@ -93,7 +93,17 @@ async def list_buyer_links(
             status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)
         ) from exc
 
-    return BuyerLinkListResponse(links=links)
+    return BuyerLinkListResponse(links=[
+        BuyerLinkResponse(
+            id=link.id,
+            tenant_id=link.tenant_id,
+            catalog_ids=link.catalog_ids,
+            signed_url=f"{settings.FRONTEND_URL}/portal/access?token={token}",
+            expires_at=link.expires_at,
+            created_at=link.created_at,
+        )
+        for link, token in links
+    ])
 
 
 # Public endpoint (no auth required)

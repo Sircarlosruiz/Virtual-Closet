@@ -66,7 +66,12 @@ class VTONJob(Base):
     result_minio_key = Column(String(512), unique=True, nullable=True)
     batch_item_id = Column(
         UUID(as_uuid=True),
-        ForeignKey("batch_items.id", ondelete="SET NULL"),
+        ForeignKey(
+            "batch_items.id",
+            ondelete="SET NULL",
+            name="fk_vton_jobs_batch_item_id",
+            use_alter=True,
+        ),
         nullable=True,
     )
     created_at = Column(

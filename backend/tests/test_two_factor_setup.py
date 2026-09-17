@@ -62,7 +62,7 @@ class TestInitiateTotpSetup:
         assert "backup_codes" in result
         assert len(result["backup_codes"]) == 8
         assert "otpauth://totp/" in result["otpauth_uri"]
-        assert "Virtual Closet" in result["otpauth_uri"]
+        assert "Virtual%20Closet" in result["otpauth_uri"]
 
     @pytest.mark.asyncio
     async def test_raises_if_already_configured(self, service, mock_two_factor_repo):

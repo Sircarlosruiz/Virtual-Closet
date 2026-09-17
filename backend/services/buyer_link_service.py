@@ -76,20 +76,6 @@ class BuyerLinkService:
         expires_at = datetime.now(timezone.utc) + timedelta(days=ttl_days)
         jti = uuid.uuid4().hex
 
-        payload = {
-            "sub": str(tenant_id),
-            "catalog_ids": [str(cid) for cid in catalog_ids],
-            "jti": jti,
-            "exp": expires_at,
-            "type": "buyer_link",
-        }
-
-        signed_token = jwt.encode(
-            payload,
-            tenant.buyer_link_secret,
-            algorithm=BUYER_LINK_ALGORITHM,
-        )
-
         link = BuyerLink(
             tenant_id=tenant_id,
             catalog_ids=catalog_ids,
@@ -99,10 +85,25 @@ class BuyerLinkService:
         )
         link = await self._buyer_link_repo.create(link)
 
-        return link, signed_token
+        return link, self._sign_link(link, tenant)
 
-    def validate_link(self, token: str) -> dict:
-        """Validate a buyer link token (stateless, no DB call).
+    @staticmethod
+    def _sign_link(link: BuyerLink, tenant: Tenant) -> str:
+        """Recreate the signed token without extending its stored expiration."""
+        return jwt.encode(
+            {
+                "sub": str(link.tenant_id),
+                "catalog_ids": [str(cid) for cid in link.catalog_ids],
+                "jti": link.token_jti,
+                "exp": link.expires_at,
+                "type": "buyer_link",
+            },
+            tenant.buyer_link_secret,
+            algorithm=BUYER_LINK_ALGORITHM,
+        )
+
+    def validate_link(self, token: str, secret: str) -> dict:
+        """Validate a buyer link token using its tenant's signing secret.
 
         Args:
             token: The signed JWT string.
@@ -117,7 +118,8 @@ class BuyerLinkService:
         try:
             payload = jwt.decode(
                 token,
-                options={"verify_exp": True, "verify_aud": False},
+                secret,
+                options={"verify_exp": True, "require_exp": True, "verify_aud": False},
                 algorithms=[BUYER_LINK_ALGORITHM],
             )
         except jwt.ExpiredSignatureError:
@@ -125,14 +127,16 @@ class BuyerLinkService:
         except (jwt.JWTError, jwt.JWTClaimsError):
             raise InvalidBuyerLinkError("Invalid buyer link token")
 
-        if payload.get("type") != "buyer_link":
-            raise InvalidBuyerLinkError("Invalid buyer link token")
-
-        return {
-            "tenant_id": uuid.UUID(payload["sub"]),
-            "catalog_ids": [uuid.UUID(cid) for cid in payload["catalog_ids"]],
-            "jti": payload["jti"],
-        }
+        try:
+            if payload.get("type") != "buyer_link" or not payload.get("catalog_ids"):
+                raise ValueError("Invalid buyer link claims")
+            return {
+                "tenant_id": uuid.UUID(payload["sub"]),
+                "catalog_ids": [uuid.UUID(cid) for cid in payload["catalog_ids"]],
+                "jti": payload["jti"],
+            }
+        except (KeyError, TypeError, ValueError, AttributeError) as exc:
+            raise InvalidBuyerLinkError("Invalid buyer link token") from exc
 
     async def validate_link_with_tenant(self, token: str) -> dict:
         """Validate a buyer link and verify tenant is active.
@@ -152,18 +156,24 @@ class BuyerLinkService:
             TenantNotFoundError: If tenant does not exist.
             TenantInactiveError: If tenant is not active.
         """
-        result = self.validate_link(token)
-
-        tenant = await self._tenant_repo.get_by_id(result["tenant_id"])
+        # Unverified claims are only used to select the key. Trust no claims
+        # until validate_link verifies the signature and expiration below.
+        try:
+            claims = jwt.get_unverified_claims(token)
+            tenant_id = uuid.UUID(claims["sub"])
+        except (jwt.JWTError, KeyError, TypeError, ValueError, AttributeError) as exc:
+            raise InvalidBuyerLinkError("Invalid buyer link token") from exc
+        tenant = await self._tenant_repo.get_by_id(tenant_id)
         if tenant is None:
             raise TenantNotFoundError("Tenant not found")
+        result = self.validate_link(token, tenant.buyer_link_secret)
         if not tenant.is_active:
             raise TenantInactiveError("Tenant is not active")
 
         result["tenant"] = tenant
         return result
 
-    async def list_links(self, tenant_id: uuid.UUID) -> list[BuyerLink]:
+    async def list_links(self, tenant_id: uuid.UUID) -> list[tuple[BuyerLink, str]]:
         """List all buyer links for a tenant.
 
         Raises:
@@ -173,4 +183,5 @@ class BuyerLinkService:
         if tenant is None:
             raise TenantNotFoundError("Tenant not found")
 
-        return await self._buyer_link_repo.list_by_tenant(tenant_id)
+        links = await self._buyer_link_repo.list_by_tenant(tenant_id)
+        return [(link, self._sign_link(link, tenant)) for link in links]

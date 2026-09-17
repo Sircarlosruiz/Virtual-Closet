@@ -74,11 +74,12 @@ class CatalogoService:
         self._minio = minio_client
 
     async def create_catalog(
-        self, mayorista_id: uuid.UUID, name: str
+        self, mayorista_id: uuid.UUID, name: str, tenant_id: uuid.UUID
     ) -> Catalogo:
         """Create a new catalog in draft status."""
         catalogo = Catalogo(
             mayorista_id=mayorista_id,
+            tenant_id=tenant_id,
             name=name,
             status="draft",
             item_count=0,

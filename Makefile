@@ -81,7 +81,12 @@ db-migrate-create: ## Create a new migration (usage: make db-migrate-create msg=
 test: test-backend test-frontend ## Run all tests
 
 test-backend: ## Run backend pytest tests
-	$(BACKEND_EXEC) uv run pytest tests/ -v
+	$(DOCKER_COMPOSE) exec -T postgres dropdb -U postgres --if-exists virtual_closet_test
+	$(DOCKER_COMPOSE) exec -T postgres createdb -U postgres virtual_closet_test
+	$(DOCKER_COMPOSE) exec -T \
+		-e TEST_DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/virtual_closet_test \
+		-e TWO_FACTOR_ENCRYPTION_KEY=M_QnGdvfW4CBKcdKSkRylQrRPSjENW3d5CEpXthzpbU= \
+		fastapi uv run pytest tests/ -v
 
 test-frontend: ## Run frontend tests
 	$(FRONTEND_EXEC) pnpm test

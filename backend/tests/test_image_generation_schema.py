@@ -50,3 +50,28 @@ def test_defaults_non_try_on_provider_to_openai() -> None:
     request = ImageGenerationRequest(mode="text", prompt="a jacket")
 
     assert request.provider is None
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {"mode": "text", "prompt": "a jacket"},
+        {
+            "mode": "edit",
+            "prompt": "replace background",
+            "reference_image_ids": [uuid4()],
+        },
+        {"mode": "extraction", "reference_image_ids": [uuid4()]},
+        {
+            "mode": "try_on",
+            "provider": "openai",
+            "garment_id": uuid4(),
+            "model_id": uuid4(),
+            "cloth_type": "upper_body",
+        },
+    ],
+)
+def test_accepts_valid_mode_contracts(payload: dict) -> None:
+    request = ImageGenerationRequest.model_validate(payload)
+
+    assert request.mode.value == payload["mode"]

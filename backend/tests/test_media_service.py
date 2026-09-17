@@ -1,21 +1,18 @@
-import io
 import uuid
 
 import pytest
 import pytest_asyncio
 from httpx import AsyncClient
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database import get_db
 from main import app
-from models.media import GarmentPhoto, ModelPhoto
 from models.mayorista import Mayorista
 from repositories.media_repo import GarmentPhotoRepo, ModelPhotoRepo
 from services.media_service import MediaUploadService
 from services.model_library_service import ModelLibraryService
 from core.minio_client import MinIOClient
-from unittest.mock import AsyncMock, patch, MagicMock
+from unittest.mock import AsyncMock
 
 # --- Fixtures ---
 
@@ -25,8 +22,8 @@ async def mayorista_with_session(client: AsyncClient):
     """Register and login a test user, return the Mayorista object."""
     from tests.conftest import register_user, login_user
 
-    await register_user(client, email="media@test.com", password="testpass123")
-    resp = await login_user(client, email="media@test.com", password="testpass123")
+    await register_user(client, email="media@test.com", password="Testpass123")
+    await login_user(client, email="media@test.com", password="Testpass123")
 
     async for session in app.dependency_overrides.get(get_db, get_db)():
         result = await session.execute(

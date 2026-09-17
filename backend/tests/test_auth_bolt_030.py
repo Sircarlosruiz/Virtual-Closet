@@ -15,7 +15,6 @@ from models.mayorista import Mayorista
 from models.email_verification_token import EmailVerificationToken
 from models.unlock_token import UnlockToken
 from core.database import get_db
-from core.limiter import limiter
 
 
 # ── Helpers ────────────────────────────────────────────────────────────────
@@ -274,6 +273,7 @@ async def test_resend_verification(client):
     )
     user = await _get_user_by_email(client, "resend@mayorista.com")
     old_token = await _get_unused_verification_token(client, user.id)
+    assert old_token is not None
 
     response = await client.post(
         "/api/auth/resend-verification",
@@ -281,14 +281,32 @@ async def test_resend_verification(client):
     )
     assert response.status_code == 200
 
-    # Old token should be invalidated
-    old_token = await _get_unused_verification_token(client, user.id)
-    assert old_token is None
+    # Inspect the original row, rather than overwriting it with the new token.
+    db_gen = get_db()
+    db = await anext(db_gen)
+    try:
+        persisted_old_token = await db.get(EmailVerificationToken, old_token.id)
+        assert persisted_old_token is not None
+        assert persisted_old_token.used is True
+    finally:
+        await db_gen.aclose()
 
-    # New token should exist
+    # scalar_one_or_none also ensures there is exactly one unused token.
     new_token = await _get_unused_verification_token(client, user.id)
     assert new_token is not None
-    assert new_token.token != old_token.token if old_token else True
+    assert new_token.id != old_token.id
+    assert new_token.token != old_token.token
+    assert new_token.used is False
+
+    rejected = await client.get("/api/auth/verify-email", params={"token": old_token.token})
+    assert rejected.status_code == 400
+    user = await _get_user_by_email(client, "resend@mayorista.com")
+    assert user.email_verified is False
+
+    accepted = await client.get("/api/auth/verify-email", params={"token": new_token.token})
+    assert accepted.status_code == 200
+    user = await _get_user_by_email(client, "resend@mayorista.com")
+    assert user.email_verified is True
 
 
 @pytest.mark.asyncio

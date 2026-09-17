@@ -107,7 +107,12 @@ class BatchItem(Base):
     cloth_type = Column(String(20), nullable=False)
     vton_job_id = Column(
         UUID(as_uuid=True),
-        ForeignKey("vton_jobs.id", ondelete="SET NULL"),
+        ForeignKey(
+            "vton_jobs.id",
+            ondelete="SET NULL",
+            name="fk_batch_items_vton_job_id",
+            use_alter=True,
+        ),
         nullable=True,
     )
     status = Column(String(20), nullable=False, default="pending")

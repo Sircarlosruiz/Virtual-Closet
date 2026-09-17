@@ -1,5 +1,7 @@
 """Integration tests for multi-tenant isolation."""
 
+import os
+
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
@@ -13,7 +15,7 @@ from core.limiter import limiter
 from main import app
 from models.mayorista import Base
 from models.tenant import Tenant
-from models.media import MediaItem
+from models.media import MediaItem, GarmentPhoto, ModelPhoto
 from models.catalogo import Catalogo
 from models.vton_job import VTONJob, JobStatus, ClothType
 from models.batch_job import BatchJob, BatchJobStatus
@@ -23,7 +25,10 @@ import models.catalogo  # noqa: F401
 import models.vton_job  # noqa: F401
 import models.batch_job  # noqa: F401
 
-TEST_DATABASE_URL = "postgresql+asyncpg://postgres:postgres@localhost:5432/virtual_closet_test"
+TEST_DATABASE_URL = os.getenv(
+    "TEST_DATABASE_URL",
+    "postgresql+asyncpg://postgres:postgres@localhost:5432/virtual_closet_test",
+)
 
 settings.COOKIE_SECURE = False
 
@@ -201,20 +206,40 @@ class TestTenantIsolation:
             mayorista_a = await _create_mayorista(session, "a3@test.com", tenant_a.id)
             mayorista_b = await _create_mayorista(session, "b3@test.com", tenant_b.id)
 
+            photos = []
+            for owner in (mayorista_a, mayorista_b):
+                garment = GarmentPhoto(
+                    mayorista_id=owner.id, tenant_id=owner.tenant_id,
+                    minio_key=f"{owner.id}/garment.jpg", filename="garment.jpg",
+                    content_type="image/jpeg", size_bytes=1000,
+                )
+                model = ModelPhoto(
+                    mayorista_id=owner.id, tenant_id=owner.tenant_id,
+                    minio_key=f"{owner.id}/model.jpg", label="Test model",
+                    content_type="image/jpeg", size_bytes=1000,
+                )
+                session.add_all([garment, model])
+                await session.flush()
+                photos.append((garment.id, model.id))
+
             # Create VTON jobs for each tenant
             job_a = VTONJob(
                 mayorista_id=mayorista_a.id,
                 tenant_id=tenant_a.id,
-                status=JobStatus.queued,
-                cloth_type=ClothType.upper_body,
+                garment_photo_id=photos[0][0],
+                model_photo_id=photos[0][1],
+                status=JobStatus.queued.value,
+                cloth_type=ClothType.upper_body.value,
                 retry_count=0,
                 max_retries=3,
             )
             job_b = VTONJob(
                 mayorista_id=mayorista_b.id,
                 tenant_id=tenant_b.id,
-                status=JobStatus.queued,
-                cloth_type=ClothType.upper_body,
+                garment_photo_id=photos[1][0],
+                model_photo_id=photos[1][1],
+                status=JobStatus.queued.value,
+                cloth_type=ClothType.upper_body.value,
                 retry_count=0,
                 max_retries=3,
             )
@@ -247,8 +272,8 @@ class TestTenantIsolation:
                 mayorista_id=mayorista_a.id,
                 tenant_id=tenant_a.id,
                 name="Batch A",
-                status=BatchJobStatus.pending,
-                total_items=0,
+                status=BatchJobStatus.pending.value,
+                total_items=1,
                 completed_count=0,
                 failed_count=0,
             )
@@ -256,8 +281,8 @@ class TestTenantIsolation:
                 mayorista_id=mayorista_b.id,
                 tenant_id=tenant_b.id,
                 name="Batch B",
-                status=BatchJobStatus.pending,
-                total_items=0,
+                status=BatchJobStatus.pending.value,
+                total_items=1,
                 completed_count=0,
                 failed_count=0,
             )

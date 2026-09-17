@@ -1,10 +1,8 @@
 import uuid
 from datetime import datetime, timezone
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
-import pytest_asyncio
-from httpx import ASGITransport, AsyncClient
 
 from tests.conftest import register_user, login_user
 
@@ -20,7 +18,7 @@ class TestTryoffAPI:
         # Create a source image first
         source_image_id = uuid.uuid4()
         
-        with patch("repositories.tryoff_job_repo.SourceImageRepo.get_by_id_and_mayorista") as mock_get:
+        with patch("repositories.tryoff_job_repo.SourceImageRepo.get_by_id") as mock_get:
             mock_source_image = MagicMock()
             mock_source_image.id = source_image_id
             mock_get.return_value = mock_source_image
@@ -60,7 +58,7 @@ class TestTryoffAPI:
 
         source_image_id = uuid.uuid4()
 
-        with patch("repositories.tryoff_job_repo.SourceImageRepo.get_by_id_and_mayorista") as mock_get:
+        with patch("repositories.tryoff_job_repo.SourceImageRepo.get_by_id") as mock_get:
             mock_source_image = MagicMock()
             mock_source_image.id = source_image_id
             mock_get.return_value = mock_source_image
@@ -139,7 +137,7 @@ class TestTryoffAPI:
         login_response = await login_user(client)
         cookies = login_response.cookies
 
-        with patch("repositories.tryoff_job_repo.SourceImageRepo.get_by_id_and_mayorista") as mock_get:
+        with patch("repositories.tryoff_job_repo.SourceImageRepo.get_by_id") as mock_get:
             mock_get.return_value = None
 
             response = await client.post(
@@ -171,6 +169,7 @@ class TestTryoffAPI:
             mock_job.started_at = datetime.now(timezone.utc)
             mock_job.completed_at = datetime.now(timezone.utc)
             mock_job.output_minio_key = "tryoff/mayorista/job.png"
+            mock_job.output_media_id = None
             mock_job.error_reason = None
             mock_job.retry_count = 0
             mock_get.return_value = mock_job
@@ -242,6 +241,7 @@ class TestTryoffAPI:
             job1.started_at = datetime.now(timezone.utc)
             job1.completed_at = datetime.now(timezone.utc)
             job1.output_minio_key = "tryoff/mayorista/job1.png"
+            job1.output_media_id = None
             job1.error_reason = None
             job1.retry_count = 0
 

@@ -1,5 +1,6 @@
 import uuid
 import importlib.util
+import os
 from pathlib import Path
 
 import pytest
@@ -12,8 +13,12 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from models.media import ModelPhoto
 from models.mayorista import Mayorista
 from models.model import Model
+from models.tenant import Tenant
 
-TEST_DATABASE_URL = "postgresql+asyncpg://postgres:postgres@localhost:5432/virtual_closet_test"
+TEST_DATABASE_URL = os.getenv(
+    "TEST_DATABASE_URL",
+    "postgresql+asyncpg://postgres:postgres@localhost:5432/virtual_closet_test",
+)
 
 
 @pytest_asyncio.fixture
@@ -25,6 +30,7 @@ async def backfill_db():
     async with engine.begin() as connection:
         await connection.run_sync(
             lambda sync_connection: (
+                Tenant.__table__.create(sync_connection, checkfirst=True),
                 Mayorista.__table__.create(sync_connection, checkfirst=True),
                 Model.__table__.create(sync_connection, checkfirst=True),
                 ModelPhoto.__table__.create(sync_connection, checkfirst=True),

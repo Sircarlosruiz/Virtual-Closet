@@ -54,16 +54,18 @@ async def test_generate_buyer_link_success(authenticated_client):
 @pytest.mark.asyncio
 async def test_list_buyer_links(authenticated_client):
     """GET /buyer-links should return list of links for tenant."""
-    await authenticated_client.post(
+    created = await authenticated_client.post(
         "/api/tenants/buyer-links",
         json={"catalog_ids": [str(uuid.uuid4())]},
     )
+    assert created.status_code == 201
 
     response = await authenticated_client.get("/api/tenants/buyer-links")
     assert response.status_code == 200
     data = response.json()
     assert "links" in data
-    assert len(data["links"]) >= 1
+    assert len(data["links"]) == 1
+    assert data["links"][0] == created.json()
 
 
 @pytest.mark.asyncio
@@ -98,6 +100,48 @@ async def test_validate_buyer_link_invalid_token(client):
     data = response.json()
     assert data["valid"] is False
     assert data["reason"] == "invalid_token"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("case,reason", [
+    ("wrong_signature", "invalid_token"),
+    ("expired", "link_expired"),
+    ("invalid_subject", "invalid_token"),
+    ("missing_expiration", "invalid_token"),
+    ("invalid_catalog", "invalid_token"),
+])
+async def test_validate_buyer_link_rejects_invalid_signed_claims(authenticated_client, case, reason):
+    from datetime import datetime, timedelta, timezone
+    from jose import jwt
+    import core.database as database
+    from models.tenant import Tenant
+
+    created = await authenticated_client.post(
+        "/api/tenants/buyer-links", json={"catalog_ids": [str(uuid.uuid4())]},
+    )
+    assert created.status_code == 201
+    data = created.json()
+    original = data["signed_url"].split("token=")[1]
+    claims = jwt.get_unverified_claims(original)
+    async with database.async_session() as db:
+        tenant = await db.get(Tenant, uuid.UUID(data["tenant_id"]))
+        secret = tenant.buyer_link_secret
+
+    if case == "wrong_signature":
+        secret = "a-different-signing-secret"
+    elif case == "expired":
+        claims["exp"] = datetime.now(timezone.utc) - timedelta(minutes=1)
+    elif case == "invalid_subject":
+        claims["sub"] = "not-a-uuid"
+    elif case == "missing_expiration":
+        del claims["exp"]
+    elif case == "invalid_catalog":
+        claims["catalog_ids"] = ["not-a-uuid"]
+    token = jwt.encode(claims, secret, algorithm="HS256")
+    response = await authenticated_client.post("/api/buyer-links/validate", json={"token": token})
+    assert response.status_code == 200
+    assert response.json()["valid"] is False
+    assert response.json()["reason"] == reason
 
 
 @pytest.mark.asyncio

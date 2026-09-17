@@ -16,7 +16,7 @@ from api.schemas.catalogo import (
     CatalogoUpdateRequest,
 )
 from core.database import get_db
-from core.dependencies import get_current_mayorista
+from core.dependencies import get_current_mayorista, get_tenant_context, TenantContext
 from core.minio_client import MinIOClient
 from models.mayorista import Mayorista
 from repositories.catalogo_repo import CatalogoItemRepo, CatalogoRepo
@@ -63,13 +63,14 @@ def _get_catalogo_service(db: AsyncSession = Depends(get_db)) -> CatalogoService
 )
 async def create_catalog(
     body: CatalogoCreateRequest,
-    mayorista: Mayorista = Depends(get_current_mayorista),
+    tenant: TenantContext = Depends(get_tenant_context),
     catalogo_service: CatalogoService = Depends(_get_catalogo_service),
 ):
     """Create a new catalog in draft status."""
     catalogo = await catalogo_service.create_catalog(
-        mayorista_id=mayorista.id,
+        mayorista_id=tenant.user_id,
         name=body.name,
+        tenant_id=tenant.tenant_id,
     )
     return catalogo
 

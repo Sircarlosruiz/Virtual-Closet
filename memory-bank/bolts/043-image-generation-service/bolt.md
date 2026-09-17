@@ -3,17 +3,27 @@ id: 043-image-generation-service
 unit: 001-image-generation-service
 intent: 008-openai-image-generation
 type: ddd-construction-bolt
-status: in_progress
+status: complete
 stories:
   - 001-staff-provider-selection
   - 002-staff-generation-jobs
-created: 2026-09-17T01:23:26Z
-started: 2026-09-17T02:00:00Z
-completed: null
-current_stage: test
+created: '2026-09-17T01:23:26Z'
+started: '2026-09-17T02:00:00Z'
+completed: '2026-09-17T16:37:51Z'
+current_stage: null
 stages_completed:
-  - model
-  - design
+  - name: model
+    completed: '2026-09-17T02:00:00Z'
+    artifact: ddd-01-domain-model.md
+  - name: design
+    completed: '2026-09-17T02:00:00Z'
+    artifact: ddd-02-technical-design.md
+  - name: adr
+    completed: '2026-09-17T04:07:47Z'
+    artifact: adr-046-provider-abstraction.md, adr-047-worker-secret-boundary.md, adr-048-commit-before-enqueue.md
+  - name: implement
+    completed: '2026-09-17T04:07:47Z'
+    artifact: backend image generation service, migration, router, and Celery task
 requires_bolts: []
 enables_bolts:
   - 044-generation-reliability
@@ -51,8 +61,9 @@ Allow supported image modes to be validated and queued while keeping OpenAI cred
 
 - [x] **1. model**: Complete → ddd-01-domain-model.md
 - [x] **2. design**: Complete → ddd-02-technical-design.md
-- [ ] **3. implement**: In progress → backend generation service
-- [ ] **4. test**: Blocked by missing backend dependencies → ddd-03-test-report.md
+- [x] **3. adr**: Complete → adr-046, adr-047, adr-048
+- [x] **4. implement**: Complete → backend generation service
+- [x] **5. test**: Complete → ddd-03-test-report.md (pending human approval to close bolt)
 
 ## Dependencies
 
@@ -64,6 +75,6 @@ Allow supported image modes to be validated and queued while keeping OpenAI cred
 
 ## Success Criteria
 
-- [ ] Provider and job boundaries are documented.
-- [ ] Staff authorization and secret handling are tested.
-- [ ] Four generation modes have validated queue contracts.
+- [x] Provider and job boundaries are documented.
+- [x] Staff authorization and secret handling are tested.
+- [x] Four generation modes have validated queue contracts.

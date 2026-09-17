@@ -2,11 +2,11 @@
 id: 002-staff-generation-jobs
 unit: 001-image-generation-service
 intent: 008-openai-image-generation
-status: draft
+status: complete
 priority: must
-created: 2026-09-17T01:23:26Z
+created: '2026-09-17T01:23:26Z'
 assigned_bolt: 043-image-generation-service
-implemented: false
+implemented: true
 ---
 
 # Story: 002-staff-generation-jobs

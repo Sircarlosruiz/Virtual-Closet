@@ -1,6 +1,6 @@
 ---
 last_updated: 2026-07-18T06:47:24Z
-total_decisions: 45
+total_decisions: 48
 ---
 
 # Decision Index
@@ -19,6 +19,30 @@ Use this to find relevant prior decisions when working on related features.
 ## Decisions
 
 <!-- Entries are appended below in reverse chronological order (newest first) -->
+
+### ADR-048: Commit Generation Jobs Before Queue Publication
+- **Status**: proposed
+- **Date**: 2026-09-17
+- **Bolt**: 043-image-generation-service (001-image-generation-service)
+- **Path**: `bolts/043-image-generation-service/adr-048-commit-before-enqueue.md`
+- **Summary**: Commit the queued generation job before publishing its Celery task so every task references durable state. Reconciliation is required for broker failures.
+- **Read when**: Coordinating database transactions with Celery or RabbitMQ publication, designing recovery for queued jobs, or reviewing asynchronous job durability
+
+### ADR-047: Resolve Provider Secrets Only Inside Workers
+- **Status**: proposed
+- **Date**: 2026-09-17
+- **Bolt**: 043-image-generation-service (001-image-generation-service)
+- **Path**: `bolts/043-image-generation-service/adr-047-worker-secret-boundary.md`
+- **Summary**: Persist sanitized inputs and send only a job ID through Celery; resolve provider credentials from server-side settings inside the worker. This keeps secrets out of clients, storage, and broker messages.
+- **Read when**: Implementing provider workers, handling API keys, designing broker payloads, or auditing secret exposure in asynchronous jobs
+
+### ADR-046: Extensible Provider Abstraction for Image Generation
+- **Status**: proposed
+- **Date**: 2026-09-17
+- **Bolt**: 043-image-generation-service (001-image-generation-service)
+- **Path**: `bolts/043-image-generation-service/adr-046-provider-abstraction.md`
+- **Summary**: Keep the existing VTON provider contract unchanged and introduce a separate image-generation protocol with adapters. This preserves legacy try-on callers while supporting OpenAI capabilities.
+- **Read when**: Adding image-generation providers, changing VTON provider interfaces, or mapping provider capabilities to generation modes
 
 ### ADR-045: Pass Tenant Context Through Internal Batch Submission
 - **Status**: accepted
