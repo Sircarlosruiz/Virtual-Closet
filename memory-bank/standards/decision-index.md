@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-07-18T06:47:24Z
-total_decisions: 48
+last_updated: 2026-09-17T18:39:38Z
+total_decisions: 52
 ---
 
 # Decision Index
@@ -19,6 +19,38 @@ Use this to find relevant prior decisions when working on related features.
 ## Decisions
 
 <!-- Entries are appended below in reverse chronological order (newest first) -->
+
+### ADR-052: Immutable, Copy-Not-Reference Composition Snapshot
+- **Status**: proposed
+- **Date**: 2026-09-17
+- **Bolt**: 045-template-lifecycle (002-template-composition-service)
+- **Path**: `bolts/045-template-lifecycle/adr-052-immutable-snapshot-pattern.md`
+- **Summary**: `CompositionSnapshot` stores a frozen copy of the effective configuration rather than a live reference to `ImageTemplate`, with a DB unique constraint enforcing exactly one snapshot per generation job. This guarantees historical results are unaffected by later template edits or archival.
+- **Read when**: Designing historical/audit records that must survive edits to their source entity, choosing between copy-on-write snapshots and live references, or enforcing one-per-parent uniqueness at the database level
+
+### ADR-051: Service-Layer-Only Scope Isolation for Template Visibility
+- **Status**: proposed
+- **Date**: 2026-09-17
+- **Bolt**: 045-template-lifecycle (002-template-composition-service)
+- **Path**: `bolts/045-template-lifecycle/adr-051-service-layer-scope-isolation.md`
+- **Summary**: Private/common template visibility is enforced only at the service layer, intentionally deviating from ADR-012's two-layer (dependency injection + ORM listener) tenant-isolation pattern because the scoped access paths are narrow and staff must bypass the filter entirely for administration.
+- **Read when**: Deciding how much of ADR-012's tenant-isolation pattern to apply to a narrow, single-table ownership concern, or reviewing why a feature-specific scope column does not use the platform-wide ORM listener
+
+### ADR-050: Atomic Postgres Column for the Per-Job Concurrency Lease
+- **Status**: proposed
+- **Date**: 2026-09-17
+- **Bolt**: 044-generation-reliability (001-image-generation-service)
+- **Path**: `bolts/044-generation-reliability/adr-050-postgres-lease-over-redis.md`
+- **Summary**: Implement the per-job concurrency lease as an atomic conditional `UPDATE` on a `lock_token`/`locked_at` column pair on `generation_jobs`, reusing the atomic-update pattern from ADR-009/ADR-021 instead of a Redis-based lock. Avoids a second source of truth for state already owned by Postgres.
+- **Read when**: Implementing per-job or per-resource concurrency guards, deciding between Redis and Postgres for ephemeral locks, or designing duplicate-delivery protection for queued jobs
+
+### ADR-049: Timeout Is an Unresolved Outcome Requiring Manual Retry
+- **Status**: proposed
+- **Date**: 2026-09-17
+- **Bolt**: 044-generation-reliability (001-image-generation-service)
+- **Path**: `bolts/044-generation-reliability/adr-049-manual-retry-on-timeout.md`
+- **Summary**: A worker-side timeout on a provider call is classified separately from `failed`, with usage recorded as unknown and no automatic Celery retry. Staff must explicitly trigger a retry to avoid duplicating a possibly-completed paid provider call.
+- **Read when**: Designing retry policies for external API calls with unknown-outcome failures, handling provider timeouts, or reviewing safeguards against duplicate billable operations
 
 ### ADR-048: Commit Generation Jobs Before Queue Publication
 - **Status**: proposed

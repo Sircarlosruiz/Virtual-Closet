@@ -25,6 +25,8 @@ from api.routers.tenant import router as tenant_router
 from api.routers.admin import router as admin_router
 from api.routers.buyer_links import router as buyer_links_router, validate_router as buyer_links_validate_router
 from api.routers.image_generation import router as image_generation_router
+from api.routers.templates import router as templates_router
+from api.routers.composition_snapshots import router as composition_snapshots_router
 import logging
 
 from core.config import email_backend_status, resend_api_key_is_configured, settings, use_console_email_backend
@@ -79,6 +81,8 @@ app.include_router(admin_router)
 app.include_router(buyer_links_router)
 app.include_router(buyer_links_validate_router)
 app.include_router(image_generation_router)
+app.include_router(templates_router)
+app.include_router(composition_snapshots_router)
 
 
 @app.exception_handler(RateLimitExceeded)

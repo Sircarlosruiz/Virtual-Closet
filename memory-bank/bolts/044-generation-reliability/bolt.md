@@ -3,16 +3,31 @@ id: 044-generation-reliability
 unit: 001-image-generation-service
 intent: 008-openai-image-generation
 type: ddd-construction-bolt
-status: planned
+status: complete
 stories:
   - 003-provider-invocation-history
   - 004-retry-idempotency-limits
   - 005-usage-recording
-created: 2026-09-17T01:23:26Z
-started: null
-completed: null
+created: 2026-09-17T01:23:26.000Z
+started: 2026-09-17T16:45:00.000Z
+completed: "2026-09-17T22:19:52Z"
 current_stage: null
-stages_completed: []
+stages_completed:
+  - name: model
+    completed: 2026-09-17T16:50:00.000Z
+    artifact: ddd-01-domain-model.md
+  - name: design
+    completed: 2026-09-17T17:00:00.000Z
+    artifact: ddd-02-technical-design.md
+  - name: adr
+    completed: 2026-09-17T17:10:00.000Z
+    artifact: adr-049-manual-retry-on-timeout.md, adr-050-postgres-lease-over-redis.md
+  - name: implement
+    completed: 2026-09-17T19:00:00.000Z
+    artifact: backend reliability layer (models, repos, services, router, worker)
+  - name: test
+    completed: 2026-09-17T21:55:00.000Z
+    artifact: ddd-03-test-report.md
 requires_bolts:
   - 043-image-generation-service
 enables_bolts:
@@ -49,10 +64,11 @@ Make platform-paid image generation durable, observable and safe against duplica
 
 ## Stages
 
-- [ ] **1. model**: Pending → ddd-01-domain-model.md
-- [ ] **2. design**: Pending → ddd-02-technical-design.md
-- [ ] **3. implement**: Pending → backend reliability layer
-- [ ] **4. test**: Pending → ddd-03-test-report.md
+- [x] **1. model**: Complete → ddd-01-domain-model.md
+- [x] **2. design**: Complete → ddd-02-technical-design.md
+- [x] **2b. ADR Analysis**: Complete → adr-049, adr-050
+- [x] **3. implement**: Complete → backend reliability layer
+- [x] **4. test**: Complete → ddd-03-test-report.md
 
 ## Dependencies
 

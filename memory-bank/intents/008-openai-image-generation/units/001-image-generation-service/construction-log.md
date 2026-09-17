@@ -2,7 +2,7 @@
 unit: 001-image-generation-service
 intent: 008-openai-image-generation
 created: 2026-09-17T04:07:47Z
-last_updated: 2026-09-17T16:25:00Z
+last_updated: 2026-09-17T22:19:52Z
 ---
 
 # Construction Log: Image Generation Service
@@ -27,7 +27,7 @@ last_updated: 2026-09-17T16:25:00Z
 | Bolt ID | Stories | Status | Changed |
 |---------|---------|--------|---------|
 | 043-image-generation-service | 001-staff-provider-selection, 002-staff-generation-jobs | complete | - |
-| 044-generation-reliability | 003-provider-invocation-history, 004-retry-idempotency-limits, 005-usage-recording | planned | - |
+| 044-generation-reliability | 003-provider-invocation-history, 004-retry-idempotency-limits, 005-usage-recording | complete | - |
 
 ## Execution History
 
@@ -46,6 +46,13 @@ last_updated: 2026-09-17T16:25:00Z
 | 2026-09-17T05:30:49Z | 043-image-generation-service | test-blocked | Full backend suite: 189 passed, 5 failed, 148 errors |
 | 2026-09-17T16:25:00Z | 043-image-generation-service | test-complete | Stage 5: 20 focused tests + full suite 360 passed; API auth, queue, and secret-boundary coverage added |
 | 2026-09-17T16:36:00Z | 043-image-generation-service | completed | All 5 stages done; stories 001–002 marked complete |
+| 2026-09-17T16:45:00Z | 044-generation-reliability | started | Stage 1: Domain Model |
+| 2026-09-17T16:50:00Z | 044-generation-reliability | stage-complete | Domain Model -> Technical Design |
+| 2026-09-17T17:00:00Z | 044-generation-reliability | stage-complete | Technical Design -> ADR Analysis |
+| 2026-09-17T17:10:00Z | 044-generation-reliability | stage-complete | ADR Analysis -> Implement; ADR-049 and ADR-050 created |
+| 2026-09-17T19:00:00Z | 044-generation-reliability | stage-complete | Implement -> Test; docker-based suite: 20 focused tests + full suite 360 passed |
+| 2026-09-17T21:55:00Z | 044-generation-reliability | test-complete | Stage 5: added 21 reliability tests; focused suite 41 passed; full suite 381 passed |
+| 2026-09-17T22:19:52Z | 044-generation-reliability | completed | All 5 stages done; stories 003–005 marked complete; unit 001-image-generation-service complete |
 
 ## Execution Summary
 
@@ -53,9 +60,9 @@ last_updated: 2026-09-17T16:25:00Z
 |--------|-------|
 | Original bolts planned | 2 |
 | Current bolt count | 2 |
-| Bolts completed | 1 |
+| Bolts completed | 2 |
 | Bolts in progress | 0 |
-| Bolts remaining | 1 |
+| Bolts remaining | 0 |
 | Replanning events | 0 |
 
 ## Notes

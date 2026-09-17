@@ -2,9 +2,9 @@
 unit: 001-image-generation-service
 intent: 008-openai-image-generation
 phase: inception
-status: draft
-created: 2026-09-17T01:23:26Z
-updated: 2026-09-17T01:23:26Z
+status: complete
+created: 2026-09-17T01:23:26.000Z
+updated: 2026-09-17T01:23:26.000Z
 ---
 
 # Unit Brief: Image Generation Service

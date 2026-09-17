@@ -58,3 +58,24 @@ class ImageGenerationResponse(BaseModel):
     provider: GenerationProvider
     status: str
     created_at: datetime
+
+
+class ProviderAttemptSummary(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    attempt_number: int
+    status: str
+    error_code: str | None = None
+    started_at: datetime
+    completed_at: datetime | None = None
+
+
+class UsageSummary(BaseModel):
+    status: str
+    model: str | None = None
+    call_count: int | None = None
+
+
+class ImageGenerationDetailResponse(ImageGenerationResponse):
+    attempts: list[ProviderAttemptSummary] = Field(default_factory=list)
+    usage: UsageSummary

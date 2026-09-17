@@ -12,6 +12,9 @@ from models.tenant import Tenant
 from models.admin_invitation import AdminInvitation
 from models.buyer_link import BuyerLink
 from models.generation_job import GenerationJob
+from models.provider_invocation import ProviderInvocation
+from models.image_template import ImageTemplate, TemplateReference
+from models.composition_snapshot import CompositionSnapshot
 
 __all__ = [
     "Mayorista",
@@ -41,4 +44,8 @@ __all__ = [
     "AdminInvitation",
     "BuyerLink",
     "GenerationJob",
+    "ProviderInvocation",
+    "ImageTemplate",
+    "TemplateReference",
+    "CompositionSnapshot",
 ]

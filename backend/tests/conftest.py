@@ -24,6 +24,9 @@ import models.two_factor  # noqa: F401 — ensure TwoFactorConfig/BackupCode tab
 import models.oauth  # noqa: F401 — ensure OAuthLink/SmsOtpRecord tables are created
 import models.password_reset_token  # noqa: F401 — ensure PasswordResetToken table is created
 import models.generation_job  # noqa: F401 — ensure GenerationJob table is created
+import models.provider_invocation  # noqa: F401 — ensure ProviderInvocation table is created
+import models.image_template  # noqa: F401 — ensure ImageTemplate/TemplateReference tables are created
+import models.composition_snapshot  # noqa: F401 — ensure CompositionSnapshot table is created
 
 TEST_DATABASE_URL = os.getenv(
     "TEST_DATABASE_URL",
