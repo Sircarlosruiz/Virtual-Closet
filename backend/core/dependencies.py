@@ -1,13 +1,15 @@
-from fastapi import Cookie, Depends, HTTPException, status
+from fastapi import Cookie, Depends, Header, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database import get_db
-from core.security import decode_access_token
+from core.security import decode_access_token, verify_password
 from models.mayorista import Mayorista
+from models.service_client import ServiceClient
 from models.tenant import Tenant
 from services.token_service import TokenService
 from repositories.customer_repo import CustomerRepo
+from repositories.service_client_repo import ServiceClientRepository
 from repositories.tenant_repo import TenantRepo
 from dataclasses import dataclass
 from uuid import UUID
@@ -142,3 +144,49 @@ async def get_tenant_context(
         user_id=mayorista.id,
         role="admin" if mayorista.role == "admin" else "owner",
     )
+
+
+async def get_service_client(
+    x_service_id: str | None = Header(None, alias="X-Service-Id"),
+    x_service_secret: str | None = Header(None, alias="X-Service-Secret"),
+    db: AsyncSession = Depends(get_db),
+) -> ServiceClient:
+    """Authenticate a server-to-server integration caller.
+
+    Verifies the presented service secret against the stored bcrypt hash and
+    ensures both the service client and its tenant are active. Every failure
+    path is fail-closed (401/403) — no partial identity is ever returned.
+    """
+    unauthorized = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Invalid service credentials",
+    )
+
+    if not x_service_id or not x_service_secret:
+        raise unauthorized
+
+    try:
+        client_id = UUID(x_service_id)
+    except ValueError as exc:
+        raise unauthorized from exc
+
+    client = await ServiceClientRepository(db).get_by_id(client_id)
+    if client is None or not client.is_active:
+        raise unauthorized
+
+    try:
+        secret_ok = verify_password(x_service_secret, client.secret_hash)
+    except ValueError as exc:
+        raise unauthorized from exc
+
+    if not secret_ok:
+        raise unauthorized
+
+    tenant = await TenantRepo(db).get_by_id(client.tenant_id)
+    if tenant is None or not tenant.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Service client tenant is not active",
+        )
+
+    return client

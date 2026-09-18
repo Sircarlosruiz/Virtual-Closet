@@ -2,11 +2,11 @@
 id: 003-deterministic-sku-composition
 unit: 002-template-composition-service
 intent: 008-openai-image-generation
-status: draft
+status: complete
 priority: must
-created: 2026-09-17T01:23:26Z
+created: 2026-09-17T01:23:26.000Z
 assigned_bolt: 046-template-composition
-implemented: false
+implemented: true
 ---
 
 # Story: 003-deterministic-sku-composition

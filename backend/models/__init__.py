@@ -15,6 +15,9 @@ from models.generation_job import GenerationJob
 from models.provider_invocation import ProviderInvocation
 from models.image_template import ImageTemplate, TemplateReference
 from models.composition_snapshot import CompositionSnapshot
+from models.product_overlay import ProductOverlay, CompositionVersion
+from models.service_client import ServiceClient
+from models.product_link import ProductLink
 
 __all__ = [
     "Mayorista",
@@ -48,4 +51,8 @@ __all__ = [
     "ImageTemplate",
     "TemplateReference",
     "CompositionSnapshot",
+    "ProductOverlay",
+    "CompositionVersion",
+    "ServiceClient",
+    "ProductLink",
 ]

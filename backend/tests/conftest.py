@@ -27,6 +27,9 @@ import models.generation_job  # noqa: F401 — ensure GenerationJob table is cre
 import models.provider_invocation  # noqa: F401 — ensure ProviderInvocation table is created
 import models.image_template  # noqa: F401 — ensure ImageTemplate/TemplateReference tables are created
 import models.composition_snapshot  # noqa: F401 — ensure CompositionSnapshot table is created
+import models.product_overlay  # noqa: F401 — ensure ProductOverlay/CompositionVersion tables are created
+import models.service_client  # noqa: F401 — ensure ServiceClient table is created
+import models.product_link  # noqa: F401 — ensure ProductLink table is created
 
 TEST_DATABASE_URL = os.getenv(
     "TEST_DATABASE_URL",

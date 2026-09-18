@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-09-17T18:39:38Z
-total_decisions: 52
+last_updated: 2026-09-17T22:34:52Z
+total_decisions: 56
 ---
 
 # Decision Index
@@ -19,6 +19,38 @@ Use this to find relevant prior decisions when working on related features.
 ## Decisions
 
 <!-- Entries are appended below in reverse chronological order (newest first) -->
+
+### ADR-056: Persist Fit-Rejected Compositions as Blocked Versions
+- **Status**: proposed
+- **Date**: 2026-09-17
+- **Bolt**: 046-template-composition (002-template-composition-service)
+- **Path**: `bolts/046-template-composition/adr-056-persist-blocked-compositions.md`
+- **Summary**: Story 003 requires that when an overlay does not fit, publication is blocked with a validation error. Fit-rejected compositions are persisted as a `CompositionVersion` with `status = blocked`, `rendered_key = null`, and the measured `fit_result`, and the API returns HTTP 422 `OVERLAY_DOES_NOT_FIT`.
+- **Read when**: Designing handling for user-input validation failures that must be both surfaced as an API error and retained for audit, or recording rejected attempts alongside successful results
+
+### ADR-055: Append-Only Composition Versions With Explicit Re-Selection
+- **Status**: proposed
+- **Date**: 2026-09-17
+- **Bolt**: 046-template-composition (002-template-composition-service)
+- **Path**: `bolts/046-template-composition/adr-055-append-only-versions.md`
+- **Summary**: FR-4 and FR-12 require that changing only the SKU or its style creates a new version without replacing the published image, and that publishing a new version requires an explicit staff selection. `composition_versions` is append-only (no update/delete), with version computed under a row lock and publication state owned by bolt 048.
+- **Read when**: Designing versioned/derived artifacts that must remain reconstructible, or deciding whether publication/selection state belongs on the composed artifact or in a separate bounded context
+
+### ADR-054: Deterministic Spec-Hash Idempotency Enforced at the Database
+- **Status**: proposed
+- **Date**: 2026-09-17
+- **Bolt**: 046-template-composition (002-template-composition-service)
+- **Path**: `bolts/046-template-composition/adr-054-deterministic-spec-hash.md`
+- **Summary**: Story 003 requires that recomposing an unchanged SKU/style produces no duplicate and identical inputs always yield the same output. `spec_hash = sha256(normalized_sku, placement, style, base_image_key, font_version)` with `UNIQUE (overlay_id, spec_hash)` guarantees idempotency at the database, including font/renderer upgrades as new versions.
+- **Read when**: Implementing idempotent/deterministic operations where identical inputs must not create duplicates, or choosing between service-layer checks and database constraints for idempotency
+
+### ADR-053: Synchronous In-Request Composition Over Queued Execution
+- **Status**: proposed
+- **Date**: 2026-09-17
+- **Bolt**: 046-template-composition (002-template-composition-service)
+- **Path**: `bolts/046-template-composition/adr-053-synchronous-composition.md`
+- **Summary**: `system-context.md` lists RabbitMQ/Celery as the mechanism for inference, composition, and publication. Composition runs synchronously inside the HTTP request for V1 because it is a local, deterministic, CPU-bound render with immediate fit-feedback needs, isolated behind `SkuCompositionService` for later queueing.
+- **Read when**: Deciding whether a backend step should run synchronously or via Celery, or reviewing why local deterministic rendering is not queued despite the system-context Celery listing
 
 ### ADR-052: Immutable, Copy-Not-Reference Composition Snapshot
 - **Status**: proposed
