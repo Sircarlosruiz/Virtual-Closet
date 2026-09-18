@@ -62,3 +62,4 @@ class MeResponse(BaseModel):
     trial_activo: bool
     trial_expira_en: datetime
     prendas_count: int = 0
+    role: str = "mayorista"

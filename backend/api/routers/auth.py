@@ -278,4 +278,5 @@ async def me(
         trial_activo=mayorista.trial_activo,
         trial_expira_en=mayorista.trial_expira_en,
         prendas_count=count,
+        role=mayorista.role,
     )

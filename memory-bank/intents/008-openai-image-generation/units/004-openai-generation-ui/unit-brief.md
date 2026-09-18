@@ -2,11 +2,11 @@
 unit: 004-openai-generation-ui
 intent: 008-openai-image-generation
 phase: inception
-status: draft
+status: complete
 unit_type: frontend
 default_bolt_type: simple-construction-bolt
-created: 2026-09-17T01:23:26Z
-updated: 2026-09-17T01:23:26Z
+created: 2026-09-17T01:23:26.000Z
+updated: 2026-09-17T01:23:26.000Z
 ---
 
 # Unit Brief: OpenAI Generation UI

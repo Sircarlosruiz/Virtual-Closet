@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Shirt, BookOpen, Users, Plus, LogOut, Scissors, Wand2, Layers } from "lucide-react";
+import { Shirt, BookOpen, Users, Plus, LogOut, Scissors, Wand2, Layers, Sparkles } from "lucide-react";
 
 import {
   Sidebar,
@@ -16,11 +16,11 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { isDashboardNavActive } from "@/components/dashboard/dashboard-nav";
-import type { MayoristaProfile } from "@/lib/api/auth";
+import { isStaffRole, type MayoristaProfile } from "@/lib/api/auth";
 import { logout } from "@/lib/api/auth";
 
 interface AppSidebarProps {
-  user: Pick<MayoristaProfile, "nombre_negocio" | "plan" | "trial_activo" | "email">;
+  user: Pick<MayoristaProfile, "nombre_negocio" | "plan" | "trial_activo" | "email" | "role">;
 }
 
 const NAV_ITEMS = [
@@ -116,6 +116,18 @@ export function AppSidebar({ user }: AppSidebarProps) {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+              {isStaffRole(user.role) && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    render={<Link href="/staff/generation" />}
+                    isActive={isDashboardNavActive(pathname, "/staff/generation")}
+                    tooltip="Generación IA"
+                  >
+                    <Sparkles />
+                    <span>Generación IA</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

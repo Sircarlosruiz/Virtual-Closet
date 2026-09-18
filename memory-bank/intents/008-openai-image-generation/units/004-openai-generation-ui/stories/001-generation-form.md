@@ -2,11 +2,11 @@
 id: 001-generation-form
 unit: 004-openai-generation-ui
 intent: 008-openai-image-generation
-status: draft
+status: complete
 priority: must
-created: 2026-09-17T01:23:26Z
+created: 2026-09-17T01:23:26.000Z
 assigned_bolt: 049-openai-generation-ui
-implemented: false
+implemented: true
 ---
 
 # Story: 001-generation-form

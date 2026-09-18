@@ -8,6 +8,13 @@ export interface MayoristaProfile {
   trial_activo: boolean;
   trial_expira_en: string;
   prendas_count: number;
+  role: string;
+}
+
+export const STAFF_ROLES = ['admin', 'owner', 'staff'] as const;
+
+export function isStaffRole(role: string | undefined): boolean {
+  return role === 'admin' || role === 'owner' || role === 'staff';
 }
 
 export interface LoginResponse {

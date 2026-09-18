@@ -105,5 +105,11 @@ export function getDashboardPageTitle(pathname: string): string {
     return "Detalle del lote";
   }
 
+  if (pathname.startsWith("/staff/generation")) {
+    return pathname.includes("/staff/generation/") && pathname !== "/staff/generation"
+      ? "Revisión de generación"
+      : "Generación IA";
+  }
+
   return "Dashboard";
 }

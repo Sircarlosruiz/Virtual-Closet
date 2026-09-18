@@ -3,16 +3,25 @@ id: 049-openai-generation-ui
 unit: 004-openai-generation-ui
 intent: 008-openai-image-generation
 type: simple-construction-bolt
-status: planned
+status: complete
 stories:
   - 001-generation-form
   - 002-generation-review
   - 003-product-integration-ui
-created: 2026-09-17T01:23:26Z
-started: null
-completed: null
+created: 2026-09-17T01:23:26.000Z
+started: 2026-09-18T16:38:00.000Z
+completed: "2026-09-18T17:03:04Z"
 current_stage: null
-stages_completed: []
+stages_completed:
+  - name: plan
+    completed: 2026-09-18T16:48:00.000Z
+    artifact: implementation-plan.md
+  - name: implement
+    completed: 2026-09-18T16:54:00.000Z
+    artifact: implementation-walkthrough.md
+  - name: test
+    completed: 2026-09-18T17:03:04Z
+    artifact: test-walkthrough.md
 requires_bolts:
   - 047-product-generation-bridge
   - 048-product-publication-sync
@@ -49,9 +58,9 @@ Expose all supported workflows from Virtual Closet and the BFashion product cont
 
 ## Stages
 
-- [ ] **1. plan**: Pending → implementation-plan.md
-- [ ] **2. implement**: Pending → frontend UI and BFashion entry surface
-- [ ] **3. test**: Pending → test-walkthrough.md
+- [x] **1. plan**: Complete → implementation-plan.md
+- [x] **2. implement**: Complete → frontend UI and BFashion entry surface
+- [x] **3. test**: Complete → test-walkthrough.md
 
 ## Dependencies
 
@@ -63,6 +72,6 @@ Expose all supported workflows from Virtual Closet and the BFashion product cont
 
 ## Success Criteria
 
-- [ ] Staff can submit, monitor, preview, recompose, select and publish.
-- [ ] Non-staff users see no generation controls or private data.
-- [ ] UI handles partial sync and provider errors accessibly.
+- [x] Staff can submit, monitor, preview, recompose, select and publish.
+- [x] Non-staff users see no generation controls or private data.
+- [x] UI handles partial sync and provider errors accessibly.

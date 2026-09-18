@@ -1,9 +1,9 @@
 ---
 intent: 008-openai-image-generation
 phase: inception
-status: inception-complete
-created: 2026-09-17T00:28:03Z
-updated: 2026-09-17T01:39:14Z
+status: complete
+created: 2026-09-17T00:28:03.000Z
+updated: 2026-09-17T01:39:14.000Z
 ---
 
 # Requirements: Generación de imágenes con OpenAI

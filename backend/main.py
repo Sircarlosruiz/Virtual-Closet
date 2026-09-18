@@ -36,6 +36,7 @@ from api.routers.publication import (
     router as publication_router,
     candidates_router as publication_candidates_router,
 )
+from api.routers.product_links import router as product_links_router
 import logging
 
 from core.config import email_backend_status, resend_api_key_is_configured, settings, use_console_email_backend
@@ -97,6 +98,7 @@ app.include_router(composition_versions_router)
 app.include_router(integration_router)
 app.include_router(publication_router)
 app.include_router(publication_candidates_router)
+app.include_router(product_links_router)
 
 
 @app.exception_handler(RateLimitExceeded)

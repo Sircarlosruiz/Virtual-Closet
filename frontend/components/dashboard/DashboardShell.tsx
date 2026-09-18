@@ -7,7 +7,7 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import type { MayoristaProfile } from "@/lib/api/auth";
 
 interface DashboardShellProps {
-  user: Pick<MayoristaProfile, "nombre_negocio" | "email" | "plan" | "trial_activo">;
+  user: Pick<MayoristaProfile, "nombre_negocio" | "email" | "plan" | "trial_activo" | "role">;
   children: React.ReactNode;
 }
 
