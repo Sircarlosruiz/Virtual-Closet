@@ -2,7 +2,7 @@
 unit: 003-product-image-integration
 intent: 008-openai-image-generation
 created: 2026-09-18T15:17:41Z
-last_updated: 2026-09-18T15:37:58Z
+last_updated: 2026-09-18T16:37:03Z
 ---
 
 # Construction Log: Product Image Integration
@@ -27,7 +27,7 @@ last_updated: 2026-09-18T15:37:58Z
 | Bolt ID | Stories | Status | Changed |
 |---------|---------|--------|---------|
 | 047-product-generation-bridge | 001-product-generation-bridge | ✅ completed | - |
-| 048-product-publication-sync | 002-publication-selection, 003-sync-delivery | [ ] planned | - |
+| 048-product-publication-sync | 002-publication-selection, 003-sync-delivery | ✅ completed | - |
 
 ## Execution History
 
@@ -38,6 +38,11 @@ last_updated: 2026-09-18T15:37:58Z
 | 2026-09-18T15:25:50Z | 047-product-generation-bridge | stage-complete | implement → test |
 | 2026-09-18T15:36:06Z | 047-product-generation-bridge | stage-complete | test → complete |
 | 2026-09-18T15:37:58Z | 047-product-generation-bridge | completed | All 3 stages done |
+| 2026-09-18T15:40:11Z | 048-product-publication-sync | started | Stage 1: plan |
+| 2026-09-18T16:18:29Z | 048-product-publication-sync | stage-complete | plan → implement |
+| 2026-09-18T16:29:18Z | 048-product-publication-sync | stage-complete | implement → test |
+| 2026-09-18T16:37:03Z | 048-product-publication-sync | stage-complete | test → complete |
+| 2026-09-18T16:37:03Z | 048-product-publication-sync | completed | All 3 stages done |
 
 ## Execution Summary
 
@@ -45,11 +50,11 @@ last_updated: 2026-09-18T15:37:58Z
 |--------|-------|
 | Original bolts planned | 2 |
 | Current bolt count | 2 |
-| Bolts completed | 1 |
+| Bolts completed | 2 |
 | Bolts in progress | 0 |
-| Bolts remaining | 1 |
+| Bolts remaining | 0 |
 | Replanning events | 0 |
 
 ## Notes
 
-Unit construction in progress. Bolt 047 (cross-system command/status bridge) complete; publication/sync (048) remains.
+Unit construction complete (047 + 048). Next planned bolt: 049-openai-generation-ui in unit 004-openai-generation-ui.

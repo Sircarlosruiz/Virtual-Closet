@@ -18,6 +18,7 @@ from models.composition_snapshot import CompositionSnapshot
 from models.product_overlay import ProductOverlay, CompositionVersion
 from models.service_client import ServiceClient
 from models.product_link import ProductLink
+from models.publication import PublicationSelection, SyncDelivery, ProductImage
 
 __all__ = [
     "Mayorista",
@@ -55,4 +56,7 @@ __all__ = [
     "CompositionVersion",
     "ServiceClient",
     "ProductLink",
+    "PublicationSelection",
+    "SyncDelivery",
+    "ProductImage",
 ]

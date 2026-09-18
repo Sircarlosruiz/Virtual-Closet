@@ -1,6 +1,7 @@
 """API contract for the authenticated Virtual Closet <-> BFashion bridge."""
 
 from datetime import datetime
+from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -38,3 +39,14 @@ class ProductGenerationBridgeResponse(BaseModel):
 
 class ProductGenerationBridgeStatusResponse(ProductGenerationBridgeResponse):
     updated_at: datetime
+    preview_url: str | None = None
+
+
+class ProductPublicationBridgeRequest(BaseModel):
+    """Server-to-server command to select or discard a generation result."""
+
+    staff_id: UUID
+    generation_job_id: UUID
+    composition_version_id: UUID | None = None
+    decision: Literal["selected", "discarded"]
+    external_wholesaler_id: str | None = Field(default=None, max_length=255)

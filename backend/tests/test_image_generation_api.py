@@ -35,6 +35,7 @@ def _assert_detail_payload_hides_secrets(payload: dict) -> None:
         "created_at",
         "attempts",
         "usage",
+        "preview_url",
     }
     _assert_no_secrets_leaked(payload)
 

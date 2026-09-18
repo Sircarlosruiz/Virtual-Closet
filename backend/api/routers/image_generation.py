@@ -17,6 +17,7 @@ from repositories.generation_job_repo import GenerationJobRepository
 from repositories.provider_invocation_repo import ProviderInvocationRepository
 from services.idempotency_service import IdempotencyConflictError
 from services.image_generation_service import ImageGenerationService
+from services.publication_service import preview_object_url
 
 router = APIRouter(prefix="/api/image-generation", tags=["image-generation"])
 
@@ -42,7 +43,7 @@ def _response(job) -> ImageGenerationResponse:
     )
 
 
-def _detail_response(job, invocations) -> ImageGenerationDetailResponse:
+def _detail_response(job, invocations, preview_url: str | None = None) -> ImageGenerationDetailResponse:
     return ImageGenerationDetailResponse(
         job_id=job.id,
         mode=job.mode,
@@ -62,6 +63,7 @@ def _detail_response(job, invocations) -> ImageGenerationDetailResponse:
         usage=UsageSummary(
             status=job.usage_status, model=job.usage_model, call_count=job.usage_call_count
         ),
+        preview_url=preview_url,
     )
 
 
@@ -95,7 +97,8 @@ async def get_image_generation_job(
     if not job:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Generation job not found")
     invocations = await ProviderInvocationRepository(db).list_by_job(job_id)
-    return _detail_response(job, invocations)
+    preview_url = await preview_object_url(job.result_key)
+    return _detail_response(job, invocations, preview_url)
 
 
 @router.post(

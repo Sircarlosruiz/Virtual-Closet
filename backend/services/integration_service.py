@@ -80,6 +80,22 @@ class IntegrationService:
             raise BridgeGenerationJobNotFoundError("Generation job not found")
         return job, link
 
+    async def resolve_link(
+        self,
+        service_client: ServiceClient,
+        external_product_id: str,
+        external_wholesaler_id: str | None,
+    ) -> ProductLink:
+        return await self._product_links.resolve_active_link(
+            system=service_client.system,
+            external_product_id=external_product_id,
+            external_wholesaler_id=external_wholesaler_id,
+            tenant_id=service_client.tenant_id,
+        )
+
+    async def authorize_staff(self, staff_id: UUID, link: ProductLink) -> None:
+        await self._authorize_staff(staff_id, link)
+
     async def _authorize_staff(self, staff_id: UUID, link: ProductLink) -> None:
         staff = await self._mayoristas.get_by_id(staff_id)
         if staff is None or staff.role not in STAFF_ROLES:

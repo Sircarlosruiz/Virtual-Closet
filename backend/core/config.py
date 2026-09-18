@@ -90,6 +90,11 @@ class Settings(BaseSettings):
     TWILIO_AUTH_TOKEN: str = ""
     TWILIO_PHONE_NUMBER: str = ""
 
+    # BFashion outbound sync (publication ingest; never an OpenAI path)
+    BFASHION_BASE_URL: str = ""
+    BFASHION_SERVICE_ID: str = ""
+    BFASHION_SERVICE_SECRET: str = ""
+
 
 settings = Settings()
 

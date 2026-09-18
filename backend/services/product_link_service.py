@@ -49,3 +49,18 @@ class ProductLinkService:
             raise ProductLinkMismatchError("Product link wholesaler does not match")
 
         return link
+
+    async def resolve_owned_link(
+        self, product_link_id: UUID, tenant_id: UUID
+    ) -> ProductLink:
+        """Resolve a link by id for cookie-authenticated staff.
+
+        Ownership still comes from the persisted row; the caller tenant must
+        match. Unknown, inactive, or cross-tenant links fail closed.
+        """
+        link = await self._repository.get_by_id(product_link_id)
+        if link is None or not link.is_active:
+            raise ProductLinkNotFoundError("Product link not found")
+        if link.tenant_id != tenant_id:
+            raise ProductLinkMismatchError("Product link belongs to a different tenant")
+        return link

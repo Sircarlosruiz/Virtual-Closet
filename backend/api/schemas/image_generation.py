@@ -79,3 +79,4 @@ class UsageSummary(BaseModel):
 class ImageGenerationDetailResponse(ImageGenerationResponse):
     attempts: list[ProviderAttemptSummary] = Field(default_factory=list)
     usage: UsageSummary
+    preview_url: str | None = None

@@ -30,6 +30,9 @@ import models.composition_snapshot  # noqa: F401 — ensure CompositionSnapshot 
 import models.product_overlay  # noqa: F401 — ensure ProductOverlay/CompositionVersion tables are created
 import models.service_client  # noqa: F401 — ensure ServiceClient table is created
 import models.product_link  # noqa: F401 — ensure ProductLink table is created
+import models.publication  # noqa: F401 — ensure publication/sync tables are created
+
+pytest_plugins = ["tests.publication_helpers"]
 
 TEST_DATABASE_URL = os.getenv(
     "TEST_DATABASE_URL",

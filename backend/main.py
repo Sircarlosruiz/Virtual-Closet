@@ -32,6 +32,10 @@ from api.routers.composition import (
     versions_router as composition_versions_router,
 )
 from api.routers.integration import router as integration_router
+from api.routers.publication import (
+    router as publication_router,
+    candidates_router as publication_candidates_router,
+)
 import logging
 
 from core.config import email_backend_status, resend_api_key_is_configured, settings, use_console_email_backend
@@ -91,6 +95,8 @@ app.include_router(composition_snapshots_router)
 app.include_router(composition_router)
 app.include_router(composition_versions_router)
 app.include_router(integration_router)
+app.include_router(publication_router)
+app.include_router(publication_candidates_router)
 
 
 @app.exception_handler(RateLimitExceeded)
