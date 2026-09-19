@@ -2,11 +2,11 @@
 id: 004-aggregate-status-and-candidates
 unit: 003-photoshoot-orchestration
 intent: 009-bfashion-generation-bridge
-status: draft
+status: complete
 priority: must
-created: 2026-09-18T10:36:00Z
+created: 2026-09-18T10:36:00.000Z
 assigned_bolt: 054-photoshoot-orchestration
-implemented: false
+implemented: true
 ---
 
 # Story: 004-aggregate-status-and-candidates

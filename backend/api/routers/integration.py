@@ -20,6 +20,7 @@ from api.schemas.integration import (
     PhotoshootCreateResponse,
     PhotoshootOptionsResponse,
     PhotoshootStageResponse,
+    PhotoshootViewResponse,
     ProductGenerationBridgeRequest,
     ProductGenerationBridgeResponse,
     ProductGenerationBridgeStatusResponse,
@@ -65,6 +66,10 @@ from services.photoshoot_catalog_service import (
     PhotoshootOptionsCatalog,
 )
 from services.photoshoot_errors import PhotoshootError
+from services.photoshoot_query_service import (
+    PhotoshootQueryService,
+    build_query_service,
+)
 from services.photoshoot_submission_service import (
     PhotoshootSubmissionService,
     build_submission_service,
@@ -161,6 +166,12 @@ def _photoshoot_submission_service(
     db: AsyncSession = Depends(get_db),
 ) -> PhotoshootSubmissionService:
     return build_submission_service(db)
+
+
+def _photoshoot_query_service(
+    db: AsyncSession = Depends(get_db),
+) -> PhotoshootQueryService:
+    return build_query_service(db)
 
 
 def _photoshoot_catalog_service(
@@ -432,6 +443,66 @@ async def create_photoshoot(
             for stage in result.stages
         ],
         created_at=result.photoshoot.created_at,
+        created=result.created,
+        variant_key=result.photoshoot.variant_key,
+    )
+
+
+@router.get(
+    "/products/{external_product_id}/photoshoots/{photoshoot_id}",
+    response_model=PhotoshootViewResponse,
+)
+async def get_photoshoot(
+    photoshoot_id: UUID,
+    external_product_id: str,
+    external_wholesaler_id: str | None = Query(None, max_length=255),
+    service_client: ServiceClient = Depends(get_service_client),
+    service: PhotoshootQueryService = Depends(_photoshoot_query_service),
+) -> PhotoshootViewResponse:
+    try:
+        view = await service.get_view(
+            client=service_client,
+            external_product_id=external_product_id,
+            photoshoot_id=photoshoot_id,
+            external_wholesaler_id=external_wholesaler_id,
+        )
+    except PhotoshootError as exc:
+        raise _domain_http_error(exc) from exc
+
+    return PhotoshootViewResponse(
+        photoshoot_id=view.photoshoot_id,
+        external_product_id=view.external_product_id,
+        status=view.status,
+        variant_key=view.variant_key,
+        expected_results=view.expected_results,
+        completed_results=view.completed_results,
+        failed_results=view.failed_results,
+        error_code=view.error_code,
+        stages=[
+            PhotoshootStageResponse(
+                name=stage.name,
+                status=stage.status,
+                error_code=stage.error_code,
+                started_at=stage.started_at,
+                completed_at=stage.completed_at,
+            )
+            for stage in view.stages
+        ],
+        results=[
+            {
+                "generation_job_id": item.generation_job_id,
+                "model_id": item.model_id,
+                "pose_id": item.pose_id,
+                "status": item.status,
+                "preview_url": item.preview_url,
+                "variant_key": item.variant_key,
+            }
+            for item in view.results
+        ],
+        candidates=[
+            PublicationCandidateResponse.model_validate(item)
+            for item in view.candidates
+        ],
     )
 
 

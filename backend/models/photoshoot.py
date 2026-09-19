@@ -104,6 +104,13 @@ class Photoshoot(Base):
         Index("ix_photoshoots_owned", "tenant_id", "product_link_id", "id"),
         Index("ix_photoshoots_link_status", "product_link_id", "status"),
         Index("ix_photoshoots_source", "source_image_id"),
+        Index(
+            "uq_photoshoots_link_idempotency",
+            "product_link_id",
+            "idempotency_key",
+            unique=True,
+            postgresql_where="idempotency_key IS NOT NULL",
+        ),
     )
 
 

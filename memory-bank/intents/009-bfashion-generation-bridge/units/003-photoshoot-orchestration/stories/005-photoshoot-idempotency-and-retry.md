@@ -2,11 +2,11 @@
 id: 005-photoshoot-idempotency-and-retry
 unit: 003-photoshoot-orchestration
 intent: 009-bfashion-generation-bridge
-status: draft
+status: complete
 priority: must
-created: 2026-09-18T10:38:00Z
+created: 2026-09-18T10:38:00.000Z
 assigned_bolt: 054-photoshoot-orchestration
-implemented: false
+implemented: true
 ---
 
 # Story: 005-photoshoot-idempotency-and-retry

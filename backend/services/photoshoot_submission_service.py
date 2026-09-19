@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-import hashlib
-import json
 import logging
 from dataclasses import dataclass
 from uuid import UUID, uuid4
 
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.celery_app import app as celery_app
@@ -24,6 +23,7 @@ from services.credential_gate_service import CredentialGateService, CredentialMi
 from services.model_pose_service import VALID_POSES
 from services.photoshoot_errors import (
     PhotoshootCredentialMissingError,
+    PhotoshootIdempotencyConflictError,
     PhotoshootKindMismatchError,
     PhotoshootModelUnavailableError,
     PhotoshootOverlayTooLongError,
@@ -33,7 +33,12 @@ from services.photoshoot_errors import (
     PhotoshootSourceNotReadyError,
     PhotoshootTemplateError,
     PhotoshootValidationError,
-    PhotoshootVariantUnsupportedError,
+)
+from services.photoshoot_idempotency_service import (
+    PhotoshootIdempotencyService,
+    normalize_idempotency_key,
+    normalize_variant_key,
+    photoshoot_fingerprint_payload,
 )
 from services.photoshoot_pipeline_policy import plan as plan_stages
 from services.product_link_service import ProductLinkError, ProductLinkService
@@ -50,11 +55,7 @@ class PhotoshootSubmitResult:
     photoshoot: Photoshoot
     stages: list[PhotoshootStage]
     external_product_id: str
-
-
-def _fingerprint(payload: dict) -> str:
-    encoded = json.dumps(payload, sort_keys=True, default=str).encode()
-    return hashlib.sha256(encoded).hexdigest()
+    created: bool = True
 
 
 class PhotoshootSubmissionService:
@@ -69,6 +70,7 @@ class PhotoshootSubmissionService:
         photos: ModelPhotoRepo,
         templates: ImageTemplateRepository,
         credentials: CredentialGateService,
+        idempotency: PhotoshootIdempotencyService | None = None,
     ) -> None:
         self._db = db
         self._repo = repo
@@ -79,6 +81,7 @@ class PhotoshootSubmissionService:
         self._photos = photos
         self._templates = templates
         self._credentials = credentials
+        self._idempotency = idempotency or PhotoshootIdempotencyService(repo)
 
     async def submit(
         self,
@@ -100,27 +103,79 @@ class PhotoshootSubmissionService:
         external_wholesaler_id: str | None,
         idempotency_key: str | None,
     ) -> PhotoshootSubmitResult:
-        if variant_key is not None:
-            raise PhotoshootVariantUnsupportedError("variant_key is reserved and must be null")
         if pose_ids is not None and pose_count is not None:
-            raise PhotoshootPoseInvalidError("pose_ids and pose_count are mutually exclusive")
+            raise PhotoshootPoseInvalidError(
+                "pose_ids and pose_count are mutually exclusive"
+            )
         if cloth_type not in CLOTH_TYPES:
             raise PhotoshootValidationError("Unknown cloth_type")
         if not model_ids or len(set(model_ids)) != len(model_ids):
             raise PhotoshootValidationError("model_ids must be a non-empty unique list")
 
         overlay_spec = _normalize_overlay(overlay)
+        variant = normalize_variant_key(variant_key)
+        key = normalize_idempotency_key(idempotency_key)
+        fingerprint_payload = photoshoot_fingerprint_payload(
+            staff_id=staff_id,
+            source_image_id=source_image_id,
+            input_kind=input_kind,
+            template_id=template_id,
+            model_ids=model_ids,
+            pose_ids=pose_ids,
+            pose_count=pose_count,
+            cloth_type=cloth_type,
+            background=background,
+            colors=colors,
+            overlay=overlay_spec,
+            variant_key=variant,
+            external_wholesaler_id=external_wholesaler_id,
+        )
+
+        link = None
+        fingerprint = None
+        if key is not None:
+            try:
+                link = await self._links.resolve_active_link(
+                    client.system,
+                    external_product_id,
+                    external_wholesaler_id,
+                    client.tenant_id,
+                )
+            except ProductLinkError as exc:
+                raise PhotoshootProductNotFoundError("Product link not found") from exc
+            outcome = await self._idempotency.resolve(
+                product_link_id=link.id,
+                tenant_id=client.tenant_id,
+                key=key,
+                payload=fingerprint_payload,
+            )
+            fingerprint = outcome.fingerprint
+            if outcome.kind == "replayed" and outcome.photoshoot is not None:
+                logger.info(
+                    "photoshoot_replayed",
+                    extra={
+                        "photoshoot_id": str(outcome.photoshoot.id),
+                        "tenant_id": str(client.tenant_id),
+                    },
+                )
+                return PhotoshootSubmitResult(
+                    outcome.photoshoot,
+                    list(outcome.photoshoot.stages),
+                    external_product_id,
+                    created=False,
+                )
 
         await self._staff.resolve_staff_identity(client, staff_id)
-        try:
-            link = await self._links.resolve_active_link(
-                client.system,
-                external_product_id,
-                external_wholesaler_id,
-                client.tenant_id,
-            )
-        except ProductLinkError as exc:
-            raise PhotoshootProductNotFoundError("Product link not found") from exc
+        if link is None:
+            try:
+                link = await self._links.resolve_active_link(
+                    client.system,
+                    external_product_id,
+                    external_wholesaler_id,
+                    client.tenant_id,
+                )
+            except ProductLinkError as exc:
+                raise PhotoshootProductNotFoundError("Product link not found") from exc
 
         source = await self._sources.get_owned(
             source_image_id, link.id, client.tenant_id
@@ -187,17 +242,9 @@ class PhotoshootSubmissionService:
             configuration=configuration,
             status="queued",
             expected_results=expected,
-            idempotency_key=idempotency_key,
-            payload_fingerprint=_fingerprint(
-                {
-                    "source_image_id": str(source_image_id),
-                    "input_kind": input_kind,
-                    "model_ids": [str(m) for m in model_ids],
-                    "pose_types": list(pose_types),
-                    "cloth_type": cloth_type,
-                }
-            ),
-            variant_key=None,
+            idempotency_key=key,
+            payload_fingerprint=fingerprint,
+            variant_key=variant,
         )
         stages = [
             PhotoshootStage(
@@ -208,7 +255,37 @@ class PhotoshootSubmissionService:
             )
             for item in stage_plan
         ]
-        await self._repo.add_aggregate(photoshoot, stages)
+        try:
+            if key is not None:
+                async with self._db.begin_nested():
+                    await self._repo.add_aggregate(photoshoot, stages)
+            else:
+                await self._repo.add_aggregate(photoshoot, stages)
+        except IntegrityError as exc:
+            existing = await self._repo.find_by_idempotency(
+                link.id, client.tenant_id, key or ""
+            )
+            if (
+                existing is not None
+                and fingerprint is not None
+                and existing.payload_fingerprint == fingerprint
+            ):
+                logger.info(
+                    "photoshoot_replayed",
+                    extra={
+                        "photoshoot_id": str(existing.id),
+                        "tenant_id": str(client.tenant_id),
+                    },
+                )
+                return PhotoshootSubmitResult(
+                    existing,
+                    list(existing.stages),
+                    external_product_id,
+                    created=False,
+                )
+            raise PhotoshootIdempotencyConflictError(
+                "Idempotency key already used with a different request payload"
+            ) from exc
         await self._db.commit()
         await self._db.refresh(photoshoot)
         logger.info(
@@ -238,7 +315,9 @@ class PhotoshootSubmissionService:
                 "photoshoot_enqueue_failed",
                 extra={"photoshoot_id": str(photoshoot.id)},
             )
-        return PhotoshootSubmitResult(photoshoot, stages, external_product_id)
+        return PhotoshootSubmitResult(
+            photoshoot, stages, external_product_id, created=True
+        )
 
     async def _resolve_poses(
         self,

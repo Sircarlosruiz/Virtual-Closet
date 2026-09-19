@@ -3,22 +3,38 @@ id: 054-photoshoot-orchestration
 unit: 003-photoshoot-orchestration
 intent: 009-bfashion-generation-bridge
 type: ddd-construction-bolt
-status: planned
+status: complete
 stories:
   - 004-aggregate-status-and-candidates
   - 005-photoshoot-idempotency-and-retry
   - 006-color-variant-forward-compat
-created: 2026-09-18T11:20:00Z
-started: null
-completed: null
+created: 2026-09-18T11:20:00.000Z
+started: 2026-09-19T16:45:00.000Z
+completed: "2026-09-19T17:21:12Z"
 current_stage: null
-stages_completed: []
-
-requires_bolts: [053-photoshoot-orchestration]
-enables_bolts: [055-replicate-execution-reliability]
-requires_units: [003-photoshoot-orchestration]
+stages_completed:
+  - name: model
+    completed: 2026-09-19T16:48:00.000Z
+    artifact: ddd-01-domain-model.md
+  - name: design
+    completed: 2026-09-19T17:00:00.000Z
+    artifact: ddd-02-technical-design.md
+  - name: adr-analysis
+    completed: 2026-09-19T17:02:00.000Z
+    artifact: adr-071-photoshoot-idempotency-key-unique.md, adr-072-photoshoot-idempotency-service.md
+  - name: implement
+    completed: 2026-09-19T17:12:00.000Z
+    artifact: source code
+  - name: test
+    completed: 2026-09-19T17:19:00.000Z
+    artifact: ddd-03-test-report.md
+requires_bolts:
+  - 053-photoshoot-orchestration
+enables_bolts:
+  - 055-replicate-execution-reliability
+requires_units:
+  - 003-photoshoot-orchestration
 blocks: true
-
 complexity:
   avg_complexity: 2
   avg_uncertainty: 1
@@ -49,10 +65,11 @@ Que `GET .../photoshoots/{id}` sea el único recurso que BFashion necesita sonde
 
 ## Stages
 
-- [ ] **1. model**: Pending → `ddd-01-domain-model.md`
-- [ ] **2. design**: Pending → `ddd-02-technical-design.md`
-- [ ] **3. implement**: Pending → endpoint de estado agregado, idempotencia del disparo, columna `variant_key`
-- [ ] **4. test**: Pending → `ddd-03-test-report.md`
+- [x] **1. model**: Complete → `ddd-01-domain-model.md`
+- [x] **2. design**: Complete → `ddd-02-technical-design.md`
+- [x] **3. adr-analysis**: Complete → ADR-071, ADR-072
+- [x] **4. implement**: Complete → GET agregado, UNIQUE de idempotencia, `variant_key`
+- [x] **5. test**: Complete → `ddd-03-test-report.md`
 
 ## Dependencies
 
@@ -64,12 +81,12 @@ Que `GET .../photoshoots/{id}` sea el único recurso que BFashion necesita sonde
 
 ## Success Criteria
 
-- [ ] `GET .../photoshoots/{id}` devuelve estado agregado, etapas, contadores y candidatos en una sola llamada, sin disparar llamadas al proveedor
-- [ ] `candidates[]` es estructuralmente compatible con `PublicationCandidateResponse`
-- [ ] Misma `Idempotency-Key` + mismo contenido devuelve el mismo `photoshoot_id`; contenido distinto responde `409`
-- [ ] Un fallo de sincronización con BFashion no pierde ningún resultado ya generado
-- [ ] `variant_key` existe en `Photoshoot` y `PhotoshootResult`, nullable, `null` en todo disparo de V1
-- [ ] Todos los criterios de aceptación de las 3 historias cubiertos por pruebas
+- [x] `GET .../photoshoots/{id}` devuelve estado agregado, etapas, contadores y candidatos en una sola llamada, sin disparar llamadas al proveedor
+- [x] `candidates[]` es estructuralmente compatible con `PublicationCandidateResponse`
+- [x] Misma `Idempotency-Key` + mismo contenido devuelve el mismo `photoshoot_id`; contenido distinto responde `409`
+- [x] Un fallo de sincronización con BFashion no pierde ningún resultado ya generado
+- [x] `variant_key` existe en `Photoshoot` y `PhotoshootResult`, nullable, `null` en todo disparo de V1
+- [x] Todos los criterios de aceptación de las 3 historias cubiertos por pruebas
 - [ ] Código revisado
 
 ## Notes

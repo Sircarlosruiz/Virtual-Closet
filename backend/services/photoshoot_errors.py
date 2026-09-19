@@ -53,6 +53,16 @@ class PhotoshootVariantUnsupportedError(PhotoshootValidationError):
     code = "VARIANT_NOT_SUPPORTED"
 
 
+class PhotoshootIdempotencyConflictError(PhotoshootError):
+    code = "IDEMPOTENCY_CONFLICT"
+    status_code = 409
+
+
+class PhotoshootNotFoundError(PhotoshootError):
+    code = "PHOTOSHOOT_NOT_FOUND"
+    status_code = 404
+
+
 class PhotoshootCredentialMissingError(PhotoshootError):
     code = "PROVIDER_CREDENTIAL_MISSING"
     status_code = 503

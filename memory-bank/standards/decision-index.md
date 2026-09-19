@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-09-19T15:58:00Z
-total_decisions: 70
+last_updated: 2026-09-19T17:01:00Z
+total_decisions: 72
 ---
 
 # Decision Index
@@ -19,6 +19,22 @@ Use this to find relevant prior decisions when working on related features.
 ## Decisions
 
 <!-- Entries are appended below in reverse chronological order (newest first) -->
+
+### ADR-072: Photoshoot Idempotency Uses the Shared Fingerprint, Not IdempotencyService
+- **Status**: proposed
+- **Date**: 2026-09-19
+- **Bolt**: 054-photoshoot-orchestration (003-photoshoot-orchestration)
+- **Path**: `bolts/054-photoshoot-orchestration/adr-072-photoshoot-idempotency-service.md`
+- **Summary**: `IdempotencyService` is built around `GenerationJob` and 044's composite unique. Photoshoots reuse `compute_payload_fingerprint` and a thin `PhotoshootIdempotencyService` on `PhotoshootRepository`; the job class is not called and no generic protocol is extracted in this bolt.
+- **Read when**: Implementing photoshoot POST replay, computing payload fingerprints for contract-C POSTs, or considering reuse/generalization of `IdempotencyService`
+
+### ADR-071: Photoshoot Idempotency Unique Is the Key, Not (Key, Fingerprint)
+- **Status**: proposed
+- **Date**: 2026-09-19
+- **Bolt**: 054-photoshoot-orchestration (003-photoshoot-orchestration)
+- **Path**: `bolts/054-photoshoot-orchestration/adr-071-photoshoot-idempotency-key-unique.md`
+- **Summary**: Two concurrent POSTs with the same photoshoot key must not both insert. Enforce `UNIQUE (product_link_id, idempotency_key)` where the key is present; fingerprint comparison yields replay or 409. This does not change `generation_jobs`.
+- **Read when**: Adding Idempotency-Key to a contract-C POST, migrating photoshoot uniqueness, or copying generation-job idempotency indexes onto another aggregate
 
 ### ADR-070: Materialized Results Own a Copy Under `generated/photoshoots/...`
 - **Status**: proposed

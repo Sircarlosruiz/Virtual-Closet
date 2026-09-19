@@ -11,6 +11,7 @@ from api.schemas.image_generation import (
     GenerationProvider,
     ImageGenerationRequest,
 )
+from api.schemas.publication import PublicationCandidateResponse
 
 StaffRole = Literal["admin", "owner", "staff"]
 
@@ -222,6 +223,9 @@ class PhotoshootCreateRequest(BaseModel):
 class PhotoshootStageResponse(BaseModel):
     name: str
     status: str
+    error_code: str | None = None
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
 
 
 class PhotoshootCreateResponse(BaseModel):
@@ -231,3 +235,28 @@ class PhotoshootCreateResponse(BaseModel):
     expected_results: int
     stages: list[PhotoshootStageResponse]
     created_at: datetime
+    created: bool = True
+    variant_key: str | None = None
+
+
+class PhotoshootResultItem(BaseModel):
+    generation_job_id: UUID
+    model_id: UUID
+    pose_id: UUID
+    status: str
+    preview_url: str | None = None
+    variant_key: str | None = None
+
+
+class PhotoshootViewResponse(BaseModel):
+    photoshoot_id: UUID
+    external_product_id: str
+    status: str
+    variant_key: str | None = None
+    expected_results: int
+    completed_results: int
+    failed_results: int
+    error_code: str | None = None
+    stages: list[PhotoshootStageResponse]
+    results: list[PhotoshootResultItem]
+    candidates: list[PublicationCandidateResponse]

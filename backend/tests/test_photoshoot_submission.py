@@ -407,14 +407,24 @@ async def test_should_reject_overlay_text_over_max(client, monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_should_reject_variant_key(client, monkeypatch):
+async def test_should_persist_variant_key_without_filtering(client, monkeypatch):
     ctx = await _setup_ready(client, monkeypatch)
     response, send = await _post_photoshoot(
-        client, ctx, _submit_body(ctx, variant_key="red", pose_ids=["front"])
+        client, ctx, _submit_body(ctx, variant_key="navy", pose_ids=["front"])
     )
-    assert response.status_code == 422
-    assert response.json()["detail"]["code"] == "VARIANT_NOT_SUPPORTED"
-    send.assert_not_called()
+    assert response.status_code == 202, response.text
+    assert response.json()["variant_key"] == "navy"
+    assert response.json()["created"] is True
+    send.assert_called_once()
+    async with database.async_session() as session:
+        row = (
+            await session.execute(
+                select(Photoshoot).where(
+                    Photoshoot.id == uuid.UUID(response.json()["photoshoot_id"])
+                )
+            )
+        ).scalar_one()
+        assert row.variant_key == "navy"
 
 
 @pytest.mark.asyncio
@@ -512,15 +522,21 @@ async def test_should_return_503_when_replicate_credential_missing(client, monke
 
 
 @pytest.mark.asyncio
-async def test_should_persist_idempotency_key_without_replay(client, monkeypatch):
+async def test_should_replay_same_idempotency_key_and_payload(client, monkeypatch):
     ctx = await _setup_ready(client, monkeypatch)
     body = _submit_body(ctx, pose_ids=["front"])
-    first, _ = await _post_photoshoot(
+    first, send_first = await _post_photoshoot(
         client, ctx, body, **{"Idempotency-Key": "same-key"}
     )
-    second, _ = await _post_photoshoot(
+    second, send_second = await _post_photoshoot(
         client, ctx, body, **{"Idempotency-Key": "same-key"}
     )
     assert first.status_code == 202
     assert second.status_code == 202
-    assert first.json()["photoshoot_id"] != second.json()["photoshoot_id"]
+    assert first.json()["photoshoot_id"] == second.json()["photoshoot_id"]
+    assert second.json()["created"] is False
+    send_first.assert_called_once()
+    send_second.assert_not_called()
+    async with database.async_session() as session:
+        rows = (await session.execute(select(Photoshoot))).scalars().all()
+    assert len(rows) == 1

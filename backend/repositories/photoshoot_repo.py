@@ -51,6 +51,23 @@ class PhotoshootRepository:
         )
         return result.scalar_one_or_none()
 
+    async def find_by_idempotency(
+        self, product_link_id: UUID, tenant_id: UUID, idempotency_key: str
+    ) -> Photoshoot | None:
+        result = await self._db.execute(
+            select(Photoshoot)
+            .where(
+                Photoshoot.product_link_id == product_link_id,
+                Photoshoot.tenant_id == tenant_id,
+                Photoshoot.idempotency_key == idempotency_key,
+            )
+            .options(
+                selectinload(Photoshoot.stages),
+                selectinload(Photoshoot.results),
+            )
+        )
+        return result.scalar_one_or_none()
+
     async def save(self, photoshoot: Photoshoot) -> None:
         photoshoot.updated_at = datetime.now(timezone.utc)
         await self._db.flush()
