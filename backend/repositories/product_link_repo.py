@@ -18,6 +18,12 @@ class ProductLinkRepository:
         await self._db.refresh(link)
         return link
 
+    async def add(self, link: ProductLink) -> ProductLink:
+        """Persist without committing so callers can share a transaction."""
+        self._db.add(link)
+        await self._db.flush()
+        return link
+
     async def get_by_id(self, link_id: UUID) -> ProductLink | None:
         result = await self._db.execute(
             select(ProductLink).where(ProductLink.id == link_id)

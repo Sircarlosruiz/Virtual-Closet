@@ -9,13 +9,19 @@ link before doing any work.
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
+from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.schemas.integration import (
     ProductGenerationBridgeRequest,
     ProductGenerationBridgeResponse,
     ProductGenerationBridgeStatusResponse,
+    ProductLinkCreateRequest,
+    ProductLinkCreateResponse,
     ProductPublicationBridgeRequest,
+    StaffIdentityProvisionRequest,
+    StaffIdentityProvisionResponse,
+    StaffIdentityRevokeResponse,
 )
 from api.schemas.publication import (
     PublicationCandidateResponse,
@@ -33,7 +39,9 @@ from core.dependencies import get_service_client
 from models.service_client import ServiceClient
 from repositories.generation_job_repo import GenerationJobRepository
 from repositories.mayorista_repo import MayoristaRepository
+from repositories.prenda_repo import PrendaRepository
 from repositories.product_link_repo import ProductLinkRepository
+from repositories.staff_identity_link_repo import StaffIdentityLinkRepository
 from services.idempotency_service import IdempotencyConflictError
 from services.image_generation_service import ImageGenerationService
 from services.integration_service import (
@@ -42,9 +50,22 @@ from services.integration_service import (
     StaffNotAuthorizedError,
 )
 from services.product_link_service import (
+    ProductLinkCreateResult,
+    ProductLinkCrossTenantError,
+    ProductLinkError,
+    ProductLinkInactiveError,
     ProductLinkMismatchError,
     ProductLinkNotFoundError,
+    ProductLinkPrendaForbiddenError,
     ProductLinkService,
+)
+from services.staff_identity_service import (
+    MirrorEmailConflictError,
+    StaffForbiddenError,
+    StaffIdentityError,
+    StaffIdentityNotFoundError,
+    StaffIdentityResult,
+    StaffIdentityService,
 )
 from services.publication_service import (
     CandidateNotEligibleError,
@@ -65,6 +86,150 @@ def _get_service(db: AsyncSession = Depends(get_db)) -> IntegrationService:
         mayoristas=MayoristaRepository(db),
         image_generation=ImageGenerationService(jobs),
         jobs=jobs,
+    )
+
+
+def _staff_identity_service(
+    db: AsyncSession = Depends(get_db),
+) -> StaffIdentityService:
+    return StaffIdentityService(
+        db,
+        StaffIdentityLinkRepository(db),
+        MayoristaRepository(db),
+    )
+
+
+def _product_link_write_service(
+    db: AsyncSession = Depends(get_db),
+) -> ProductLinkService:
+    staff_identities = StaffIdentityService(
+        db,
+        StaffIdentityLinkRepository(db),
+        MayoristaRepository(db),
+    )
+    return ProductLinkService(
+        ProductLinkRepository(db),
+        db=db,
+        staff_identities=staff_identities,
+        prendas=PrendaRepository(db),
+    )
+
+
+def _domain_http_error(exc: Exception) -> HTTPException:
+    code = getattr(exc, "code", None)
+    status_code = getattr(exc, "status_code", status.HTTP_400_BAD_REQUEST)
+    context = getattr(exc, "context", {})
+    if code:
+        return HTTPException(
+            status_code=status_code,
+            detail={"code": code, "message": str(exc), "context": context},
+        )
+    return HTTPException(status_code=status_code, detail=str(exc))
+
+
+@router.post(
+    "/product-links",
+    response_model=ProductLinkCreateResponse,
+)
+async def create_product_link(
+    body: ProductLinkCreateRequest,
+    service_client: ServiceClient = Depends(get_service_client),
+    service: ProductLinkService = Depends(_product_link_write_service),
+) -> ProductLinkCreateResponse:
+    try:
+        result: ProductLinkCreateResult = await service.create_link(
+            client=service_client,
+            external_product_id=body.external_product_id,
+            staff_id=body.staff_id,
+            external_wholesaler_id=body.external_wholesaler_id,
+            prenda_id=body.prenda_id,
+        )
+    except (
+        StaffForbiddenError,
+        ProductLinkCrossTenantError,
+        ProductLinkInactiveError,
+        ProductLinkPrendaForbiddenError,
+        ProductLinkMismatchError,
+        ProductLinkError,
+        StaffIdentityError,
+    ) as exc:
+        raise _domain_http_error(exc) from exc
+
+    payload = ProductLinkCreateResponse(
+        product_link_id=result.link.id,
+        external_product_id=result.link.external_product_id,
+        mayorista_id=result.link.mayorista_id,
+        tenant_id=result.link.tenant_id,
+        is_active=result.link.is_active,
+        created=result.created,
+    )
+    return JSONResponse(
+        status_code=(
+            status.HTTP_201_CREATED if result.created else status.HTTP_200_OK
+        ),
+        content=payload.model_dump(mode="json"),
+    )
+
+
+@router.post(
+    "/staff-identities",
+    response_model=StaffIdentityProvisionResponse,
+)
+async def provision_staff_identity(
+    body: StaffIdentityProvisionRequest,
+    service_client: ServiceClient = Depends(get_service_client),
+    service: StaffIdentityService = Depends(_staff_identity_service),
+) -> StaffIdentityProvisionResponse:
+    try:
+        result: StaffIdentityResult = await service.provision(
+            client=service_client,
+            external_staff_id=body.external_staff_id,
+            email=str(body.email),
+            display_name=body.display_name,
+            role=body.role,
+        )
+    except (
+        MirrorEmailConflictError,
+        StaffForbiddenError,
+        StaffIdentityError,
+    ) as exc:
+        raise _domain_http_error(exc) from exc
+
+    status_code = (
+        status.HTTP_201_CREATED if result.created else status.HTTP_200_OK
+    )
+    response = StaffIdentityProvisionResponse(
+        staff_id=result.mayorista.id,
+        external_staff_id=result.link.external_staff_id,
+        email=result.mayorista.email,
+        role=result.mayorista.role,
+        is_active=result.link.is_active,
+        created=result.created,
+    )
+    return JSONResponse(
+        status_code=status_code,
+        content=response.model_dump(mode="json"),
+    )
+
+
+@router.post(
+    "/staff-identities/{external_staff_id}:revoke",
+    response_model=StaffIdentityRevokeResponse,
+)
+async def revoke_staff_identity(
+    external_staff_id: str,
+    service_client: ServiceClient = Depends(get_service_client),
+    service: StaffIdentityService = Depends(_staff_identity_service),
+) -> StaffIdentityRevokeResponse:
+    try:
+        result = await service.revoke(service_client, external_staff_id)
+    except (StaffIdentityNotFoundError, StaffIdentityError) as exc:
+        raise _domain_http_error(exc) from exc
+
+    return StaffIdentityRevokeResponse(
+        staff_id=result.mayorista.id,
+        external_staff_id=result.link.external_staff_id,
+        is_active=result.link.is_active,
     )
 
 

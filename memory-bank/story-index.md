@@ -1,9 +1,9 @@
 # Global Story Index
 
 ## Overview
-- **Total stories**: 190
-- **Generated**: 190
-- **Last updated**: 2026-09-17
+- **Total stories**: 210
+- **Generated**: 210
+- **Last updated**: 2026-09-18
 
 ---
 
@@ -334,9 +334,49 @@
 - [x] **002-generation-review** ✅ GENERATED — Generation Review — Must
 - [x] **003-product-integration-ui** ✅ GENERATED — Product Integration UI — Must
 
+---
+
+### 009-bfashion-generation-bridge
+
+#### Unit: 001-bridge-provisioning
+
+- [x] **001-product-link-creation** ✅ GENERATED — Product Link Creation — Must
+- [x] **002-staff-identity-provisioning** ✅ GENERATED — Staff Identity Provisioning — Must
+- [x] **003-staff-identity-revocation** ✅ GENERATED — Staff Identity Revocation — Must
+
+#### Unit: 002-source-image-intake
+
+- [x] **001-source-image-presign** ✅ GENERATED — Source Image Presign — Must
+- [x] **002-source-image-confirm** ✅ GENERATED — Source Image Confirm — Must
+- [x] **003-source-image-rejection** ✅ GENERATED — Source Image Rejection — Must
+
+#### Unit: 003-photoshoot-orchestration
+
+- [x] **001-photoshoot-submission** ✅ GENERATED — Photoshoot Submission — Must
+- [x] **002-stage-pipeline-execution** ✅ GENERATED — Stage Pipeline Execution — Must
+- [x] **003-generation-job-materialization** ✅ GENERATED — Generation Job Materialization — Must
+- [x] **004-aggregate-status-and-candidates** ✅ GENERATED — Aggregate Status and Candidates — Must
+- [x] **005-photoshoot-idempotency-and-retry** ✅ GENERATED — Photoshoot Idempotency and Retry — Must
+- [x] **006-color-variant-forward-compat** ✅ GENERATED — Color Variant Forward Compat — Should
+
+#### Unit: 004-replicate-execution-reliability
+
+- [x] **001-replicate-provider-wiring** ✅ GENERATED — Replicate Provider Wiring — Must
+- [x] **002-provider-credential-gating** ✅ GENERATED — Provider Credential Gating — Must
+- [x] **003-global-concurrency-cap** ✅ GENERATED — Global Concurrency Cap — Must
+- [x] **004-provider-timeout-policy** ✅ GENERATED — Provider Timeout Policy — Must
+- [x] **005-replicate-usage-accounting** ✅ GENERATED — Replicate Usage Accounting — Must
+- [x] **006-product-slug-overlay-fit** ✅ GENERATED — Product Slug Overlay Fit — Must
+
+#### Unit: 005-photoshoot-catalog
+
+- [x] **001-photoshoot-options-catalog** ✅ GENERATED — Photoshoot Options Catalog — Must
+- [x] **002-catalog-isolation-and-freshness** ✅ GENERATED — Catalog Isolation and Freshness — Must
+
 ## Stories by Status
 
 - **Completed**: 167 (all intents 001-007)
 - **Planned/Generated**: 23 (multi-pose VTON and OpenAI image generation)
 - **Draft (new)**: 14
+- **Draft (009-bfashion-generation-bridge)**: 20
 - **In Progress**: 0

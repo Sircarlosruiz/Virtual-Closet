@@ -27,6 +27,12 @@ class MayoristaRepository:
         await self.session.refresh(mayorista)
         return mayorista
 
+    async def add(self, mayorista: Mayorista) -> Mayorista:
+        """Persist without committing so callers can share a transaction."""
+        self.session.add(mayorista)
+        await self.session.flush()
+        return mayorista
+
     async def increment_failed_attempts(
         self, user_id: uuid.UUID
     ) -> tuple[int, bool] | None:

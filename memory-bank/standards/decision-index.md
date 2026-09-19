@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-09-17T22:34:52Z
-total_decisions: 56
+last_updated: 2026-09-19T00:40:02Z
+total_decisions: 60
 ---
 
 # Decision Index
@@ -19,6 +19,38 @@ Use this to find relevant prior decisions when working on related features.
 ## Decisions
 
 <!-- Entries are appended below in reverse chronological order (newest first) -->
+
+### ADR-060: ProductLink.mayorista_id Is the Staff Mirror
+- **Status**: proposed
+- **Date**: 2026-09-19
+- **Bolt**: 050-bridge-provisioning (001-bridge-provisioning)
+- **Path**: `bolts/050-bridge-provisioning/adr-060-product-link-owner-is-mirror.md`
+- **Summary**: FR-1 requires the link owner to be resolved from the staff mirror and the ServiceClient tenant, never from an external id. `create_link` sets `ProductLink.mayorista_id` (and `created_by`) to the active mirror UUID; `external_wholesaler_id` is stored for comparison only.
+- **Read when**: Creating or resolving ProductLinks, setting GenerationJob owner_id from a link, scoping catalog/models/templates by mayorista for BFashion-originated products, or introducing a company-level mayorista later
+
+### ADR-059: Asymmetric Reactivation of Product Links vs Staff Identities
+- **Status**: proposed
+- **Date**: 2026-09-19
+- **Bolt**: 050-bridge-provisioning (001-bridge-provisioning)
+- **Path**: `bolts/050-bridge-provisioning/adr-059-asymmetric-link-reactivation.md`
+- **Summary**: Both aggregates share uniqueness and `is_active`, but inactive semantics differ. Creating a ProductLink must not reactivate (409); provisioning a revoked staff identity reactivates the same mayorista UUID (`created=false`).
+- **Read when**: Implementing idempotent create on unique `(system, external_*_id)` pairs, handling inactive ProductLink or StaffIdentityLink rows, or writing a shared upsert helper for bridge mappings
+
+### ADR-058: StaffIdentityLink Is the Only Mirror Signal
+- **Status**: proposed
+- **Date**: 2026-09-19
+- **Bolt**: 050-bridge-provisioning (001-bridge-provisioning)
+- **Path**: `bolts/050-bridge-provisioning/adr-058-staff-identity-link-mirror-signal.md`
+- **Summary**: A Mayorista is a bridge mirror iff a staff_identity_links row points at it. No `is_bridge_mirror` column. Mirrors do not consume monthly wholesaler quota (OQ-5); later quota paths must EXISTS-check the link table.
+- **Read when**: Distinguishing mirror staff from real wholesalers, applying monthly quota or login rules to a mayorista_id that came from a ProductLink, or adding columns to Mayorista for bridge identity
+
+### ADR-057: Contract-C Staff Resolution Lives Outside `_authorize_staff`
+- **Status**: proposed
+- **Date**: 2026-09-19
+- **Bolt**: 050-bridge-provisioning (001-bridge-provisioning)
+- **Path**: `bolts/050-bridge-provisioning/adr-057-c-contract-staff-resolution.md`
+- **Summary**: Contract C authorizes asserted staff_id via StaffIdentityService.resolve_staff_identity (role, tenant, and an active StaffIdentityLink). integration_service.py is not modified; contract B may still accept a revoked mirror.
+- **Read when**: Adding contract-C endpoints that assert staff_id, implementing staff revocation, or considering changes to integration_service._authorize_staff
 
 ### ADR-056: Persist Fit-Rejected Compositions as Blocked Versions
 - **Status**: proposed
