@@ -11,8 +11,14 @@ class GenerationJobRepository:
     def __init__(self, db: AsyncSession) -> None:
         self._db = db
 
-    async def create(self, job: GenerationJob) -> GenerationJob:
+    async def add(self, job: GenerationJob) -> GenerationJob:
+        """Persist without committing so callers can share a transaction."""
         self._db.add(job)
+        await self._db.flush()
+        return job
+
+    async def create(self, job: GenerationJob) -> GenerationJob:
+        job = await self.add(job)
         await self._db.commit()
         await self._db.refresh(job)
         return job
@@ -84,6 +90,51 @@ class GenerationJobRepository:
             update(GenerationJob)
             .where(GenerationJob.id == job_id)
             .values(retry_count=GenerationJob.retry_count + 1)
+        )
+        await self._db.commit()
+
+    async def ensure_concurrency_wait_started(self, job_id: UUID) -> None:
+        await self._db.execute(
+            update(GenerationJob)
+            .where(
+                GenerationJob.id == job_id,
+                GenerationJob.concurrency_wait_started_at.is_(None),
+            )
+            .values(concurrency_wait_started_at=datetime.now(timezone.utc))
+        )
+        await self._db.commit()
+
+    async def record_provider_call_started(self, job_id: UUID) -> None:
+        now = datetime.now(timezone.utc)
+        job = await self.get_by_id(job_id)
+        wait_started = (
+            job.concurrency_wait_started_at if job and job.concurrency_wait_started_at else now
+        )
+        if wait_started.tzinfo is None:
+            wait_started = wait_started.replace(tzinfo=timezone.utc)
+        queue_wait = max(0, int((now - wait_started).total_seconds()))
+        await self._db.execute(
+            update(GenerationJob)
+            .where(GenerationJob.id == job_id)
+            .values(
+                provider_call_started_at=now,
+                queue_wait_seconds=queue_wait,
+            )
+        )
+        await self._db.commit()
+
+    async def record_execution_seconds(self, job_id: UUID) -> None:
+        job = await self.get_by_id(job_id)
+        if job is None or job.provider_call_started_at is None:
+            return
+        started = job.provider_call_started_at
+        if started.tzinfo is None:
+            started = started.replace(tzinfo=timezone.utc)
+        elapsed = max(0, int((datetime.now(timezone.utc) - started).total_seconds()))
+        await self._db.execute(
+            update(GenerationJob)
+            .where(GenerationJob.id == job_id)
+            .values(execution_seconds=elapsed)
         )
         await self._db.commit()
 

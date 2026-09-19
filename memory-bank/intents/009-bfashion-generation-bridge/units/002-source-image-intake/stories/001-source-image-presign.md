@@ -2,11 +2,11 @@
 id: 001-source-image-presign
 unit: 002-source-image-intake
 intent: 009-bfashion-generation-bridge
-status: draft
+status: complete
 priority: must
-created: 2026-09-18T10:20:00Z
+created: 2026-09-18T10:20:00.000Z
 assigned_bolt: 051-source-image-intake
-implemented: false
+implemented: true
 ---
 
 # Story: 001-source-image-presign

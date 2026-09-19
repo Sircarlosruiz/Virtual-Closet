@@ -51,27 +51,15 @@ class VTONJobService:
             PhotoNotFoundError: If garment or model photo doesn't exist.
             PhotoOwnershipError: If garment doesn't belong to mayorista.
         """
-        # Validate garment ownership
+        await self.validate_pairing(
+            mayorista_id, garment_photo_id, model_photo_id, cloth_type
+        )
         garment = await self._garment_repo.get_by_id_and_mayorista(
             garment_photo_id, mayorista_id
         )
         if garment is None:
-            # Check if it exists at all (for better error message)
-            exists = await self._garment_repo.get_by_id(garment_photo_id)
-            if exists is None:
-                raise PhotoNotFoundError("Garment photo not found")
-            raise PhotoOwnershipError("You do not own this garment photo")
+            raise PhotoNotFoundError("Garment photo not found")
 
-        # Validate model photo (can be own or curated)
-        model = await self._model_repo.get_by_id(model_photo_id)
-        if model is None:
-            raise PhotoNotFoundError("Model photo not found")
-
-        # If it's an own model, verify ownership
-        if not model.is_curated and model.mayorista_id != mayorista_id:
-            raise PhotoOwnershipError("You do not own this model photo")
-
-        # Create job record
         max_retries = getattr(settings, "VTON_MAX_RETRIES", 3)
         job = VTONJob(
             mayorista_id=mayorista_id,
@@ -86,11 +74,9 @@ class VTONJobService:
         )
         job = await self._vton_job_repo.create(job, commit=commit)
 
-        # Publish Celery task
         if publish:
             self.publish_job(job.id)
 
-        # Generate presigned URL for garment (for response)
         presigned_url = ""
         if self._minio is not None:
             presigned_url = await self._minio.get_presigned_url(
@@ -98,6 +84,31 @@ class VTONJobService:
             )
 
         return job, presigned_url
+
+    async def validate_pairing(
+        self,
+        mayorista_id: uuid.UUID,
+        garment_photo_id: uuid.UUID,
+        model_photo_id: uuid.UUID,
+        cloth_type: str | None = None,
+    ) -> None:
+        """Ownership/existence gate. Does not create or enqueue a job (ADR-067)."""
+        _ = cloth_type
+        garment = await self._garment_repo.get_by_id_and_mayorista(
+            garment_photo_id, mayorista_id
+        )
+        if garment is None:
+            exists = await self._garment_repo.get_by_id(garment_photo_id)
+            if exists is None:
+                raise PhotoNotFoundError("Garment photo not found")
+            raise PhotoOwnershipError("You do not own this garment photo")
+
+        model = await self._model_repo.get_by_id(model_photo_id)
+        if model is None:
+            raise PhotoNotFoundError("Model photo not found")
+
+        if not model.is_curated and model.mayorista_id != mayorista_id:
+            raise PhotoOwnershipError("You do not own this model photo")
 
     @staticmethod
     def publish_job(job_id: uuid.UUID) -> None:

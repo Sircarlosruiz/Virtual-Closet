@@ -10,6 +10,18 @@ from api.schemas.image_generation import (
 )
 
 
+def test_accepts_try_on_for_replicate() -> None:
+    request = ImageGenerationRequest(
+        mode=GenerationMode.try_on,
+        provider=GenerationProvider.replicate,
+        garment_id=uuid4(),
+        model_id=uuid4(),
+        cloth_type="upper_body",
+    )
+
+    assert request.provider == GenerationProvider.replicate
+
+
 def test_accepts_try_on_for_vton() -> None:
     request = ImageGenerationRequest(
         mode=GenerationMode.try_on,

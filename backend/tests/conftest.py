@@ -31,7 +31,14 @@ import models.product_overlay  # noqa: F401 — ensure ProductOverlay/Compositio
 import models.service_client  # noqa: F401 — ensure ServiceClient table is created
 import models.product_link  # noqa: F401 — ensure ProductLink table is created
 import models.staff_identity_link  # noqa: F401 — ensure StaffIdentityLink table is created
+import models.bridge_source_image  # noqa: F401 — ensure BridgeSourceImage table is created
+import models.tryoff_job  # noqa: F401 — ensure SourceImage table is created
 import models.publication  # noqa: F401 — ensure publication/sync tables are created
+import models.model  # noqa: F401 — ensure Model table is created
+import models.batch_job  # noqa: F401 — ensure BatchJob/BatchItem tables are created
+import models.pose_set  # noqa: F401 — ensure PoseSet table is created
+import models.vton_job  # noqa: F401 — ensure VTONJob table is created
+import models.photoshoot  # noqa: F401 — ensure Photoshoot tables are created
 
 pytest_plugins = ["tests.publication_helpers"]
 

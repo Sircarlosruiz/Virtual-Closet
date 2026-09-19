@@ -13,18 +13,38 @@ class GarmentPhotoRepo:
     def __init__(self, db: AsyncSession) -> None:
         self._db = db
 
-    async def create(self, garment_photo: GarmentPhoto) -> GarmentPhoto:
+    async def add(self, garment_photo: GarmentPhoto) -> GarmentPhoto:
+        """Persist without committing so callers can share a transaction."""
         self._db.add(garment_photo)
+        await self._db.flush()
+        return garment_photo
+
+    async def create(self, garment_photo: GarmentPhoto) -> GarmentPhoto:
+        garment_photo = await self.add(garment_photo)
         await self._db.commit()
         await self._db.refresh(garment_photo)
         return garment_photo
 
     async def get_by_id(
+        self, photo_id: uuid.UUID, mayorista_id: uuid.UUID | None = None
+    ) -> GarmentPhoto | None:
+        stmt = select(GarmentPhoto).where(GarmentPhoto.id == photo_id)
+        if mayorista_id is not None:
+            stmt = stmt.where(GarmentPhoto.mayorista_id == mayorista_id)
+        result = await self._db.execute(stmt)
+        return result.scalar_one_or_none()
+
+    async def get_by_id_and_mayorista(
         self, photo_id: uuid.UUID, mayorista_id: uuid.UUID
+    ) -> GarmentPhoto | None:
+        return await self.get_by_id(photo_id, mayorista_id)
+
+    async def get_by_minio_key(
+        self, minio_key: str, mayorista_id: uuid.UUID
     ) -> GarmentPhoto | None:
         result = await self._db.execute(
             select(GarmentPhoto).where(
-                GarmentPhoto.id == photo_id,
+                GarmentPhoto.minio_key == minio_key,
                 GarmentPhoto.mayorista_id == mayorista_id,
             )
         )
@@ -134,6 +154,16 @@ class ModelPhotoRepo:
 
     async def list_by_model(self, model_id: uuid.UUID) -> list[ModelPhoto]:
         """List pose photos for a model, ordered front, side, back."""
+        grouped = await self.list_by_model_ids([model_id])
+        return grouped.get(model_id, [])
+
+    async def list_by_model_ids(
+        self, model_ids: list[uuid.UUID]
+    ) -> dict[uuid.UUID, list[ModelPhoto]]:
+        """Batch pose photos for many models, each list ordered front/side/back."""
+        grouped: dict[uuid.UUID, list[ModelPhoto]] = {mid: [] for mid in model_ids}
+        if not model_ids:
+            return grouped
         pose_order = case(
             (ModelPhoto.pose == "front", 0),
             (ModelPhoto.pose == "side", 1),
@@ -142,10 +172,15 @@ class ModelPhotoRepo:
         )
         result = await self._db.execute(
             select(ModelPhoto)
-            .where(ModelPhoto.model_id == model_id)
-            .order_by(pose_order)
+            .where(
+                ModelPhoto.model_id.in_(model_ids),
+                ModelPhoto.pose.is_not(None),
+            )
+            .order_by(ModelPhoto.model_id, pose_order)
         )
-        return list(result.scalars().all())
+        for photo in result.scalars():
+            grouped.setdefault(photo.model_id, []).append(photo)
+        return grouped
 
 
 class MediaItemRepo:

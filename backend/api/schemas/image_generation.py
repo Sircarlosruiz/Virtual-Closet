@@ -15,6 +15,7 @@ class GenerationMode(str, Enum):
 class GenerationProvider(str, Enum):
     openai = "openai"
     vton = "vton"
+    replicate = "replicate"
 
 
 class ImageGenerationRequest(BaseModel):
@@ -33,7 +34,11 @@ class ImageGenerationRequest(BaseModel):
         if self.mode == GenerationMode.try_on:
             if not self.garment_id or not self.model_id or not self.cloth_type:
                 raise ValueError("try_on requires garment_id, model_id and cloth_type")
-            if provider not in {GenerationProvider.openai, GenerationProvider.vton}:
+            if provider not in {
+                GenerationProvider.openai,
+                GenerationProvider.vton,
+                GenerationProvider.replicate,
+            }:
                 raise ValueError("try_on provider is unsupported")
         elif provider != GenerationProvider.openai:
             raise ValueError("only openai supports this generation mode")
@@ -80,3 +85,5 @@ class ImageGenerationDetailResponse(ImageGenerationResponse):
     attempts: list[ProviderAttemptSummary] = Field(default_factory=list)
     usage: UsageSummary
     preview_url: str | None = None
+    queue_wait_seconds: int | None = None
+    execution_seconds: int | None = None

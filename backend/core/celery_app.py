@@ -11,6 +11,7 @@ app = Celery(
         "tasks.vton_task",
         "tasks.tryoff_task",
         "tasks.image_generation",
+        "tasks.photoshoot_orchestration",
     ],
 )
 
@@ -28,6 +29,7 @@ app.conf.task_queues = {
     "vton.generation.dead": {},
     "tryoff": {},
     "image.generation.normal": {},
+    "photoshoot": {},
 }
 
 

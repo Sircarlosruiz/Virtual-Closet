@@ -3,22 +3,42 @@ id: 053-photoshoot-orchestration
 unit: 003-photoshoot-orchestration
 intent: 009-bfashion-generation-bridge
 type: ddd-construction-bolt
-status: planned
+status: complete
 stories:
   - 001-photoshoot-submission
   - 002-stage-pipeline-execution
   - 003-generation-job-materialization
-created: 2026-09-18T11:15:00Z
-started: null
-completed: null
+created: 2026-09-18T11:15:00.000Z
+started: 2026-09-19T15:52:00.000Z
+completed: "2026-09-19T16:36:03Z"
 current_stage: null
-stages_completed: []
-
-requires_bolts: [050-bridge-provisioning, 051-source-image-intake, 052-replicate-execution-reliability]
-enables_bolts: [054-photoshoot-orchestration]
-requires_units: [001-bridge-provisioning, 002-source-image-intake, 004-replicate-execution-reliability]
+stages_completed:
+  - name: model
+    completed: 2026-09-19T15:55:00.000Z
+    artifact: ddd-01-domain-model.md
+  - name: design
+    completed: 2026-09-19T15:57:00.000Z
+    artifact: ddd-02-technical-design.md
+  - name: adr-analysis
+    completed: 2026-09-19T15:58:00.000Z
+    artifact: adr-067-vton-stage-is-a-gate.md, adr-068-photoshoot-tick-reschedule.md, adr-069-contract-c-pose-types.md, adr-070-photoshoot-owned-result-key.md
+  - name: implement
+    completed: 2026-09-19T16:18:00.000Z
+    artifact: photoshoot models/services/router/task
+  - name: test
+    completed: 2026-09-19T16:35:11.000Z
+    artifact: ddd-03-test-report.md
+requires_bolts:
+  - 050-bridge-provisioning
+  - 051-source-image-intake
+  - 052-replicate-execution-reliability
+enables_bolts:
+  - 054-photoshoot-orchestration
+requires_units:
+  - 001-bridge-provisioning
+  - 002-source-image-intake
+  - 004-replicate-execution-reliability
 blocks: true
-
 complexity:
   avg_complexity: 3
   avg_uncertainty: 2
@@ -49,10 +69,11 @@ Que `POST .../photoshoots` dispare de verdad `tryoff → vton → poses → comp
 
 ## Stages
 
-- [ ] **1. model**: Pending → `ddd-01-domain-model.md`
-- [ ] **2. design**: Pending → `ddd-02-technical-design.md`
-- [ ] **3. implement**: Pending → nuevos modelos `Photoshoot`, `PhotoshootStage`, `PhotoshootResult` + `PhotoshootOrchestrationService` + tasks Celery
-- [ ] **4. test**: Pending → `ddd-03-test-report.md`
+- [x] **1. model**: Complete → `ddd-01-domain-model.md`
+- [x] **2. design**: Complete → `ddd-02-technical-design.md`
+- [x] **3. adr-analysis**: Complete → ADR-067, ADR-068, ADR-069, ADR-070
+- [x] **4. implement**: Complete → commit-then-enqueue, tryoff en la txn del tick
+- [x] **5. test**: Complete → `ddd-03-test-report.md` (61 passed; pending bolt-close)
 
 ## Dependencies
 
@@ -66,13 +87,13 @@ Que `POST .../photoshoots` dispare de verdad `tryoff → vton → poses → comp
 
 ## Success Criteria
 
-- [ ] `expected_results` se calcula en el momento del disparo, antes de que exista ningún resultado
-- [ ] `garment_on_model` ejecuta las 4 etapas; `flat_garment` marca `tryoff` como `skipped`, no `failed`
-- [ ] El fallo de una rama no cancela las demás
-- [ ] N×M resultados se materializan como N×M `GenerationJob` completados con `result_key` durable
-- [ ] Cada resultado aparece en `GET .../generation-jobs/{job_id}/publication-candidates` sin modificar `publication_service.py`
-- [ ] Verificado por ejecución que `PoseSet` + `BatchJob` cubren la expansión a N poses sin cambios de contrato interno
-- [ ] Todos los criterios de aceptación de las 3 historias cubiertos por pruebas
+- [x] `expected_results` se calcula en el momento del disparo, antes de que exista ningún resultado
+- [x] `garment_on_model` ejecuta las 4 etapas; `flat_garment` marca `tryoff` como `skipped`, no `failed`
+- [x] El fallo de una rama no cancela las demás
+- [x] N×M resultados se materializan como N×M `GenerationJob` completados con `result_key` durable
+- [x] Cada resultado aparece en `GET .../generation-jobs/{job_id}/publication-candidates` sin modificar `publication_service.py`
+- [x] Verificado por ejecución que `PoseSet` + `BatchJob` cubren la expansión a N poses sin cambios de contrato interno
+- [x] Todos los criterios de aceptación de las 3 historias cubiertos por pruebas
 - [ ] Código revisado
 
 ## Notes

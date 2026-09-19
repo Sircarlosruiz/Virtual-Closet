@@ -16,9 +16,11 @@ def _assert_no_secrets_leaked(payload: dict) -> None:
     serialized = json.dumps(payload).lower()
     assert "api_key" not in serialized
     assert "openai_api_key" not in serialized
-    secret = settings.OPENAI_API_KEY.strip()
-    if secret:
-        assert secret not in json.dumps(payload)
+    assert "replicate_api_key" not in serialized
+    dumped = json.dumps(payload)
+    for secret in (settings.OPENAI_API_KEY.strip(), settings.REPLICATE_API_KEY.strip()):
+        if secret:
+            assert secret not in dumped
 
 
 def _assert_public_payload_hides_secrets(payload: dict) -> None:
@@ -36,6 +38,8 @@ def _assert_detail_payload_hides_secrets(payload: dict) -> None:
         "attempts",
         "usage",
         "preview_url",
+        "queue_wait_seconds",
+        "execution_seconds",
     }
     _assert_no_secrets_leaked(payload)
 

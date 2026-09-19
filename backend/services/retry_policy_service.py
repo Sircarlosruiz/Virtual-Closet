@@ -47,6 +47,18 @@ class RetryPolicyService:
             code="PROVIDER_REQUEST_ERROR", category="terminal", retryable=False
         )
 
+    def classify_credential_missing(self) -> ErrorClassification:
+        return ErrorClassification(
+            code="PROVIDER_CREDENTIAL_MISSING", category="terminal", retryable=False
+        )
+
+    def classify_concurrency_wait_exhausted(self) -> ErrorClassification:
+        return ErrorClassification(
+            code="GLOBAL_CONCURRENCY_WAIT_EXHAUSTED",
+            category="terminal",
+            retryable=False,
+        )
+
     def decide(
         self,
         classification: ErrorClassification,

@@ -37,8 +37,17 @@ class StorageService:
             "model-thumbnails": settings.MINIO_BUCKET_MODEL_THUMBNAILS,
         }
 
-    async def generate_upload_url(self, key: str, ttl_seconds: int = 900, bucket_override: str | None = None) -> str:
+    async def generate_upload_url(
+        self,
+        key: str,
+        ttl_seconds: int = 900,
+        bucket_override: str | None = None,
+        content_type: str | None = None,
+    ) -> str:
         bucket = self._buckets.get(bucket_override, self._bucket) if bucket_override else self._bucket
+        params: dict[str, str] = {"Bucket": bucket, "Key": key}
+        if content_type:
+            params["ContentType"] = content_type
         async with self._session.create_client(
             "s3",
             endpoint_url=self._public_endpoint,
@@ -48,7 +57,7 @@ class StorageService:
         ) as client:
             url = await client.generate_presigned_url(
                 "put_object",
-                Params={"Bucket": bucket, "Key": key},
+                Params=params,
                 ExpiresIn=ttl_seconds,
                 HttpMethod="PUT",
             )
@@ -70,7 +79,9 @@ class StorageService:
             )
         return url
 
-    async def object_exists(self, key: str, bucket_override: str | None = None) -> bool:
+    async def head_object(
+        self, key: str, bucket_override: str | None = None
+    ) -> dict | None:
         from botocore.exceptions import ClientError
 
         bucket = self._buckets.get(bucket_override, self._bucket) if bucket_override else self._bucket
@@ -82,10 +93,16 @@ class StorageService:
             config=self._config,
         ) as client:
             try:
-                await client.head_object(Bucket=bucket, Key=key)
-                return True
+                response = await client.head_object(Bucket=bucket, Key=key)
             except ClientError:
-                return False
+                return None
+        return {
+            "content_type": response.get("ContentType"),
+            "content_length": int(response.get("ContentLength") or 0),
+        }
+
+    async def object_exists(self, key: str, bucket_override: str | None = None) -> bool:
+        return await self.head_object(key, bucket_override=bucket_override) is not None
 
     def object_exists_sync(self, key: str, bucket_override: str | None = None) -> bool:
         import boto3

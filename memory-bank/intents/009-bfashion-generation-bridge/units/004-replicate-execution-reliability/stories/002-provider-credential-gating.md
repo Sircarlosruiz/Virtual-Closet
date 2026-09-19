@@ -2,11 +2,11 @@
 id: 002-provider-credential-gating
 unit: 004-replicate-execution-reliability
 intent: 009-bfashion-generation-bridge
-status: draft
+status: complete
 priority: must
-created: 2026-09-18T10:47:00Z
+created: 2026-09-18T10:47:00.000Z
 assigned_bolt: 052-replicate-execution-reliability
-implemented: false
+implemented: true
 ---
 
 # Story: 002-provider-credential-gating

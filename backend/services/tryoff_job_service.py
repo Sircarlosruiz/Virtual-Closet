@@ -42,6 +42,9 @@ class TryoffJobService:
         mayorista_id: uuid.UUID,
         source_image_id: uuid.UUID,
         garment_type: str,
+        *,
+        commit: bool = True,
+        publish: bool = True,
     ) -> TryoffJob:
         """Submit a new TryOff extraction job.
 
@@ -69,16 +72,24 @@ class TryoffJobService:
             retry_count=0,
             max_retries=max_retries,
         )
-        job = await self._tryoff_job_repo.create(job)
+        if commit:
+            job = await self._tryoff_job_repo.create(job)
+        else:
+            job = await self._tryoff_job_repo.add(job)
 
-        # Publish Celery task
-        celery_app.send_task(
-            "tasks.tryoff_task.process_tryoff_job",
-            args=[str(job.id)],
-            queue="tryoff",
-        )
+        if publish:
+            self.publish_job(job.id)
 
         return job
+
+    @staticmethod
+    def publish_job(job_id: uuid.UUID) -> None:
+        """Publish a persisted TryOff job after its transaction commits."""
+        celery_app.send_task(
+            "tasks.tryoff_task.process_tryoff_job",
+            args=[str(job_id)],
+            queue="tryoff",
+        )
 
     async def submit_batch(
         self,

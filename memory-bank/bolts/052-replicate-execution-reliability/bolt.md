@@ -3,23 +3,37 @@ id: 052-replicate-execution-reliability
 unit: 004-replicate-execution-reliability
 intent: 009-bfashion-generation-bridge
 type: ddd-construction-bolt
-status: planned
+status: complete
 stories:
   - 001-replicate-provider-wiring
   - 002-provider-credential-gating
   - 003-global-concurrency-cap
   - 004-provider-timeout-policy
-created: 2026-09-18T11:10:00Z
-started: null
-completed: null
+created: 2026-09-18T11:10:00.000Z
+started: 2026-09-19T01:35:10.000Z
+completed: "2026-09-19T15:49:26Z"
 current_stage: null
-stages_completed: []
-
+stages_completed:
+  - name: model
+    completed: 2026-09-19T01:37:20.000Z
+    artifact: ddd-01-domain-model.md
+  - name: design
+    completed: 2026-09-19T01:40:55.000Z
+    artifact: ddd-02-technical-design.md
+  - name: adr-analysis
+    completed: 2026-09-19T01:47:09.000Z
+    artifact: adr-065-redis-global-concurrency-reschedule.md
+  - name: implement
+    completed: 2026-09-19T15:23:42.000Z
+    artifact: tasks/image_generation.py
+  - name: test
+    completed: 2026-09-19T15:50:00.000Z
+    artifact: ddd-03-test-report.md
 requires_bolts: []
-enables_bolts: [053-photoshoot-orchestration]
+enables_bolts:
+  - 053-photoshoot-orchestration
 requires_units: []
 blocks: false
-
 complexity:
   avg_complexity: 2
   avg_uncertainty: 2
@@ -53,10 +67,10 @@ Que un `GenerationJob` de Replicate complete de principio a fin sin `OPENAI_API_
 
 ## Stages
 
-- [ ] **1. model**: Pending → `ddd-01-domain-model.md`
-- [ ] **2. design**: Pending → `ddd-02-technical-design.md`
-- [ ] **3. implement**: Pending → cambios en `backend/tasks/image_generation.py`, `backend/services`, `backend/core/config.py`
-- [ ] **4. test**: Pending → `ddd-03-test-report.md`
+- [x] **1. model**: Complete → `ddd-01-domain-model.md`
+- [x] **2. design**: Complete → `ddd-02-technical-design.md`
+- [x] **3. implement**: Complete → cambios en `backend/tasks/image_generation.py`, `backend/services`, `backend/core/config.py`
+- [x] **4. test**: Complete → `ddd-03-test-report.md`
 
 ## Dependencies
 
@@ -68,13 +82,13 @@ Que un `GenerationJob` de Replicate complete de principio a fin sin `OPENAI_API_
 
 ## Success Criteria
 
-- [ ] `_get_provider` resuelve Replicate sin escribir un cliente HTTP nuevo
-- [ ] Con `OPENAI_API_KEY` vacío y `REPLICATE_API_KEY` presente, un job de Replicate completa
-- [ ] Tope global configurable de llamadas simultáneas; el excedente encola, no falla
-- [ ] Timeout por proveedor configurable, ≥ 900 s de partida para Replicate
-- [ ] Regresión de los jobs `text` del intent 008 pasa sin cambios de comportamiento
-- [ ] Todos los criterios de aceptación de las 4 historias cubiertos por pruebas
-- [ ] Código revisado
+- [x] `_get_provider` resuelve Replicate sin escribir un cliente HTTP nuevo
+- [x] Con `OPENAI_API_KEY` vacío y `REPLICATE_API_KEY` presente, un job de Replicate completa
+- [x] Tope global configurable de llamadas simultáneas; el excedente encola, no falla
+- [x] Timeout por proveedor configurable, ≥ 900 s de partida para Replicate
+- [x] Regresión de los jobs `text` del intent 008 pasa sin cambios de comportamiento
+- [x] Todos los criterios de aceptación de las 4 historias cubiertos por pruebas
+- [x] Código revisado
 
 ## Notes
 

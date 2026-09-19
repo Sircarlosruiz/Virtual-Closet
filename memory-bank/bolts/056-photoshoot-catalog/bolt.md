@@ -3,21 +3,36 @@ id: 056-photoshoot-catalog
 unit: 005-photoshoot-catalog
 intent: 009-bfashion-generation-bridge
 type: ddd-construction-bolt
-status: planned
+status: complete
 stories:
   - 001-photoshoot-options-catalog
   - 002-catalog-isolation-and-freshness
-created: 2026-09-18T11:55:00Z
-started: null
-completed: null
+created: 2026-09-18T11:55:00.000Z
+started: 2026-09-19T01:35:20.000Z
+completed: "2026-09-19T01:55:24Z"
 current_stage: null
-stages_completed: []
-
-requires_bolts: [050-bridge-provisioning]
+stages_completed:
+  - name: model
+    completed: 2026-09-19T01:36:51.000Z
+    artifact: ddd-01-domain-model.md
+  - name: design
+    completed: 2026-09-19T01:41:17.000Z
+    artifact: ddd-02-technical-design.md
+  - name: adr-analysis
+    completed: 2026-09-19T01:45:00.000Z
+    artifact: adr-063-catalog-version-content-hash.md, adr-064-weak-etag-deferred-presign.md
+  - name: implement
+    completed: 2026-09-19T01:50:00.000Z
+    artifact: backend/services/photoshoot_catalog_service.py
+  - name: test
+    completed: 2026-09-19T01:55:24Z
+    artifact: ddd-03-test-report.md
+requires_bolts:
+  - 050-bridge-provisioning
 enables_bolts: []
-requires_units: [001-bridge-provisioning]
+requires_units:
+  - 001-bridge-provisioning
 blocks: true
-
 complexity:
   avg_complexity: 1
   avg_uncertainty: 1
@@ -49,10 +64,11 @@ Que `GET /api/integration/v1/products/{external_product_id}/photoshoot-options` 
 
 ## Stages
 
-- [ ] **1. model**: Pending → `ddd-01-domain-model.md` (confirmar explícitamente que no hace falta modelo de datos nuevo ni revisión Alembic)
-- [ ] **2. design**: Pending → `ddd-02-technical-design.md`
-- [ ] **3. implement**: Pending → nuevo router/servicio de agregación de catálogo, sin nuevas tablas
-- [ ] **4. test**: Pending → `ddd-03-test-report.md`
+- [x] **1. model**: Complete → `ddd-01-domain-model.md` (sin modelo de datos nuevo ni Alembic)
+- [x] **2. design**: Complete → `ddd-02-technical-design.md`
+- [x] **3. adr-analysis**: Complete → ADR-063, ADR-064
+- [x] **4. implement**: Complete → `backend/services/photoshoot_catalog_service.py`
+- [x] **5. test**: Complete → `ddd-03-test-report.md`
 
 ## Dependencies
 

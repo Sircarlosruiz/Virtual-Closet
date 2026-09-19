@@ -69,11 +69,39 @@ class TestTryoffJobService:
             assert job.status == "pending"
             assert job.garment_type == "upper"
             mock_tryoff_repo.create.assert_called_once()
+            mock_tryoff_repo.add.assert_not_called()
             mock_celery.send_task.assert_called_once_with(
                 "tasks.tryoff_task.process_tryoff_job",
                 args=[str(job.id)],
                 queue="tryoff",
             )
+
+    @pytest.mark.asyncio
+    async def test_should_persist_without_commit_or_publish_when_sharing_txn(
+        self, service, mock_tryoff_repo, mock_source_image_repo
+    ):
+        mayorista_id = uuid.uuid4()
+        source_image_id = uuid.uuid4()
+        mock_source_image_repo.get_by_id = AsyncMock(return_value=MagicMock())
+        persisted = MagicMock()
+        persisted.id = uuid.uuid4()
+        persisted.status = "pending"
+        persisted.garment_type = "upper"
+        mock_tryoff_repo.add = AsyncMock(return_value=persisted)
+
+        with patch("services.tryoff_job_service.celery_app") as mock_celery:
+            job = await service.submit_job(
+                mayorista_id,
+                source_image_id,
+                "upper",
+                commit=False,
+                publish=False,
+            )
+
+        assert job is persisted
+        mock_tryoff_repo.add.assert_called_once()
+        mock_tryoff_repo.create.assert_not_called()
+        mock_celery.send_task.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_should_submit_batch_jobs(

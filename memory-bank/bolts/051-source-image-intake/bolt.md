@@ -3,22 +3,38 @@ id: 051-source-image-intake
 unit: 002-source-image-intake
 intent: 009-bfashion-generation-bridge
 type: ddd-construction-bolt
-status: planned
+status: complete
 stories:
   - 001-source-image-presign
   - 002-source-image-confirm
   - 003-source-image-rejection
-created: 2026-09-18T11:05:00Z
-started: null
-completed: null
+created: 2026-09-18T11:05:00.000Z
+started: 2026-09-19T01:35:00.000Z
+completed: "2026-09-19T02:03:37Z"
 current_stage: null
-stages_completed: []
-
-requires_bolts: [050-bridge-provisioning]
-enables_bolts: [053-photoshoot-orchestration]
-requires_units: [001-bridge-provisioning]
-blocks: true
-
+stages_completed:
+  - name: model
+    completed: 2026-09-19T01:42:00.000Z
+    artifact: ddd-01-domain-model.md
+  - name: design
+    completed: 2026-09-19T01:45:00.000Z
+    artifact: ddd-02-technical-design.md
+  - name: adr-analysis
+    completed: 2026-09-19T01:50:00.000Z
+    artifact: adr-061-scoped-source-image-forbidden.md, adr-062-atomic-confirm-shared-session.md
+  - name: implement
+    completed: 2026-09-19T01:55:00.000Z
+    artifact: backend/models/bridge_source_image.py
+  - name: test
+    completed: 2026-09-19T02:15:00Z
+    artifact: ddd-03-test-report.md
+requires_bolts:
+  - 050-bridge-provisioning
+enables_bolts:
+  - 053-photoshoot-orchestration
+requires_units:
+  - 001-bridge-provisioning
+blocks: false
 complexity:
   avg_complexity: 2
   avg_uncertainty: 2
@@ -49,10 +65,11 @@ Que un archivo subido directamente por el navegador del staff a MinIO/S3 quede r
 
 ## Stages
 
-- [ ] **1. model**: Pending → `ddd-01-domain-model.md`
-- [ ] **2. design**: Pending → `ddd-02-technical-design.md`
-- [ ] **3. implement**: Pending → código en `backend/models`, `backend/repositories`, `backend/services`, `backend/api`
-- [ ] **4. test**: Pending → `ddd-03-test-report.md`
+- [x] **1. model**: Complete → `ddd-01-domain-model.md`
+- [x] **2. design**: Complete → `ddd-02-technical-design.md`
+- [x] **3. adr-analysis**: Complete → ADR-061, ADR-062
+- [x] **4. implement**: Complete → `backend/models/bridge_source_image.py`
+- [x] **5. test**: Complete → `ddd-03-test-report.md`
 
 ## Dependencies
 
@@ -64,14 +81,14 @@ Que un archivo subido directamente por el navegador del staff a MinIO/S3 quede r
 
 ## Success Criteria
 
-- [ ] `POST .../source-images:presign` firma un `PUT` de vida corta acotado a una clave, sin credenciales de almacenamiento en la respuesta
-- [ ] `POST .../source-images/{id}:confirm` verifica el objeto real (existencia, tipo, tamaño) antes de registrar la media
-- [ ] El registro delega en `tryoff_source_image_service` (`garment_on_model`) o `media_service` (`flat_garment`), sin un cuarto almacén paralelo
-- [ ] Discrepancias declarado/real dejan la imagen en `rejected`, nunca en `ready`
-- [ ] Vínculo ajeno, tenant ajeno o staff revocado: fail-closed en ambos endpoints
-- [ ] Nuevo modelo `BridgeSourceImage` con revisión Alembic aplicada
-- [ ] Todos los criterios de aceptación de las 3 historias cubiertos por pruebas
-- [ ] Código revisado
+- [x] `POST .../source-images:presign` firma un `PUT` de vida corta acotado a una clave, sin credenciales de almacenamiento en la respuesta
+- [x] `POST .../source-images/{id}:confirm` verifica el objeto real (existencia, tipo, tamaño) antes de registrar la media
+- [x] El registro delega en `tryoff_source_image_service` (`garment_on_model`) o `media_service` (`flat_garment`), sin un cuarto almacén paralelo
+- [x] Discrepancias declarado/real dejan la imagen en `rejected`, nunca en `ready`
+- [x] Vínculo ajeno, tenant ajeno o staff revocado: fail-closed en ambos endpoints
+- [x] Nuevo modelo `BridgeSourceImage` con revisión Alembic aplicada
+- [x] Todos los criterios de aceptación de las 3 historias cubiertos por pruebas
+- [x] Código revisado
 
 ## Notes
 

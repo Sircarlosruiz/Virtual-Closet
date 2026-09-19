@@ -63,6 +63,24 @@ class TryoffSourceImageService:
         )
         return source_image, presigned_url
 
+    async def register_existing(
+        self,
+        mayorista_id: uuid.UUID,
+        minio_key: str,
+        filename: str,
+        content_type: str,
+        size_bytes: int,
+    ) -> SourceImage:
+        """Attach an already-uploaded originals object. Does not commit."""
+        source_image = SourceImage(
+            mayorista_id=mayorista_id,
+            minio_key=minio_key,
+            filename=filename,
+            content_type=content_type,
+            size_bytes=size_bytes,
+        )
+        return await self._source_image_repo.add(source_image)
+
 
 __all__ = [
     "TryoffSourceImageService",

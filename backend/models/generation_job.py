@@ -40,6 +40,10 @@ class GenerationJob(Base):
     usage_status = Column(String(20), nullable=False, server_default="unknown")
     usage_model = Column(String(80), nullable=True)
     usage_call_count = Column(Integer, nullable=True)
+    concurrency_wait_started_at = Column(DateTime(timezone=True), nullable=True)
+    provider_call_started_at = Column(DateTime(timezone=True), nullable=True)
+    queue_wait_seconds = Column(Integer, nullable=True)
+    execution_seconds = Column(Integer, nullable=True)
 
     owner = relationship("Mayorista")
     invocations = relationship(

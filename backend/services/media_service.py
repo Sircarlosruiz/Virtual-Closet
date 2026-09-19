@@ -111,6 +111,26 @@ class MediaUploadService:
 
         return garment_photo, presigned_url
 
+    async def register_existing_garment(
+        self,
+        mayorista_id: uuid.UUID,
+        tenant_id: uuid.UUID,
+        minio_key: str,
+        filename: str,
+        content_type: str,
+        size_bytes: int,
+    ) -> GarmentPhoto:
+        """Attach an already-uploaded originals object. Does not commit."""
+        garment_photo = GarmentPhoto(
+            mayorista_id=mayorista_id,
+            tenant_id=tenant_id,
+            minio_key=minio_key,
+            filename=filename,
+            content_type=content_type,
+            size_bytes=size_bytes,
+        )
+        return await self._garment_repo.add(garment_photo)
+
     async def upload_model_photo(
         self,
         mayorista_id: uuid.UUID,

@@ -8,7 +8,6 @@ from core.config import settings
 
 _OPENAI_BASE_URL = "https://api.openai.com/v1"
 _OPENAI_IMAGE_MODEL = "gpt-image-1"
-_REQUEST_TIMEOUT_SECONDS = 60.0
 
 
 @dataclass(frozen=True)
@@ -80,7 +79,8 @@ class OpenAIImageProvider:
             raise ProviderRequestError("A non-empty prompt is required for text generation")
 
         try:
-            async with httpx.AsyncClient(timeout=_REQUEST_TIMEOUT_SECONDS) as client:
+            timeout = float(settings.IMAGE_GENERATION_OPENAI_TIMEOUT_SECONDS)
+            async with httpx.AsyncClient(timeout=timeout) as client:
                 response = await client.post(
                     f"{_OPENAI_BASE_URL}/images/generations",
                     headers={"Authorization": f"Bearer {self._api_key}"},

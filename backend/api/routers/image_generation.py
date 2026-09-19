@@ -64,6 +64,8 @@ def _detail_response(job, invocations, preview_url: str | None = None) -> ImageG
             status=job.usage_status, model=job.usage_model, call_count=job.usage_call_count
         ),
         preview_url=preview_url,
+        queue_wait_seconds=job.queue_wait_seconds,
+        execution_seconds=job.execution_seconds,
     )
 
 

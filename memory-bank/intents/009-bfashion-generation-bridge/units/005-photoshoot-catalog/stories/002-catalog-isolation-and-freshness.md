@@ -2,11 +2,11 @@
 id: 002-catalog-isolation-and-freshness
 unit: 005-photoshoot-catalog
 intent: 009-bfashion-generation-bridge
-status: draft
+status: complete
 priority: must
-created: 2026-09-18T11:52:00Z
+created: 2026-09-18T11:52:00.000Z
 assigned_bolt: 056-photoshoot-catalog
-implemented: false
+implemented: true
 ---
 
 # Story: 002-catalog-isolation-and-freshness

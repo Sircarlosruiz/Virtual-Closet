@@ -2,11 +2,11 @@
 id: 003-global-concurrency-cap
 unit: 004-replicate-execution-reliability
 intent: 009-bfashion-generation-bridge
-status: draft
+status: complete
 priority: must
-created: 2026-09-18T10:49:00Z
+created: 2026-09-18T10:49:00.000Z
 assigned_bolt: 052-replicate-execution-reliability
-implemented: false
+implemented: true
 ---
 
 # Story: 003-global-concurrency-cap

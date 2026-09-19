@@ -12,8 +12,14 @@ class SourceImageRepo:
     def __init__(self, db: AsyncSession) -> None:
         self._db = db
 
-    async def create(self, source_image: SourceImage) -> SourceImage:
+    async def add(self, source_image: SourceImage) -> SourceImage:
+        """Persist without committing so callers can share a transaction."""
         self._db.add(source_image)
+        await self._db.flush()
+        return source_image
+
+    async def create(self, source_image: SourceImage) -> SourceImage:
+        source_image = await self.add(source_image)
         await self._db.commit()
         await self._db.refresh(source_image)
         return source_image
@@ -73,8 +79,14 @@ class TryoffJobRepo:
     def __init__(self, db: AsyncSession) -> None:
         self._db = db
 
-    async def create(self, job: TryoffJob) -> TryoffJob:
+    async def add(self, job: TryoffJob) -> TryoffJob:
+        """Persist without committing so callers can share a transaction."""
         self._db.add(job)
+        await self._db.flush()
+        return job
+
+    async def create(self, job: TryoffJob) -> TryoffJob:
+        job = await self.add(job)
         await self._db.commit()
         await self._db.refresh(job)
         return job

@@ -8,17 +8,28 @@ link before doing any work.
 
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, Depends, Header, HTTPException, Path, Query, status
+from fastapi.responses import JSONResponse, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.schemas.integration import (
+    PhotoshootCatalogModel,
+    PhotoshootCatalogTemplate,
+    PhotoshootClothTypeOption,
+    PhotoshootCreateRequest,
+    PhotoshootCreateResponse,
+    PhotoshootOptionsResponse,
+    PhotoshootStageResponse,
     ProductGenerationBridgeRequest,
     ProductGenerationBridgeResponse,
     ProductGenerationBridgeStatusResponse,
     ProductLinkCreateRequest,
     ProductLinkCreateResponse,
     ProductPublicationBridgeRequest,
+    SourceImageConfirmRequest,
+    SourceImageConfirmResponse,
+    SourceImagePresignRequest,
+    SourceImagePresignResponse,
     StaffIdentityProvisionRequest,
     StaffIdentityProvisionResponse,
     StaffIdentityRevokeResponse,
@@ -36,13 +47,28 @@ from api.routers.publication import (
 from core.celery_app import app as celery_app
 from core.database import get_db
 from core.dependencies import get_service_client
+from core.minio_client import MinIOClient
 from models.service_client import ServiceClient
 from repositories.generation_job_repo import GenerationJobRepository
+from repositories.image_template_repo import ImageTemplateRepository
 from repositories.mayorista_repo import MayoristaRepository
+from repositories.media_repo import ModelPhotoRepo
+from repositories.model_repo import ModelRepo
 from repositories.prenda_repo import PrendaRepository
 from repositories.product_link_repo import ProductLinkRepository
 from repositories.staff_identity_link_repo import StaffIdentityLinkRepository
 from services.idempotency_service import IdempotencyConflictError
+from services.photoshoot_catalog_service import (
+    PhotoshootCatalogError,
+    PhotoshootCatalogNotVisibleError,
+    PhotoshootCatalogService,
+    PhotoshootOptionsCatalog,
+)
+from services.photoshoot_errors import PhotoshootError
+from services.photoshoot_submission_service import (
+    PhotoshootSubmissionService,
+    build_submission_service,
+)
 from services.image_generation_service import ImageGenerationService
 from services.integration_service import (
     BridgeGenerationJobNotFoundError,
@@ -58,6 +84,18 @@ from services.product_link_service import (
     ProductLinkNotFoundError,
     ProductLinkPrendaForbiddenError,
     ProductLinkService,
+)
+from services.source_image_intake_service import (
+    SourceImageConfirmResult,
+    SourceImageForbiddenError,
+    SourceImageIntakeError,
+    SourceImageNotUploadedError,
+    SourceImagePresignResult,
+    SourceImageProductNotFoundError,
+    SourceImageRejectedError,
+    SourceImageValidationError,
+    StorageUnavailableError,
+    build_intake_service,
 )
 from services.staff_identity_service import (
     MirrorEmailConflictError,
@@ -99,6 +137,10 @@ def _staff_identity_service(
     )
 
 
+def _source_image_intake_service(db: AsyncSession = Depends(get_db)):
+    return build_intake_service(db)
+
+
 def _product_link_write_service(
     db: AsyncSession = Depends(get_db),
 ) -> ProductLinkService:
@@ -112,6 +154,86 @@ def _product_link_write_service(
         db=db,
         staff_identities=staff_identities,
         prendas=PrendaRepository(db),
+    )
+
+
+def _photoshoot_submission_service(
+    db: AsyncSession = Depends(get_db),
+) -> PhotoshootSubmissionService:
+    return build_submission_service(db)
+
+
+def _photoshoot_catalog_service(
+    db: AsyncSession = Depends(get_db),
+) -> PhotoshootCatalogService:
+    return PhotoshootCatalogService(
+        product_links=ProductLinkService(ProductLinkRepository(db)),
+        templates=ImageTemplateRepository(db),
+        models=ModelRepo(db),
+        photos=ModelPhotoRepo(db),
+        minio=MinIOClient(),
+    )
+
+
+def _if_none_match_tokens(header: str | None) -> set[str]:
+    if not header:
+        return set()
+    tokens: set[str] = set()
+    for raw in header.split(","):
+        token = raw.strip()
+        if not token or token == "*":
+            continue
+        if token.startswith("W/"):
+            token = token[2:].strip()
+        tokens.add(token.strip('"'))
+    return tokens
+
+
+def _weak_etag(catalog_version: str) -> str:
+    return f'W/"{catalog_version}"'
+
+
+def _catalog_cache_headers(catalog_version: str) -> dict[str, str]:
+    return {
+        "ETag": _weak_etag(catalog_version),
+        "Cache-Control": "private, no-cache",
+    }
+
+
+def _catalog_response(catalog: PhotoshootOptionsCatalog) -> PhotoshootOptionsResponse:
+    return PhotoshootOptionsResponse(
+        templates=[
+            PhotoshootCatalogTemplate(
+                id=row.id,
+                name=row.name,
+                scope=row.scope,  # type: ignore[arg-type]
+                wholesaler_scope=row.wholesaler_scope,
+                version=row.version,
+                model=row.model,
+                background=row.background,
+                colors=row.colors,
+                rack=row.rack,
+                updated_at=row.updated_at,
+            )
+            for row in catalog.templates
+        ],
+        models=[
+            PhotoshootCatalogModel(
+                id=row.id,
+                name=row.name,
+                available_poses=list(row.available_poses),  # type: ignore[arg-type]
+                preview_url=row.preview_url,
+            )
+            for row in catalog.models
+        ],
+        cloth_types=[
+            PhotoshootClothTypeOption(value=item.value, label=item.label)
+            for item in catalog.cloth_types
+        ],
+        background_suggestions=list(catalog.background_suggestions),
+        color_suggestions=list(catalog.color_suggestions),
+        max_pose_count=catalog.max_pose_count,
+        catalog_version=catalog.catalog_version,
     )
 
 
@@ -230,6 +352,173 @@ async def revoke_staff_identity(
         staff_id=result.mayorista.id,
         external_staff_id=result.link.external_staff_id,
         is_active=result.link.is_active,
+    )
+
+
+@router.get(
+    "/products/{external_product_id}/photoshoot-options",
+    response_model=PhotoshootOptionsResponse,
+)
+async def get_photoshoot_options(
+    external_product_id: str = Path(min_length=1, max_length=255),
+    external_wholesaler_id: str | None = Query(None, max_length=255),
+    if_none_match: str | None = Header(None, alias="If-None-Match"),
+    service_client: ServiceClient = Depends(get_service_client),
+    service: PhotoshootCatalogService = Depends(_photoshoot_catalog_service),
+) -> Response:
+    try:
+        catalog = await service.get_photoshoot_options(
+            client=service_client,
+            external_product_id=external_product_id,
+            external_wholesaler_id=external_wholesaler_id,
+        )
+    except (PhotoshootCatalogNotVisibleError, PhotoshootCatalogError) as exc:
+        raise _domain_http_error(exc) from exc
+
+    headers = _catalog_cache_headers(catalog.catalog_version)
+    if catalog.catalog_version in _if_none_match_tokens(if_none_match):
+        return Response(status_code=status.HTTP_304_NOT_MODIFIED, headers=headers)
+
+    signed = await service.with_preview_urls(catalog)
+    payload = _catalog_response(signed)
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content=payload.model_dump(mode="json"),
+        headers=headers,
+    )
+
+
+@router.post(
+    "/products/{external_product_id}/photoshoots",
+    response_model=PhotoshootCreateResponse,
+    status_code=status.HTTP_202_ACCEPTED,
+)
+async def create_photoshoot(
+    external_product_id: str,
+    body: PhotoshootCreateRequest,
+    idempotency_key: str | None = Header(None, alias="Idempotency-Key"),
+    service_client: ServiceClient = Depends(get_service_client),
+    service: PhotoshootSubmissionService = Depends(_photoshoot_submission_service),
+) -> PhotoshootCreateResponse:
+    try:
+        result = await service.submit(
+            client=service_client,
+            external_product_id=external_product_id,
+            staff_id=body.staff_id,
+            source_image_id=body.source_image_id,
+            input_kind=body.input_kind,
+            model_ids=body.model_ids,
+            cloth_type=body.cloth_type,
+            pose_ids=list(body.pose_ids) if body.pose_ids is not None else None,
+            pose_count=body.pose_count,
+            template_id=body.template_id,
+            background=body.background,
+            colors=body.colors,
+            overlay=body.overlay.model_dump() if body.overlay else None,
+            variant_key=body.variant_key,
+            external_wholesaler_id=body.external_wholesaler_id,
+            idempotency_key=idempotency_key,
+        )
+    except (StaffIdentityError, PhotoshootError) as exc:
+        raise _domain_http_error(exc) from exc
+
+    return PhotoshootCreateResponse(
+        photoshoot_id=result.photoshoot.id,
+        external_product_id=result.external_product_id,
+        status=result.photoshoot.status,
+        expected_results=result.photoshoot.expected_results,
+        stages=[
+            PhotoshootStageResponse(name=stage.name, status=stage.status)
+            for stage in result.stages
+        ],
+        created_at=result.photoshoot.created_at,
+    )
+
+
+@router.post(
+    "/products/{external_product_id}/source-images:presign",
+    response_model=SourceImagePresignResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def presign_source_image(
+    external_product_id: str,
+    body: SourceImagePresignRequest,
+    service_client: ServiceClient = Depends(get_service_client),
+    service=Depends(_source_image_intake_service),
+) -> SourceImagePresignResponse:
+    try:
+        result: SourceImagePresignResult = await service.presign(
+            client=service_client,
+            external_product_id=external_product_id,
+            staff_id=body.staff_id,
+            kind=body.kind,
+            content_type=body.content_type,
+            size_bytes=body.size_bytes,
+            filename=body.filename,
+            external_wholesaler_id=body.external_wholesaler_id,
+        )
+    except (
+        StaffForbiddenError,
+        SourceImageProductNotFoundError,
+        SourceImageValidationError,
+        StorageUnavailableError,
+        SourceImageIntakeError,
+        StaffIdentityError,
+    ) as exc:
+        raise _domain_http_error(exc) from exc
+
+    return SourceImagePresignResponse(
+        source_image_id=result.reservation.id,
+        upload_url=result.upload_url,
+        method="PUT",
+        headers={"Content-Type": result.reservation.declared_content_type},
+        expires_in=result.expires_in,
+        storage_key=result.reservation.storage_key,
+    )
+
+
+@router.post(
+    "/products/{external_product_id}/source-images/{source_image_id}:confirm",
+    response_model=SourceImageConfirmResponse,
+)
+async def confirm_source_image(
+    external_product_id: str,
+    source_image_id: UUID,
+    body: SourceImageConfirmRequest,
+    service_client: ServiceClient = Depends(get_service_client),
+    service=Depends(_source_image_intake_service),
+) -> SourceImageConfirmResponse:
+    try:
+        result: SourceImageConfirmResult = await service.confirm(
+            client=service_client,
+            external_product_id=external_product_id,
+            source_image_id=source_image_id,
+            staff_id=body.staff_id,
+            checksum_sha256=body.checksum_sha256,
+            external_wholesaler_id=body.external_wholesaler_id,
+        )
+    except (
+        StaffForbiddenError,
+        SourceImageProductNotFoundError,
+        SourceImageForbiddenError,
+        SourceImageNotUploadedError,
+        SourceImageRejectedError,
+        StorageUnavailableError,
+        SourceImageIntakeError,
+        StaffIdentityError,
+    ) as exc:
+        raise _domain_http_error(exc) from exc
+
+    reservation = result.reservation
+    return SourceImageConfirmResponse(
+        source_image_id=reservation.id,
+        kind=reservation.kind,  # type: ignore[arg-type]
+        status="ready",
+        content_type=reservation.actual_content_type
+        or reservation.declared_content_type,
+        size_bytes=reservation.actual_size_bytes
+        or reservation.declared_size_bytes,
+        preview_url=result.preview_url,
     )
 
 

@@ -106,7 +106,7 @@ class BatchSubmissionService:
         # Enqueue VtonJobs for each item (within same transaction)
         for batch_item in batch_items:
             try:
-                vton_job = await self._vton_service.submit_job(
+                submitted = await self._vton_service.submit_job(
                     mayorista_id=mayorista_id,
                     garment_photo_id=batch_item.garment_id,
                     model_photo_id=batch_item.model_id,
@@ -116,6 +116,7 @@ class BatchSubmissionService:
                     commit=False,
                     publish=False,
                 )
+                vton_job = submitted[0] if isinstance(submitted, tuple) else submitted
                 batch_item.vton_job_id = vton_job.id
                 batch_item.status = "processing"
                 self._pending_job_ids.append(vton_job.id)

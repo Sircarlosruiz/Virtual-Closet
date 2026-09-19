@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-09-19T00:40:02Z
-total_decisions: 60
+last_updated: 2026-09-19T15:58:00Z
+total_decisions: 70
 ---
 
 # Decision Index
@@ -19,6 +19,86 @@ Use this to find relevant prior decisions when working on related features.
 ## Decisions
 
 <!-- Entries are appended below in reverse chronological order (newest first) -->
+
+### ADR-070: Materialized Results Own a Copy Under `generated/photoshoots/...`
+- **Status**: proposed
+- **Date**: 2026-09-19
+- **Bolt**: 053-photoshoot-orchestration (003-photoshoot-orchestration)
+- **Path**: `bolts/053-photoshoot-orchestration/adr-070-photoshoot-owned-result-key.md`
+- **Summary**: Publication candidates must not die if batch/media keys are deleted. Materialize copies the image to `generated/photoshoots/{photoshoot_id}/{model_id}/{pose_id}` and only then completes the GenerationJob.
+- **Read when**: Materializing photoshoot results, choosing GenerationJob.result_key, retrying persist without re-calling the provider, or wiring publication candidates to object storage
+
+### ADR-069: Contract-C `pose_ids` Are Pose Types, Resolved to ModelPhoto IDs Server-Side
+- **Status**: proposed
+- **Date**: 2026-09-19
+- **Bolt**: 053-photoshoot-orchestration (003-photoshoot-orchestration)
+- **Path**: `bolts/053-photoshoot-orchestration/adr-069-contract-c-pose-types.md`
+- **Summary**: The photoshoot-options catalog exposes front/side/back, not ModelPhoto ids. Contract C `pose_ids` are those pose types; the server resolves each model to ModelPhoto.id before persist and before PoseSet submit.
+- **Read when**: Implementing photoshoot submit validation, writing BFashion form payloads, mapping catalog poses to PoseSet, or changing pose_ids on Contract C
+
+### ADR-068: Photoshoot Orchestration Uses Tick + Celery Reschedule
+- **Status**: proposed
+- **Date**: 2026-09-19
+- **Bolt**: 053-photoshoot-orchestration (003-photoshoot-orchestration)
+- **Path**: `bolts/053-photoshoot-orchestration/adr-068-photoshoot-tick-reschedule.md`
+- **Summary**: Tryoff and PoseSet take minutes; blocking a worker fights time_limit. Drive the pipeline with photoshoot_tick_task(photoshoot_id) on queue photoshoot and countdown reschedule, observing children in Postgres.
+- **Read when**: Implementing photoshoot Celery tasks, waiting on delegated tryoff/batch jobs, sizing photoshoot worker time_limit, or adding retries in bolt 054
+
+### ADR-067: Photoshoot VTON Stage Is a Validation Gate, Not a Billable Inference
+- **Status**: proposed
+- **Date**: 2026-09-19
+- **Bolt**: 053-photoshoot-orchestration (003-photoshoot-orchestration)
+- **Path**: `bolts/053-photoshoot-orchestration/adr-067-vton-stage-is-a-gate.md`
+- **Summary**: PoseSet already expands to N VtonJobs per model. The vton stage validates pairings through VTONJobService and must not enqueue generate. PoseSet is the only photoshoot path that starts VTON inference.
+- **Read when**: Implementing photoshoot stage vton, calling VTONJobService from the bridge, counting Replicate calls per photoshoot, or reviewing why the vton row completes without a result image
+
+### ADR-066: Release the Per-Job Lease While Waiting for a Global Slot
+- **Status**: proposed
+- **Date**: 2026-09-19
+- **Bolt**: 052-replicate-execution-reliability (004-replicate-execution-reliability)
+- **Path**: `bolts/052-replicate-execution-reliability/adr-066-release-lease-while-slot-waiting.md`
+- **Summary**: Holding ADR-050's lease across a minutes-long slot wait would orphan the job on worker restart. The lease is acquired each attempt and released before a slot-wait reschedule; it is held only while a slot is held or a provider call is in flight.
+- **Read when**: Implementing generate_image_task ordering, combining ConcurrencyGuardService with a global cap, or diagnosing stuck jobs after a worker restart during concurrency wait
+
+### ADR-065: Redis Semaphore + Celery Reschedule for the Global Provider Cap
+- **Status**: proposed
+- **Date**: 2026-09-19
+- **Bolt**: 052-replicate-execution-reliability (004-replicate-execution-reliability)
+- **Path**: `bolts/052-replicate-execution-reliability/adr-065-redis-global-concurrency-reschedule.md`
+- **Summary**: NFR-2 needs a deployment-wide cap; prefetch is per-worker and in-task BLPOP fights Celery time_limit. Use a Redis SET semaphore with non-blocking acquire and Celery countdown reschedule; fail closed if Redis is down; keep the per-job lease in Postgres (ADR-050).
+- **Read when**: Limiting simultaneous provider/Replicate calls, adding Redis keys on the inference path, sizing Celery time_limit for image generation, or reviewing why the global cap is not worker prefetch
+
+### ADR-064: Weak ETag and Deferred Presign on 304
+- **Status**: proposed
+- **Date**: 2026-09-19
+- **Bolt**: 056-photoshoot-catalog (005-photoshoot-catalog)
+- **Path**: `bolts/056-photoshoot-catalog/adr-064-weak-etag-deferred-presign.md`
+- **Summary**: `preview_url` is regenerated on every 200, so the validator is a weak ETag of ADR-063's `catalog_version`. A matching `If-None-Match` returns 304 with no body and no MinIO signing.
+- **Read when**: Implementing photoshoot-options caching, adding ETag/304 to other contract-C GETs, or generating presigned preview URLs on a revalidatable response
+
+### ADR-063: CatalogVersion Is a Hash of the Visible Set
+- **Status**: proposed
+- **Date**: 2026-09-19
+- **Bolt**: 056-photoshoot-catalog (005-photoshoot-catalog)
+- **Path**: `bolts/056-photoshoot-catalog/adr-063-catalog-version-content-hash.md`
+- **Summary**: `catalog_version` is a SHA-256 of the already-filtered templates and model poses, not `max(updated_at)` and not a persisted counter. Archiving or adding a pose must change the token.
+- **Read when**: Implementing photoshoot-options freshness, choosing how to invalidate BFashion's catalog cache, or adding a version signal to other aggregated read models
+
+### ADR-062: Atomic Confirm Registers Media in the Request Session
+- **Status**: proposed
+- **Date**: 2026-09-19
+- **Bolt**: 051-source-image-intake (002-source-image-intake)
+- **Path**: `bolts/051-source-image-intake/adr-062-atomic-confirm-shared-session.md`
+- **Summary**: Confirm must produce exactly one delegated media row. A pending reservation is locked, media is inserted on the request AsyncSession (no nested commit), then status flips with a conditional UPDATE. Replay never registers again.
+- **Read when**: Implementing source-image confirm, calling tryoff/media services from the BFashion bridge, designing concurrent confirm/idempotent media registration, or reviewing transaction boundaries across aggregates
+
+### ADR-061: Scoped Source-Image Misses Return 403, Not 404
+- **Status**: proposed
+- **Date**: 2026-09-19
+- **Bolt**: 051-source-image-intake (002-source-image-intake)
+- **Path**: `bolts/051-source-image-intake/adr-061-scoped-source-image-forbidden.md`
+- **Summary**: After a ProductLink is resolved, a missing or foreign source_image_id returns the same 403 SOURCE_IMAGE_FORBIDDEN. ADR-040's 404 still applies to an unresolvable product, not to the reservation id.
+- **Read when**: Designing contract-C endpoints that take source_image_id, choosing 403 vs 404 for nested resources, or implementing photoshoot submit ownership checks
 
 ### ADR-060: ProductLink.mayorista_id Is the Staff Mirror
 - **Status**: proposed

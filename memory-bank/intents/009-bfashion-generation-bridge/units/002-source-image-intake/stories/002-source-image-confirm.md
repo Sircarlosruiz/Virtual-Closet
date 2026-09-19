@@ -2,11 +2,11 @@
 id: 002-source-image-confirm
 unit: 002-source-image-intake
 intent: 009-bfashion-generation-bridge
-status: draft
+status: complete
 priority: must
-created: 2026-09-18T10:22:00Z
+created: 2026-09-18T10:22:00.000Z
 assigned_bolt: 051-source-image-intake
-implemented: false
+implemented: true
 ---
 
 # Story: 002-source-image-confirm

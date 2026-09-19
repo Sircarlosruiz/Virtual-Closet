@@ -29,7 +29,7 @@ spec:
             - worker
             - --loglevel=info
             - -Q
-            - "vton.generation.normal,vton.generation.priority,tryoff"
+            - "vton.generation.normal,vton.generation.priority,tryoff,photoshoot"
           envFrom:
             - configMapRef:
                 name: virtual-closet-config

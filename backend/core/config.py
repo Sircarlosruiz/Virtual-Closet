@@ -1,3 +1,4 @@
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -38,6 +39,16 @@ class Settings(BaseSettings):
     MINIO_BUCKET_THUMBNAILS: str = "thumbnails"
     MINIO_BUCKET_MODEL_THUMBNAILS: str = "model-thumbnails"
 
+    # Bridge source-image intake (contract C)
+    BRIDGE_SOURCE_IMAGE_UPLOAD_TTL_SECONDS: int = 900
+    BRIDGE_SOURCE_IMAGE_PREVIEW_TTL_SECONDS: int = 300
+    BRIDGE_SOURCE_IMAGE_MAX_BYTES: int = 10 * 1024 * 1024
+
+    # Photoshoot orchestration (contract C)
+    PHOTOSHOOT_DEFAULT_POSE_COUNT: int = Field(default=3, ge=1, le=3)
+    PHOTOSHOOT_TICK_COUNTDOWN_SECONDS: int = Field(default=5, ge=1)
+    PHOTOSHOOT_MAX_TICKS: int = Field(default=360, ge=1)
+
     # VTON / IA
     VTON_PROVIDER: str = "replicate"
     VTON_MAX_RETRIES: int = 3
@@ -45,6 +56,12 @@ class Settings(BaseSettings):
     VTON_RETRY_MAX_DELAY_SECONDS: int = 600
     REPLICATE_API_KEY: str = ""
     OPENAI_API_KEY: str = ""
+    IMAGE_GENERATION_GLOBAL_CONCURRENCY: int = Field(default=2, ge=1)
+    IMAGE_GENERATION_OPENAI_TIMEOUT_SECONDS: int = Field(default=60, ge=1)
+    IMAGE_GENERATION_REPLICATE_TIMEOUT_SECONDS: int = Field(default=900, ge=1)
+    IMAGE_GENERATION_SLOT_RETRY_COUNTDOWN_SECONDS: int = Field(default=2, ge=1)
+    IMAGE_GENERATION_SLOT_WAIT_MAX_SECONDS: int = Field(default=21600, ge=1)
+    IMAGE_GENERATION_CELERY_TIME_LIMIT_BUFFER_SECONDS: int = Field(default=60, ge=1)
     LMSTUDIO_BASE_URL: str = "http://localhost:1234"
     LMSTUDIO_MODEL: str = ""
     LMSTUDIO_API_KEY: str = "lm-studio"

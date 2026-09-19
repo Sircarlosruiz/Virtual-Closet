@@ -144,7 +144,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    command: uv run celery -A core.celery_app worker --loglevel=info -Q vton.generation.normal,vton.generation.priority,tryoff
+    command: uv run celery -A core.celery_app worker --loglevel=info -Q vton.generation.normal,vton.generation.priority,tryoff,photoshoot
     env_file:
       - ./backend/.env
     volumes:

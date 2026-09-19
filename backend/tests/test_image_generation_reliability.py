@@ -17,8 +17,27 @@ from services.image_generation_providers import (
 )
 from services.retry_policy_service import RetryPolicyService
 from services.usage_accounting_service import UsageAccountingService
+from core.config import settings
 from tasks.image_generation import _process_job
 from tests.conftest import login_user, register_user
+
+
+class _AlwaysAvailableSlot:
+    async def try_acquire(self, job_id):
+        return True
+
+    async def release(self, job_id):
+        return None
+
+
+@pytest.fixture(autouse=True)
+def _image_generation_credentials(monkeypatch) -> None:
+    monkeypatch.setattr(settings, "OPENAI_API_KEY", "sk-test-openai")
+    monkeypatch.setattr(settings, "REPLICATE_API_KEY", "r8-test-replicate")
+    monkeypatch.setattr(
+        "tasks.image_generation._global_concurrency_service",
+        lambda: _AlwaysAvailableSlot(),
+    )
 
 
 async def _promote_to_staff(email: str = "test@mayorista.com") -> None:
@@ -232,9 +251,9 @@ async def test_worker_success_records_invocation_and_usage(client):
         mock_provider_cls.return_value.generate = AsyncMock(return_value=fake_result)
         mock_storage_cls.return_value.upload_bytes = AsyncMock()
 
-        retry_delay = await _process_job(job.id)
+        result = await _process_job(job.id)
 
-    assert retry_delay is None
+    assert result.retry_delay is None
     reloaded = await _reload_job(job.id)
     assert reloaded.status == "completed"
     assert reloaded.usage_status == "reported"
@@ -256,9 +275,9 @@ async def test_worker_rate_limit_schedules_retry_and_keeps_job_queued(client):
         mock_provider_cls.return_value.generate = AsyncMock(
             side_effect=ProviderRateLimitedError(retry_after_seconds=7)
         )
-        retry_delay = await _process_job(job.id)
+        result = await _process_job(job.id)
 
-    assert retry_delay == 7
+    assert result.retry_delay == 7
     reloaded = await _reload_job(job.id)
     assert reloaded.status == "queued"
     assert reloaded.retry_count == 1
@@ -276,9 +295,9 @@ async def test_worker_timeout_does_not_auto_retry(client):
 
     with patch("tasks.image_generation.OpenAIImageProvider") as mock_provider_cls:
         mock_provider_cls.return_value.generate = AsyncMock(side_effect=ProviderTimeoutError())
-        retry_delay = await _process_job(job.id)
+        result = await _process_job(job.id)
 
-    assert retry_delay is None
+    assert result.retry_delay is None
     reloaded = await _reload_job(job.id)
     assert reloaded.status == "failed"
     assert reloaded.error_code == "PROVIDER_TIMEOUT"
@@ -296,9 +315,9 @@ async def test_worker_no_result_is_terminal(client):
 
     with patch("tasks.image_generation.OpenAIImageProvider") as mock_provider_cls:
         mock_provider_cls.return_value.generate = AsyncMock(side_effect=ProviderNoResultError())
-        retry_delay = await _process_job(job.id)
+        result = await _process_job(job.id)
 
-    assert retry_delay is None
+    assert result.retry_delay is None
     reloaded = await _reload_job(job.id)
     assert reloaded.status == "failed"
     assert reloaded.error_code == "PROVIDER_NO_RESULT"
@@ -314,9 +333,9 @@ async def test_worker_skips_job_that_is_not_queued(client):
 
     with patch("tasks.image_generation.OpenAIImageProvider") as mock_provider_cls:
         mock_provider_cls.return_value.generate = AsyncMock()
-        retry_delay = await _process_job(job.id)
+        result = await _process_job(job.id)
 
-    assert retry_delay is None
+    assert result.retry_delay is None
     mock_provider_cls.return_value.generate.assert_not_called()
     assert await _list_invocations(job.id) == []
 
@@ -328,9 +347,9 @@ async def test_worker_skips_when_lease_already_held(client):
 
     with patch("tasks.image_generation.OpenAIImageProvider") as mock_provider_cls:
         mock_provider_cls.return_value.generate = AsyncMock()
-        retry_delay = await _process_job(job.id)
+        result = await _process_job(job.id)
 
-    assert retry_delay is None
+    assert result.retry_delay is None
     mock_provider_cls.return_value.generate.assert_not_called()
     assert await _list_invocations(job.id) == []
 
