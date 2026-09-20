@@ -407,6 +407,20 @@ async def test_should_reject_overlay_text_over_max(client, monkeypatch):
 
 
 @pytest.mark.asyncio
+async def test_should_accept_overlay_slug_longer_than_thirty(client, monkeypatch):
+    ctx = await _setup_ready(client, monkeypatch)
+    slug = "blusa-manga-globo-estampada-verano"
+    assert 30 < len(slug) <= SKU_MAX_LENGTH
+    response, send = await _post_photoshoot(
+        client,
+        ctx,
+        _submit_body(ctx, overlay={"text": slug}, pose_ids=["front"]),
+    )
+    assert response.status_code == 202, response.text
+    send.assert_called_once()
+
+
+@pytest.mark.asyncio
 async def test_should_persist_variant_key_without_filtering(client, monkeypatch):
     ctx = await _setup_ready(client, monkeypatch)
     response, send = await _post_photoshoot(

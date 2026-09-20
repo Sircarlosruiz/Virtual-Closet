@@ -229,6 +229,52 @@ async def test_worker_replicate_job_completes_without_openai_key(client, monkeyp
 
 
 @pytest.mark.asyncio
+async def test_worker_replicate_job_records_reported_usage_from_sidecar(client, monkeypatch):
+    from unittest.mock import patch
+
+    monkeypatch.setattr(settings, "OPENAI_API_KEY", "")
+    monkeypatch.setattr(settings, "REPLICATE_API_KEY", "r8-present")
+    owner_id = await _setup_staff(client)
+    job = await _create_job(
+        owner_id,
+        mode="try_on",
+        provider="replicate",
+        input_data={
+            "mode": "try_on",
+            "cloth_type": "upper",
+            "garment_bytes": "Zg==",
+            "model_bytes": "bQ==",
+        },
+    )
+    fake = ProviderInvocationResult(
+        image_bytes=b"out",
+        provider_model="zhengchong/catvton",
+        usage={"prediction_id": "pred-live", "predict_time": 11.4},
+    )
+    with (
+        patch(
+            "tasks.image_generation._get_provider",
+            return_value=MagicMock(generate=AsyncMock(return_value=fake), last_usage=fake.usage),
+        ),
+        patch("tasks.image_generation.StorageService") as storage_cls,
+    ):
+        storage_cls.return_value.upload_bytes = AsyncMock()
+        result = await _process_job(job.id)
+
+    assert result.reschedule_slot_wait is False
+    reloaded = await _reload_job(job.id)
+    assert reloaded.status == "completed"
+    assert reloaded.usage_status == "reported"
+    assert reloaded.usage_model == "zhengchong/catvton"
+    invocations = await _list_invocations(job.id)
+    assert len(invocations) == 1
+    assert invocations[0].usage_status == "reported"
+    assert invocations[0].usage_model == "zhengchong/catvton"
+    assert invocations[0].usage_raw == {"prediction_id": "pred-live", "predict_time": 11.4}
+    assert invocations[0].usage_raw.get("total_tokens") is None
+
+
+@pytest.mark.asyncio
 async def test_worker_openai_job_fails_without_openai_key(client, monkeypatch) -> None:
     monkeypatch.setattr(settings, "OPENAI_API_KEY", "")
     monkeypatch.setattr(settings, "REPLICATE_API_KEY", "r8-present")

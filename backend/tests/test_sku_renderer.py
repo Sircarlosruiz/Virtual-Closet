@@ -53,6 +53,41 @@ def test_evaluate_fit_accepts_then_rejects_by_available_area():
     assert rejected["reason"]
 
 
+def test_evaluate_fit_and_render_share_measurement_for_long_slug():
+    slug = "blusa-manga-globo-estampada-verano"
+    assert len(slug) > 30
+    base = make_base(1200, 1600)
+    size = sku_renderer.image_size_from_bytes(base)
+    placement = _placement(offset_x=16, offset_y=16)
+    style = _style(font_size=12)
+    fit = sku_renderer.evaluate_fit(size, slug, placement, style)
+    rendered = sku_renderer.render_composition(base, slug, placement, style)
+    rendered_size = sku_renderer.image_size_from_bytes(rendered)
+    assert rendered_size == size
+    if fit["fits"]:
+        assert fit["rendered_width"] <= fit["available_width"]
+        assert fit["rendered_height"] <= fit["available_height"]
+    else:
+        assert fit["reason"]
+        assert fit["rendered_width"] > fit["available_width"] or fit[
+            "rendered_height"
+        ] > fit["available_height"]
+
+
+def test_long_slug_blocked_reports_measured_dimensions():
+    slug = "blusa-manga-globo-estampada-verano"
+    size = sku_renderer.image_size_from_bytes(make_base(600, 800))
+    rejected = sku_renderer.evaluate_fit(
+        size,
+        slug,
+        _placement(max_width=8, max_height=8),
+        _style(font_size=48),
+    )
+    assert rejected["fits"] is False
+    assert rejected["reason"]
+    assert rejected["rendered_width"] > rejected["available_width"]
+
+
 def test_resolve_frame_honours_anchors():
     assert sku_renderer.resolve_frame((100, 100), _placement(offset_x=0, offset_y=0, anchor=OverlayAnchor.top_left), 10, 10) == (0, 0, 100, 100)
     assert sku_renderer.resolve_frame((100, 100), _placement(offset_x=5, offset_y=5), 10, 10) == (85, 85, 90, 90)

@@ -2,7 +2,7 @@
 unit: 004-replicate-execution-reliability
 intent: 009-bfashion-generation-bridge
 created: 2026-09-19T01:35:10Z
-last_updated: 2026-09-19T15:49:26Z
+last_updated: 2026-09-20T18:16:57Z
 ---
 
 # Construction Log: replicate-execution-reliability
@@ -27,7 +27,7 @@ last_updated: 2026-09-19T15:49:26Z
 | Bolt ID | Stories | Status | Changed |
 |---------|---------|--------|---------|
 | 052-replicate-execution-reliability | 001, 002, 003, 004 | ✅ complete | - |
-| 055-replicate-execution-reliability | 005, 006 | [ ] planned | Tras orquestación; necesita imágenes reales |
+| 055-replicate-execution-reliability | 005, 006 | ✅ complete | Tras orquestación; necesita imágenes reales |
 
 ## Execution History
 
@@ -40,6 +40,14 @@ last_updated: 2026-09-19T15:49:26Z
 | 2026-09-19T15:23:42Z | 052-replicate-execution-reliability | stage-complete | implement → test |
 | 2026-09-19T15:50:00Z | 052-replicate-execution-reliability | stage-complete | test (checkpoint; bolt-complete pendiente de aprobación) |
 | 2026-09-19T15:49:26Z | 052-replicate-execution-reliability | completed | All 5 stages done |
+| 2026-09-19T17:22:00Z | 055-replicate-execution-reliability | started | Stage 1: model |
+| 2026-09-19T17:28:00Z | 055-replicate-execution-reliability | stage-complete | model → design |
+| 2026-09-19T17:30:00Z | 055-replicate-execution-reliability | stage-complete | design → adr-analysis |
+| 2026-09-19T17:31:00Z | 055-replicate-execution-reliability | adr-created | ADR-073, ADR-074 |
+| 2026-09-19T17:33:00Z | 055-replicate-execution-reliability | started | Stage 4: implement |
+| 2026-09-20T17:56:00Z | 055-replicate-execution-reliability | stage-complete | implement → test |
+| 2026-09-20T18:12:00Z | 055-replicate-execution-reliability | stage-complete | test (checkpoint; bolt-complete pendiente de aprobación) |
+| 2026-09-20T18:16:57Z | 055-replicate-execution-reliability | completed | All 5 stages done |
 
 - **2026-09-19T01:35:10Z**: 052-replicate-execution-reliability started - Stage 1: model
 - **2026-09-19T01:37:20Z**: 052-replicate-execution-reliability stage-complete - model → design
@@ -48,6 +56,14 @@ last_updated: 2026-09-19T15:49:26Z
 - **2026-09-19T15:23:42Z**: 052-replicate-execution-reliability stage-complete - implement → test
 - **2026-09-19T15:50:00Z**: 052-replicate-execution-reliability stage-complete - test (58 passed, 86 % cov; bolt-complete pendiente)
 - **2026-09-19T15:49:26Z**: 052-replicate-execution-reliability completed - All 5 stages done
+- **2026-09-19T17:22:00Z**: 055-replicate-execution-reliability started - Stage 1: model
+- **2026-09-19T17:28:00Z**: 055-replicate-execution-reliability stage-complete - model → design
+- **2026-09-19T17:30:00Z**: 055-replicate-execution-reliability stage-complete - design → adr-analysis
+- **2026-09-19T17:31:00Z**: 055-replicate-execution-reliability adr-created - ADR-073 usage sidecar, ADR-074 provider-keyed whitelist
+- **2026-09-19T17:33:00Z**: 055-replicate-execution-reliability started - Stage 4: implement
+- **2026-09-20T17:56:00Z**: 055-replicate-execution-reliability stage-complete - implement → test
+- **2026-09-20T18:12:00Z**: 055-replicate-execution-reliability stage-complete - test (117 passed, 88 % cov; bolt-complete pendiente)
+- **2026-09-20T18:16:57Z**: 055-replicate-execution-reliability completed - All 5 stages done
 
 ## Execution Summary
 
@@ -55,11 +71,11 @@ last_updated: 2026-09-19T15:49:26Z
 |--------|-------|
 | Original bolts planned | 2 |
 | Current bolt count | 2 |
-| Bolts completed | 1 |
+| Bolts completed | 2 |
 | Bolts in progress | 0 |
-| Bolts remaining | 1 |
+| Bolts remaining | 0 |
 | Replanning events | 0 |
 
 ## Notes
 
-`052` es independiente de `050` y `051`. Habilita `053-photoshoot-orchestration`. Las historias 005 y 006 quedan fuera de este bolt (consumo y overlay con datos reales).
+`052` es independiente de `050` y `051`. Habilita `053-photoshoot-orchestration`. Las historias 005 y 006 se ejecutan en `055` tras el cierre de `054` (photoshoots reales contra Replicate).

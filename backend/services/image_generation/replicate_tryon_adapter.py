@@ -41,8 +41,12 @@ class ReplicateTryOnAdapter:
             if timeout_seconds is not None
             else ProviderTimeoutPolicy().timeout_for("replicate").seconds
         )
+        self.last_usage: dict[str, object] | None = None
+        self.last_model: str | None = None
 
     async def generate(self, inputs: Mapping[str, object]) -> ProviderInvocationResult:
+        self.last_usage = None
+        self.last_model = None
         garment, model, cloth_type = await self._resolve_try_on_inputs(inputs)
         inner = self._inner
         if inner is None:
@@ -62,10 +66,19 @@ class ReplicateTryOnAdapter:
             raise
         except Exception as exc:
             raise ProviderRequestError(f"Replicate try-on failed: {type(exc).__name__}") from exc
+
+        inner_usage = getattr(inner, "last_usage", None)
+        inner_model = getattr(inner, "last_model", None)
+        self.last_usage = inner_usage if isinstance(inner_usage, dict) else None
+        self.last_model = (
+            inner_model
+            if isinstance(inner_model, str) and inner_model.strip()
+            else settings.CATVTON_REPLICATE_MODEL
+        )
         return ProviderInvocationResult(
             image_bytes=image_bytes,
-            provider_model=settings.CATVTON_REPLICATE_MODEL,
-            usage=None,
+            provider_model=self.last_model,
+            usage=self.last_usage,
         )
 
     async def _resolve_try_on_inputs(

@@ -3,21 +3,36 @@ id: 055-replicate-execution-reliability
 unit: 004-replicate-execution-reliability
 intent: 009-bfashion-generation-bridge
 type: ddd-construction-bolt
-status: planned
+status: complete
 stories:
   - 005-replicate-usage-accounting
   - 006-product-slug-overlay-fit
-created: 2026-09-18T11:25:00Z
-started: null
-completed: null
+created: 2026-09-18T11:25:00.000Z
+started: 2026-09-19T17:22:00.000Z
+completed: "2026-09-20T18:16:57Z"
 current_stage: null
-stages_completed: []
-
-requires_bolts: [054-photoshoot-orchestration]
+stages_completed:
+  - name: model
+    completed: 2026-09-19T17:28:00.000Z
+    artifact: ddd-01-domain-model.md
+  - name: design
+    completed: 2026-09-19T17:30:00.000Z
+    artifact: ddd-02-technical-design.md
+  - name: adr-analysis
+    completed: 2026-09-19T17:31:00.000Z
+    artifact: adr-073-usage-sidecar-on-adapter.md, adr-074-provider-keyed-usage-whitelist.md
+  - name: implement
+    completed: 2026-09-20T17:56:00.000Z
+    artifact: source code
+  - name: test
+    completed: 2026-09-20T18:12:00.000Z
+    artifact: ddd-03-test-report.md
+requires_bolts:
+  - 054-photoshoot-orchestration
 enables_bolts: []
-requires_units: [003-photoshoot-orchestration]
+requires_units:
+  - 003-photoshoot-orchestration
 blocks: true
-
 complexity:
   avg_complexity: 2
   avg_uncertainty: 3
@@ -47,10 +62,11 @@ Que al menos una invocación real de Replicate quede con consumo `reported` y mo
 
 ## Stages
 
-- [ ] **1. model**: Pending → `ddd-01-domain-model.md`
-- [ ] **2. design**: Pending → `ddd-02-technical-design.md`
-- [ ] **3. implement**: Pending → ampliación de `UsageAccountingService`; verificación de `sku_renderer`/`composition_spec` contra slugs reales
-- [ ] **4. test**: Pending → `ddd-03-test-report.md`
+- [x] **1. model**: Complete → `ddd-01-domain-model.md`
+- [x] **2. design**: Complete → `ddd-02-technical-design.md`
+- [x] **3. adr-analysis**: Complete → ADR-073, ADR-074 (checkpoint)
+- [x] **4. implement**: Complete → UsageAccountingService, sidecar, hook CatVTON
+- [x] **5. test**: Complete → `ddd-03-test-report.md`
 
 ## Dependencies
 

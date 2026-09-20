@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-09-19T17:01:00Z
-total_decisions: 72
+last_updated: 2026-09-19T17:31:00Z
+total_decisions: 74
 ---
 
 # Decision Index
@@ -19,6 +19,22 @@ Use this to find relevant prior decisions when working on related features.
 ## Decisions
 
 <!-- Entries are appended below in reverse chronological order (newest first) -->
+
+### ADR-074: Usage Whitelist Is Keyed by Provider, Not Inferred from Payload Keys
+- **Status**: proposed
+- **Date**: 2026-09-19
+- **Bolt**: 055-replicate-execution-reliability (004-replicate-execution-reliability)
+- **Path**: `bolts/055-replicate-execution-reliability/adr-074-provider-keyed-usage-whitelist.md`
+- **Summary**: Replicate telemetry is metrics and prediction identity, not OpenAI tokens; a mixed payload must not flip `reported` for the wrong vendor. `normalize(provider, model, raw)` selects an additive whitelist by the job's persisted provider; OpenAI's token set is unchanged.
+- **Read when**: Extending `UsageAccountingService`, adding a generation provider's usage fields, persisting `usage_raw`, or deciding `reported` vs `unknown`
+
+### ADR-073: Usage Telemetry Lives on the Adapter Sidecar, Not on `generate`'s Return Type
+- **Status**: proposed
+- **Date**: 2026-09-19
+- **Bolt**: 055-replicate-execution-reliability (004-replicate-execution-reliability)
+- **Path**: `bolts/055-replicate-execution-reliability/adr-073-usage-sidecar-on-adapter.md`
+- **Summary**: Story 005 needs Replicate prediction identity and metrics after `generate`, but ADR-046's protocol returns only the image. Capture usage on the adapter instance (`last_usage`, `last_model`); the worker reads it and calls `normalize`. Do not widen `generate` or add a second Replicate client.
+- **Read when**: Wiring provider usage into `generate_image_task`, changing `ImageGenerationProvider.generate`, wrapping `CatVTONReplicateProvider`, or adding telemetry to a generation adapter
 
 ### ADR-072: Photoshoot Idempotency Uses the Shared Fingerprint, Not IdempotencyService
 - **Status**: proposed

@@ -382,6 +382,10 @@ async def test_get_job_exposes_attempt_history_and_usage(client):
     assert len(body["attempts"]) == 1
     assert body["attempts"][0]["status"] == "succeeded"
     assert body["usage"] == {"status": "unknown", "model": "gpt-image-1", "call_count": None}
+    assert "cost" not in body
+    assert "credits" not in body
+    assert "usage_raw" not in body
+    assert set(body["usage"]) == {"status", "model", "call_count"}
 
 
 # ---------------------------------------------------------------------------

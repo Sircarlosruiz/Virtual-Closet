@@ -223,7 +223,30 @@ async def _process_job(job_id: UUID) -> JobProcessResult:
                 )
                 return JobProcessResult()
 
-            usage_record = usage_service.normalize(result.provider_model, result.usage)
+            raw_usage = result.usage if isinstance(result.usage, dict) else None
+            if raw_usage is None:
+                sidecar = getattr(provider, "last_usage", None)
+                raw_usage = sidecar if isinstance(sidecar, dict) else None
+            usage_model = (
+                result.provider_model
+                if isinstance(result.provider_model, str) and result.provider_model.strip()
+                else None
+            )
+            if usage_model is None:
+                sidecar_model = getattr(provider, "last_model", None)
+                usage_model = sidecar_model if isinstance(sidecar_model, str) else None
+            usage_record = usage_service.normalize(
+                usage_model,
+                raw_usage,
+                provider=job.provider,
+            )
+            if usage_record.status == "reported":
+                logger.info(
+                    "Usage reported job=%s provider=%s model=%s",
+                    job_id,
+                    job.provider,
+                    usage_record.model,
+                )
             result_key = f"generated/{job.owner_id}/{job_id}.png"
             storage = StorageService()
             await storage.upload_bytes(
